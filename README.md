@@ -16,9 +16,18 @@ See [contribution guide](CONTRIBUTION.md)
 
 ## MVP
 - [ ] Start ProcessExecution
+  - [x] Basic
   - [ ] ProcessIdReusePolicy
-- [ ] Executing `wait_until`/`execute` APIs 
-- [ ] StateDecision: force completing process
+  - [ ] Process timeout
+  - [ ] Retention policy after closed
+- [x] Executing `wait_until`/`execute` APIs 
+- [ ] StateDecision
+  - [x] Single next State
+  - [ ] Multiple next states
+  - [x] Force completing process
+  - [ ] Graceful completing process
+  - [ ] Force fail process
+  - [ ] Dead end
 - [ ] Parallel execution of multiple states
 - [ ] WaitForProcessCompletion API
 - [ ] StateOption: WaitUntil/Execute API timeout and retry policy
@@ -26,20 +35,20 @@ See [contribution guide](CONTRIBUTION.md)
 - [ ] TimerCommand
 - [ ] LocalQueue
   - [ ] LocalQueueCommand
-  - [ ] Deduplication
+  - [ ] MessageId for deduplication
 - [ ] LocalAttribute + GlobalAttribute
-  - [ ] LoadingPolicy
+  - [ ] LoadingPolicy (attribute selection + locking)
   - [ ] InitialUpsert
   - [ ] Multi-tables for GlobalAttribute
 - [ ] Stop ProcessExecution
 - [ ] Error handling for canceled, failed, timeout, terminated
 - [ ] AsyncState failure policy for recovery 
 - [ ] RPC
-- [ ] Retention policy for execution
 - [ ] WaitForStateCompletion API
 - [ ] ResetProcessExecution
 - [ ] Describe ProcessExecution API
 - [ ] Atomic conditional complete workflow by checking queue emptiness
+- [ ] History events for operation/debugging
 
 ## Future
 
@@ -52,7 +61,7 @@ See [contribution guide](CONTRIBUTION.md)
 - [ ] GlobalQueue
 - [ ] CronSchedule
 - [ ] DelayStart
-- [ ] Caching
+- [ ] Caching (with Redis, etc)
 - [ ] Custom Database Query
-- [ ] SearchAttribute
-- [ ] ExternalAttribute
+- [ ] SearchAttribute (with ElasticSearch, etc)
+- [ ] ExternalAttribute (with S3, Snowflake, etc)
