@@ -99,6 +99,6 @@ func (d defaultStateId) GetStateId() string {
 
 type noWaitUntil struct{}
 
-func (d noWaitUntil) WaitUntil(ctx XdbContext, input Object, persistence Persistence, communication Communication) (*CommandRequest, error) {
+func (d noWaitUntil) WaitUntil(ctx XdbContext, input Object, communication Communication) (*CommandRequest, error) {
 	panic("this method is for skipping WaitUntil. It should never be called")
 }

@@ -28,7 +28,7 @@ See [contribution guide](CONTRIBUTION.md)
   - [ ] Graceful completing process
   - [ ] Force fail process
   - [ ] Dead end
-  - [ ] Conditional complete workflow with checking queue emptiness
+  - [ ] Conditional complete process with checking queue emptiness
 - [ ] Parallel execution of multiple states
 - [ ] WaitForProcessCompletion API
 - [ ] StateOption: WaitUntil/Execute API timeout and retry policy

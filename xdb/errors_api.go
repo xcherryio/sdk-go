@@ -90,20 +90,20 @@ func IsClientError(err error) bool {
 	return apiError.StatusCode >= 400 && apiError.StatusCode < 500
 }
 
-func IsWorkflowAlreadyStartedError(err error) bool {
+func IsProcessAlreadyStartedError(err error) bool {
 	apiError, ok := err.(*ApiError)
 	if !ok || apiError.Response == nil {
 		return false
 	}
-	return apiError.Response.GetSubStatus() == xdbapi.EXECUTION_ALREADY_STARTED_SUB_STATUS
+	return apiError.StatusCode == http.StatusConflict
 }
 
-func IsWorkflowNotExistsError(err error) bool {
+func IsProcessNotExistsError(err error) bool {
 	apiError, ok := err.(*ApiError)
 	if !ok || apiError.Response == nil {
 		return false
 	}
-	return apiError.Response.GetSubStatus() == xdbapi.EXECUTION_NOT_EXISTS_SUB_STATUS
+	return apiError.StatusCode == http.StatusNotFound
 }
 
 func IsRPCExecutionError(err error) bool {
@@ -139,8 +139,8 @@ func GetOpenApiErrorBody(err error) string {
 	return string(apiError.OpenApiError.Body())
 }
 
-// AsWorkflowUncompletedError will check if it's a ProcessAbnormalExitError and convert it if so
-func AsWorkflowUncompletedError(err error) (*ProcessAbnormalExitError, bool) {
+// AsProcessAbnormalExitError will check if it's a ProcessAbnormalExitError and convert it if so
+func AsProcessAbnormalExitError(err error) (*ProcessAbnormalExitError, bool) {
 	wErr, ok := err.(*ProcessAbnormalExitError)
 	return wErr, ok
 }

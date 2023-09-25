@@ -58,6 +58,5 @@ func NewClient(registry Registry, options *ClientOptions) Client {
 	return &clientImpl{
 		UnregisteredClient: NewUnregisteredClient(options),
 		registry:           registry,
-		options:            options,
 	}
 }
