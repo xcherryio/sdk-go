@@ -37,6 +37,7 @@ See [contribution guide](CONTRIBUTION.md)
 - [ ] LocalQueue
   - [ ] LocalQueueCommand
   - [ ] MessageId for deduplication
+  - [ ] SendMessage API without RPC
 - [ ] LocalAttribute
   - [ ] LoadingPolicy (attribute selection + locking)
   - [ ] InitialUpsert

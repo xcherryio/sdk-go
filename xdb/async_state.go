@@ -34,9 +34,9 @@ type AsyncState interface {
 	Execute(ctx XdbContext, input Object, commandResults CommandResults, persistence Persistence, communication Communication) (*StateDecision, error)
 }
 
-// GetFinalAsyncStateId returns the stateId that will be registered and used
+// GetFinalStateId returns the stateId that will be registered and used
 // if the asyncState is from myStruct{} under mywf package, the method returns "mywf.myStruct"
-func GetFinalAsyncStateId(asyncState AsyncState) string {
+func GetFinalStateId(asyncState AsyncState) string {
 	sid := asyncState.GetStateId()
 	if sid == "" {
 		return getSimpleTypeNameFromReflect(asyncState)

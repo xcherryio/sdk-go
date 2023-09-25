@@ -1,19 +1,21 @@
 package xdb
 
 type StateSchema struct {
-	startingState     AsyncState
-	nonStartingStates []AsyncState
+	StartingState AsyncState
+	AllStates     []AsyncState
 }
 
 func WithStartingState(startingState AsyncState, nonStartingStates ...AsyncState) StateSchema {
+	allStates := nonStartingStates
+	allStates = append(allStates, startingState)
 	return StateSchema{
-		startingState:     startingState,
-		nonStartingStates: nonStartingStates,
+		StartingState: startingState,
+		AllStates:     allStates,
 	}
 }
 
 func NoStartingState(nonStartingStates ...AsyncState) StateSchema {
 	return StateSchema{
-		nonStartingStates: nonStartingStates,
+		AllStates: nonStartingStates,
 	}
 }
