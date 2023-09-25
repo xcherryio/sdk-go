@@ -1,4 +1,4 @@
-# Develop iWF Golang SDK
+# Develop XDB Golang SDK
 
 ## Repo layout
 

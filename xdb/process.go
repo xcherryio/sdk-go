@@ -9,7 +9,7 @@ import (
 // Process is a top level concept in XDB
 type Process interface {
 	// GetAsyncStateSchema defines the AsyncStates of the process.
-	// If there is no startingState, the process will not start any state execution after process stated. 
+	// If there is no startingState, the process will not start any state execution after process stated.
 	// Application can still use RPC to invoke new state execution later.
 	GetAsyncStateSchema() StateSchema
 
