@@ -13,7 +13,7 @@ type AsyncState interface {
 	GetStateId() string
 
 	// WaitUntil is the method to set up commands set up to wait for, before `Execute` API is invoked.
-	//           It's optional -- use xdb.AsyncStateNoWaitUntil to skip this( then Execute will be invoked instead)
+	//           It's optional -- use xdb.AsyncStateNoWaitUntil to skip this( then Execute will be invoked directly instead)
 	//
 	//  ctx              the context info of this API invocation, like process start time, processId, etc
 	//  input            the state input
@@ -22,7 +22,7 @@ type AsyncState interface {
 	///
 	WaitUntil(ctx XdbContext, input Object, communication Communication) (*CommandRequest, error)
 
-	// Execute is the method to execute and decide what to do next. 
+	// Execute is the method to execute and decide what to do next.
 	// It's invoked after commands from WaitUntil are completed, or if WaitUntil is skipped(not implemented).
 	//
 	//  ctx              the context info of this API invocation, like process start time, processId, etc
@@ -50,18 +50,20 @@ func GetFinalAsyncStateId(asyncState AsyncState) string {
 //	type myStateImpl struct{
 //	    AsyncStateDefaults
 //	}
+//
 // Then myStateImpl doesn't have to implement GetStateId
 type AsyncStateDefaults struct {
 	defaultStateId
 }
 
-// AsyncStateNoWaitUntil is required to skip WaitUntil 
+// AsyncStateNoWaitUntil is required to skip WaitUntil
 // put into your state implementation to save the boilerplate code of returning default values
 // Example usage:
 //
 //	type myStateImpl struct{
 //	    AsyncStateNoWaitUntil
 //	}
+//
 // Then myStateImpl will skip WaitUntil, and doesn't have to implement GetStateId
 type AsyncStateNoWaitUntil struct {
 	defaultStateId

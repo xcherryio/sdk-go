@@ -48,6 +48,7 @@ func getSimpleTypeNameFromReflect(obj interface{}) string {
 //	type myPcImpl struct{
 //	    ProcessDefaults
 //	}
+//
 // Then myPcImpl doesn't have to implement GetProcessType or GetAsyncStateSchema
 type ProcessDefaults struct {
 }
