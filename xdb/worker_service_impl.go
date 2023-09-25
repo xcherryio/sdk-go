@@ -53,6 +53,9 @@ func (w *workerServiceImpl) HandleAsyncStateExecute(ctx context.Context, request
 		return nil, err
 	}
 	idlDecision, err := toIdlDecision(decision, prcType, w.registry, w.options.ObjectEncoder)
+	if err != nil {
+		return nil, err
+	}
 	resp = &xdbapi.AsyncStateExecuteResponse{
 		StateDecision: idlDecision,
 	}
