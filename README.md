@@ -1,9 +1,11 @@
 # XDB Golang SDK
 [![Go Reference](https://pkg.go.dev/badge/github.com/xdblab/xdb-golang-sdk.svg)](https://pkg.go.dev/github.com/xdblab/xdb-golang-sdk)
 [![Go Report Card](https://goreportcard.com/badge/github.com/xdblab/xdb-golang-sdk)](https://goreportcard.com/report/github.com/xdblab/xdb-golang-sdk)
-[![Coverage Status](https://codecov.io/github/xdblab/xdb-golang-sdk/coverage.svg?branch=release)](https://app.codecov.io/gh/xdblab/xdb-golang-sdk/branch/main)
 
-[![Build status](https://github.com/xdblab/xdb-golang-sdk/actions/workflows/ci-integ-test.yml/badge.svg?branch=release)](https://github.com/xdblab/xdb-golang-sdk/actions/workflows/ci-integ-test.yml)
+<!--- using build branch for coverage and build status. Because server depends on GoSDK, so main branch code not be testable until server has implemented the features --->
+[![Coverage Status](https://codecov.io/github/xdblab/xdb-golang-sdk/coverage.svg?branch=build)](https://app.codecov.io/gh/xdblab/xdb-golang-sdk/branch/main)
+
+[![Build status](https://github.com/xdblab/xdb-golang-sdk/actions/workflows/ci-integ-test.yml/badge.svg?branch=build)](https://github.com/xdblab/xdb-golang-sdk/actions/workflows/ci-integ-test.yml)
 
 
 Golang SDK for [XDB](https://github.com/xdblab/xdb)
