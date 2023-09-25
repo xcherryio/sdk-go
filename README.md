@@ -23,7 +23,7 @@ See [contribution guide](CONTRIBUTION.md)
 - [x] Executing `wait_until`/`execute` APIs 
 - [ ] StateDecision
   - [x] Single next State
-  - [ ] Multiple next states
+  - [x] Multiple next states
   - [x] Force completing process
   - [ ] Graceful completing process
   - [ ] Force fail process
