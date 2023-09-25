@@ -71,6 +71,6 @@ func (r *registryImpl) registerProcessState(prc Process) error {
 	if prc.GetAsyncStateSchema().StartingState != nil {
 		r.startingState[wfType] = prc.GetAsyncStateSchema().StartingState
 	}
-	
+
 	return nil
 }
