@@ -14,7 +14,7 @@ See [contribution guide](CONTRIBUTION.md)
 
 # Development Plan
 
-## MVP
+## 1.0
 - [ ] Start ProcessExecution
   - [x] Basic
   - [ ] ProcessIdReusePolicy
@@ -28,6 +28,7 @@ See [contribution guide](CONTRIBUTION.md)
   - [ ] Graceful completing process
   - [ ] Force fail process
   - [ ] Dead end
+  - [ ] Conditional complete workflow with checking queue emptiness
 - [ ] Parallel execution of multiple states
 - [ ] WaitForProcessCompletion API
 - [ ] StateOption: WaitUntil/Execute API timeout and retry policy
@@ -36,18 +37,20 @@ See [contribution guide](CONTRIBUTION.md)
 - [ ] LocalQueue
   - [ ] LocalQueueCommand
   - [ ] MessageId for deduplication
-- [ ] LocalAttribute + GlobalAttribute
+- [ ] LocalAttribute
   - [ ] LoadingPolicy (attribute selection + locking)
   - [ ] InitialUpsert
-  - [ ] Multi-tables for GlobalAttribute
+- [ ] GlobalAttribute
+  - [ ] LoadingPolicy (attribute selection + locking)
+  - [ ] InitialUpsert
+  - [ ] Multi-tables
 - [ ] Stop ProcessExecution
 - [ ] Error handling for canceled, failed, timeout, terminated
 - [ ] AsyncState failure policy for recovery 
 - [ ] RPC
 - [ ] WaitForStateCompletion API
-- [ ] ResetProcessExecution
+- [ ] ResetStateExecution for operation
 - [ ] Describe ProcessExecution API
-- [ ] Atomic conditional complete workflow by checking queue emptiness
 - [ ] History events for operation/debugging
 
 ## Future
@@ -60,6 +63,7 @@ See [contribution guide](CONTRIBUTION.md)
 - [ ] WaitingType: AnyCombinationsOf
 - [ ] GlobalQueue
 - [ ] CronSchedule
+- [ ] Batch operation
 - [ ] DelayStart
 - [ ] Caching (with Redis, etc)
 - [ ] Custom Database Query
