@@ -6,13 +6,13 @@ import (
 )
 
 // Process is the interface to define a process definition.
-// Process is a top level concept in XDB. Any object that is long-lasting(at least a few seconds) can be modeled as an "Process".
+// Process is a top level concept in XDB
 type Process interface {
 	// GetAsyncStateSchema defines the AsyncStates of the process.
 	// A state can execute some commands (signal/timer) and wait for result
 	// See more details in the AsyncState interface.
 	// It can return an empty list, meaning no states.
-	// There can be at most one startingState in the list.
+	// There can be at most one startingState.
 	// If there is no startingState or with the default empty state list, the process
 	// will not start any state execution after process stated. Application can still
 	// use RPC to invoke new state execution in the future.
@@ -42,12 +42,13 @@ func getSimpleTypeNameFromReflect(obj interface{}) string {
 	return rtStr
 }
 
-// ProcessDefaults is a convenient struct to put into your process implementation to save the boilerplate code.
+// ProcessDefaults is a convenient struct to put into your process implementation to save the boilerplate code of returning default values
 // Example usage :
 //
-//	type myStateImpl struct{
+//	type myPcImpl struct{
 //	    ProcessDefaults
 //	}
+// Then myPcImpl doesn't have to implement GetProcessType or GetAsyncStateSchema
 type ProcessDefaults struct {
 }
 
