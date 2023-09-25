@@ -39,5 +39,6 @@ func (b state2) Execute(ctx xdb.XdbContext, input xdb.Object, commandResults xdb
 }
 
 func TestBuild(t *testing.T) {
-	fmt.Println("TODO")
+	wf := basicWorkflow{}
+	fmt.Println("TODO", wf)
 }
