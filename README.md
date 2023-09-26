@@ -5,7 +5,7 @@
 <!--- using build branch for coverage and build status. Because server depends on GoSDK, so main branch code not be testable until server has implemented the features --->
 [![Coverage Status](https://codecov.io/github/xdblab/xdb-golang-sdk/coverage.svg?branch=build)](https://app.codecov.io/gh/xdblab/xdb-golang-sdk/branch/main)
 
-[![Build status](https://github.com/xdblab/xdb-golang-sdk/actions/workflows/ci-integ-test.yml/badge.svg?branch=build)](https://github.com/xdblab/xdb-golang-sdk/actions/workflows/ci-integ-test.yml)
+[![Build status](https://github.com/xdblab/xdb-golang-sdk/actions/workflows/ci-tests.yml/badge.svg?branch=build)](https://github.com/xdblab/xdb-golang-sdk/actions/workflows/ci-tests.yml)
 
 
 Golang SDK for [XDB](https://github.com/xdblab/xdb)
@@ -17,7 +17,7 @@ See [contribution guide](CONTRIBUTION.md)
 # Development Plan
 
 ## 1.0
-- [ ] Start ProcessExecution
+- [ ] StartProcessExecution API
   - [x] Basic
   - [ ] ProcessIdReusePolicy
   - [ ] Process timeout
