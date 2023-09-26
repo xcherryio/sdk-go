@@ -6,12 +6,12 @@ import (
 	"net/http"
 )
 
-type unregisteredClientImpl struct {
+type basicClientImpl struct {
 	options   *ClientOptions
 	apiClient *xdbapi.APIClient
 }
 
-func (u *unregisteredClientImpl) StartProcess(ctx context.Context, processType string, startStateId, processId string, input interface{}, options *UnregisteredProcessOptions) (string, error) {
+func (u *basicClientImpl) StartProcess(ctx context.Context, processType string, startStateId, processId string, input interface{}, options *BasicClientProcessOptions) (string, error) {
 	var encodedInput *xdbapi.EncodedObject
 	var err error
 	if input != nil {
@@ -51,7 +51,7 @@ func (u *unregisteredClientImpl) StartProcess(ctx context.Context, processType s
 	return resp.GetProcessExecutionId(), nil
 }
 
-func (u *unregisteredClientImpl) processError(err error, httpResp *http.Response) error {
+func (u *basicClientImpl) processError(err error, httpResp *http.Response) error {
 	if err == nil && httpResp != nil && httpResp.StatusCode == http.StatusOK {
 		return nil
 	}

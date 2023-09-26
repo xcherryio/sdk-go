@@ -7,7 +7,7 @@ import (
 )
 
 type clientImpl struct {
-	UnregisteredClient
+	BasicClient
 	registry Registry
 }
 
@@ -20,7 +20,7 @@ func (c *clientImpl) StartProcess(ctx context.Context, definition Process, proce
 
 	state := c.registry.getProcessStartingState(prcType)
 
-	unregOpt := &UnregisteredProcessOptions{}
+	unregOpt := &BasicClientProcessOptions{}
 
 	startStateId := ""
 	if state != nil {
@@ -36,5 +36,5 @@ func (c *clientImpl) StartProcess(ctx context.Context, definition Process, proce
 		unregOpt.ProcessIdReusePolicy = options.IdReusePolicy
 		unregOpt.TimeoutSeconds = options.TimeoutSeconds
 	}
-	return c.UnregisteredClient.StartProcess(ctx, prcType, startStateId, processId, input, unregOpt)
+	return c.BasicClient.StartProcess(ctx, prcType, startStateId, processId, input, unregOpt)
 }

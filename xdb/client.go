@@ -16,10 +16,10 @@ type Client interface {
 	StartProcess(ctx context.Context, definition Process, processId string, input interface{}, options *ProcessOptions) (string, error)
 }
 
-// UnregisteredClient is a client without process registry
+// BasicClient is a base client without process registry
 // It's the internal implementation of Client.
 // But it can be used directly if there is good reason -- let you invoke the APIs to xdb server without much type validation checks(process type, queue names, etc).
-type UnregisteredClient interface {
+type BasicClient interface {
 	// StartProcess starts a process execution
 	// processType is the process type
 	// startStateId is the stateId of the startingState
@@ -27,11 +27,11 @@ type UnregisteredClient interface {
 	// input the optional input for the startingState
 	// options is optional includes like ProcessIdReusePolicy.
 	// return the processExecutionId
-	StartProcess(ctx context.Context, processType string, startStateId, processId string, input interface{}, options *UnregisteredProcessOptions) (string, error)
+	StartProcess(ctx context.Context, processType string, startStateId, processId string, input interface{}, options *BasicClientProcessOptions) (string, error)
 }
 
-// NewUnregisteredClient returns a UnregisteredClient
-func NewUnregisteredClient(options *ClientOptions) UnregisteredClient {
+// NewBasicClient returns a BasicClient
+func NewBasicClient(options *ClientOptions) BasicClient {
 	if options == nil {
 		options = GetLocalDefaultClientOptions()
 	}
@@ -44,7 +44,7 @@ func NewUnregisteredClient(options *ClientOptions) UnregisteredClient {
 		},
 	})
 
-	return &unregisteredClientImpl{
+	return &basicClientImpl{
 		options:   options,
 		apiClient: apiClient,
 	}
@@ -56,7 +56,7 @@ func NewClient(registry Registry, options *ClientOptions) Client {
 		panic("A registry is required")
 	}
 	return &clientImpl{
-		UnregisteredClient: NewUnregisteredClient(options),
-		registry:           registry,
+		BasicClient: NewBasicClient(options),
+		registry:    registry,
 	}
 }
