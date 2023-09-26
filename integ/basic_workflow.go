@@ -1,10 +1,6 @@
 package integ
 
-import (
-	"fmt"
-	"github.com/xdblab/xdb-golang-sdk/xdb"
-	"testing"
-)
+import "github.com/xdblab/xdb-golang-sdk/xdb"
 
 type basicWorkflow struct {
 	xdb.ProcessDefaults
@@ -36,9 +32,4 @@ func (b state2) Execute(ctx xdb.XdbContext, input xdb.Object, commandResults xdb
 	var i int
 	input.Get(&i)
 	return xdb.ForceCompletingProcess, nil
-}
-
-func TestBuild(t *testing.T) {
-	wf := basicWorkflow{}
-	fmt.Println("TODO", wf)
 }
