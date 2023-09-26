@@ -1,0 +1,19 @@
+name: Test Build
+on:
+  pull_request:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  tests:
+    name: "Test build"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+      - name: "Run test"
+        run: make tests
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
