@@ -22,7 +22,11 @@ See [contribution guide](CONTRIBUTION.md)
   - [ ] ProcessIdReusePolicy
   - [ ] Process timeout
   - [ ] Retention policy after closed
-- [x] Executing `wait_until`/`execute` APIs 
+- [ ] Executing `wait_until`/`execute` APIs
+  - [x] Basic
+  - [x] Parallel execution of multiple states
+  - [ ] StateOption: WaitUntil/Execute API timeout and retry policy
+  - [ ] AsyncState failure policy for recovery
 - [ ] StateDecision
   - [x] Single next State
   - [x] Multiple next states
@@ -31,29 +35,27 @@ See [contribution guide](CONTRIBUTION.md)
   - [ ] Force fail process
   - [ ] Dead end
   - [ ] Conditional complete process with checking queue emptiness
-- [ ] Parallel execution of multiple states
-- [ ] WaitForProcessCompletion API
-- [ ] StateOption: WaitUntil/Execute API timeout and retry policy
-- [ ] AnyOfCompletion and AllOfCompletion waitingType
-- [ ] TimerCommand
+- [ ] Commands
+  - [ ] AnyOfCompletion and AllOfCompletion waitingType
+  - [ ] TimerCommand
 - [ ] LocalQueue
   - [ ] LocalQueueCommand
   - [ ] MessageId for deduplication
   - [ ] SendMessage API without RPC
-- [ ] LocalAttribute
+- [ ] LocalAttribute persistence
   - [ ] LoadingPolicy (attribute selection + locking)
   - [ ] InitialUpsert
-- [ ] GlobalAttribute
+- [ ] GlobalAttribute  persistence
   - [ ] LoadingPolicy (attribute selection + locking)
   - [ ] InitialUpsert
-  - [ ] Multi-tables
-- [ ] Stop ProcessExecution
-- [ ] Error handling for canceled, failed, timeout, terminated
-- [ ] AsyncState failure policy for recovery 
+  - [ ] Multi-tables 
 - [ ] RPC
+- [ ] API error handling for canceled, failed, timeout, terminated
+- [ ] StopProcessExecution API
 - [ ] WaitForStateCompletion API
 - [ ] ResetStateExecution for operation
-- [ ] Describe ProcessExecution API
+- [ ] DescribeProcessExecution API
+- [ ] WaitForProcessCompletion API
 - [ ] History events for operation/debugging
 
 ## Future
@@ -61,8 +63,7 @@ See [contribution guide](CONTRIBUTION.md)
 - [ ] Skip timer API for testing/operation
 - [ ] Dynamic attributes and queue definition
 - [ ] State options overridden dynamically
-- [ ] Consume more than one messages in a single command
-  - [ ] FIFO/BestMatch policies
+- [ ] Consume more than one messages in a single command with FIFO/BestMatch policies
 - [ ] WaitingType: AnyCombinationsOf
 - [ ] GlobalQueue
 - [ ] CronSchedule
