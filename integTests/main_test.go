@@ -8,7 +8,7 @@ import (
 
 func TestMain(m *testing.M) {
 	fmt.Println("start running integ test")
-	closeFn := startWorker()
+	closeFn := StartGinWorker()
 	code := m.Run()
 	closeFn()
 	fmt.Println("finished running integ test with status code", code)

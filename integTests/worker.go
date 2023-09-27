@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func startWorker() (closeFunc func()) {
+func StartGinWorker() (closeFunc func()) {
 	router := gin.Default()
 	router.POST(xdb.ApiPathAsyncStateWaitUntil, apiAsyncStateWaitUntil)
 	router.POST(xdb.ApiPathAsyncStateExecute, apiAsyncStateExecute)
