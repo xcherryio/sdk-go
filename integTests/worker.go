@@ -1,4 +1,4 @@
-package integ
+package integTests
 
 import (
 	"github.com/gin-gonic/gin"

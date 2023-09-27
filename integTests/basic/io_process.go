@@ -1,12 +1,19 @@
-package integ
+package basic
 
-import "github.com/xdblab/xdb-golang-sdk/xdb"
+import (
+	"context"
+	"github.com/stretchr/testify/assert"
+	"github.com/xdblab/xdb-golang-sdk/xdb"
+	"strconv"
+	"testing"
+	"time"
+)
 
-type basicWorkflow struct {
+type IOProcess struct {
 	xdb.ProcessDefaults
 }
 
-func (b basicWorkflow) GetAsyncStateSchema() xdb.StateSchema {
+func (b IOProcess) GetAsyncStateSchema() xdb.StateSchema {
 	return xdb.WithStartingState(&state1{}, &state2{})
 }
 
@@ -32,4 +39,11 @@ func (b state2) Execute(ctx xdb.XdbContext, input xdb.Object, commandResults xdb
 	var i int
 	input.Get(&i)
 	return xdb.ForceCompletingProcess, nil
+}
+
+func TestStartIOProcess(t *testing.T, client xdb.Client) {
+	prcId := "TestProceedOnStateStartFailWorkflow" + strconv.Itoa(int(time.Now().Unix()))
+	prc := IOProcess{}
+	_, err := client.StartProcess(context.Background(), prc, prcId, 123, nil)
+	assert.Nil(t, err)
 }
