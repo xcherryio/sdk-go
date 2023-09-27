@@ -12,7 +12,7 @@ type basicClientImpl struct {
 }
 
 func (u *basicClientImpl) DescribeCurrentProcessExecution(ctx context.Context, processId string) (*xdbapi.ProcessExecutionDescribeResponse, error) {
-	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionDesribePost(ctx)
+	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionDescribePost(ctx)
 	resp, httpResp, err := req.ProcessExecutionDescribeRequest(xdbapi.ProcessExecutionDescribeRequest{
 		ProcessId: &processId,
 	}).Execute()
