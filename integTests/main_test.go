@@ -9,7 +9,7 @@ import (
 
 func TestMain(m *testing.M) {
 	fmt.Println("start running integ test")
-	closeFn := worker.StartGinWorker()
+	closeFn := worker.StartGinWorker(workerService)
 	code := m.Run()
 	closeFn()
 	fmt.Println("finished running integ test with status code", code)

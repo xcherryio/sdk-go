@@ -11,6 +11,10 @@ type clientImpl struct {
 	registry Registry
 }
 
+func (c *clientImpl) GetBasicClient() BasicClient {
+	return c.BasicClient
+}
+
 func (c *clientImpl) StartProcess(ctx context.Context, definition Process, processId string, input interface{}, options *ProcessOptions) (string, error) {
 	prcType := GetFinalProcessType(definition)
 	prc := c.registry.getProcess(prcType)

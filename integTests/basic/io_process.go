@@ -46,4 +46,9 @@ func TestStartIOProcess(t *testing.T, client xdb.Client) {
 	prc := IOProcess{}
 	_, err := client.StartProcess(context.Background(), prc, prcId, 123, nil)
 	assert.Nil(t, err)
+	resp, err := client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
+	assert.Nil(t, err)
+	assert.Equal(t, xdb.DefaultWorkerPort, resp.GetWorkerUrl())
+	assert.Equal(t, xdb.GetFinalProcessType(prc), resp.GetProcessType())
+	assert.NotNil(t, resp.ProcessExecutionId)
 }
