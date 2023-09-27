@@ -11,6 +11,17 @@ type basicClientImpl struct {
 	apiClient *xdbapi.APIClient
 }
 
+func (u *basicClientImpl) DescribeCurrentProcessExecution(ctx context.Context, processId string) (*xdbapi.ProcessExecutionDescribeResponse, error) {
+	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionDesribePost(ctx)
+	resp, httpResp, err := req.ProcessExecutionDescribeRequest(xdbapi.ProcessExecutionDescribeRequest{
+		ProcessId: &processId,
+	}).Execute()
+	if err := u.processError(err, httpResp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
 func (u *basicClientImpl) StartProcess(ctx context.Context, processType string, startStateId, processId string, input interface{}, options *BasicClientProcessOptions) (string, error) {
 	var encodedInput *xdbapi.EncodedObject
 	var err error
@@ -35,7 +46,7 @@ func (u *basicClientImpl) StartProcess(ctx context.Context, processType string, 
 		}
 	}
 
-	req := u.apiClient.DefaultApi.ApiV1XdbServiceProcessExecutionStartPost(ctx)
+	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionStartPost(ctx)
 	resp, httpResp, err := req.ProcessExecutionStartRequest(xdbapi.ProcessExecutionStartRequest{
 		ProcessId:          processId,
 		ProcessType:        processType,

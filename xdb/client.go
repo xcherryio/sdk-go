@@ -7,6 +7,7 @@ import (
 
 // Client is a full-featured client
 type Client interface {
+	GetBasicClient() BasicClient
 	// StartProcess starts a process execution
 	// definition is the definition of the process
 	// processId is the required business identifier for the process execution(can be used with ProcessIdReusePolicy
@@ -28,6 +29,18 @@ type BasicClient interface {
 	// options is optional includes like ProcessIdReusePolicy.
 	// return the processExecutionId
 	StartProcess(ctx context.Context, processType string, startStateId, processId string, input interface{}, options *BasicClientProcessOptions) (string, error)
+	DescribeCurrentProcessExecution(ctx context.Context, processId string) (*xdbapi.ProcessExecutionDescribeResponse, error)
+}
+
+// NewClient returns a Client
+func NewClient(registry Registry, options *ClientOptions) Client {
+	if registry == nil {
+		panic("A registry is required")
+	}
+	return &clientImpl{
+		BasicClient: NewBasicClient(options),
+		registry:    registry,
+	}
 }
 
 // NewBasicClient returns a BasicClient
@@ -47,16 +60,5 @@ func NewBasicClient(options *ClientOptions) BasicClient {
 	return &basicClientImpl{
 		options:   options,
 		apiClient: apiClient,
-	}
-}
-
-// NewClient returns a Client
-func NewClient(registry Registry, options *ClientOptions) Client {
-	if registry == nil {
-		panic("A registry is required")
-	}
-	return &clientImpl{
-		BasicClient: NewBasicClient(options),
-		registry:    registry,
 	}
 }
