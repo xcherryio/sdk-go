@@ -14,7 +14,8 @@ type basicClientImpl struct {
 func (u *basicClientImpl) DescribeCurrentProcessExecution(ctx context.Context, processId string) (*xdbapi.ProcessExecutionDescribeResponse, error) {
 	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionDescribePost(ctx)
 	resp, httpResp, err := req.ProcessExecutionDescribeRequest(xdbapi.ProcessExecutionDescribeRequest{
-		ProcessId: &processId,
+		Namespace: u.options.Namespace,
+		ProcessId: processId,
 	}).Execute()
 	if err := u.processError(err, httpResp); err != nil {
 		return nil, err
@@ -48,6 +49,7 @@ func (u *basicClientImpl) StartProcess(ctx context.Context, processType string, 
 
 	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionStartPost(ctx)
 	resp, httpResp, err := req.ProcessExecutionStartRequest(xdbapi.ProcessExecutionStartRequest{
+		Namespace:          u.options.Namespace,
 		ProcessId:          processId,
 		ProcessType:        processType,
 		WorkerUrl:          u.options.WorkerUrl,
