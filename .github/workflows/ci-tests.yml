@@ -20,3 +20,6 @@ jobs:
         run: make tests
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
+      - name: Dump docker logs
+        if: always()
+        uses: jwalton/gh-docker-logs@v2
