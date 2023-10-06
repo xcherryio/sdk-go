@@ -12,9 +12,8 @@ type Client interface {
 	// definition is the definition of the process
 	// processId is the required business identifier for the process execution (can be used with ProcessIdReusePolicy)
 	// input the optional input for the startingState
-	// options is optional includes like ProcessIdReusePolicy.
 	// return the processExecutionId
-	StartProcess(ctx context.Context, definition Process, processId string, input interface{}, options *ProcessOptions) (string, error)
+	StartProcess(ctx context.Context, definition Process, processId string, input interface{}) (string, error)
 	// StopProcess stops a process execution
 	// processId is the required business identifier for the process execution
 	StopProcess(ctx context.Context, processId string, stopType xdbapi.ProcessExecutionStopType) error

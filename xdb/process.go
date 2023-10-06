@@ -13,22 +13,18 @@ type Process interface {
 	// Application can still use RPC to invoke new state execution later.
 	GetAsyncStateSchema() StateSchema
 
-	// GetProcessType defines the processType of this process definition.
-	// See GetFinalProcessType for default value when return empty string.
-	// It's the package + struct name of the process instance and ignores the import paths and aliases.
-	// e.g. if the process is from myStruct{} under mywf package, the simple name is just "mywf.myStruct". Underneath, it's from reflect.TypeOf(wf).String().
-	GetProcessType() string
+	GetProcessOptions() *ProcessOptions
 }
 
 // GetFinalProcessType returns the process type that will be registered
 // if the process is from &myStruct{} or myStruct{} under mywf package, the method returns "mywf.myStruct"
 func GetFinalProcessType(wf Process) string {
-	wfType := wf.GetProcessType()
-	if wfType == "" {
+	options := wf.GetProcessOptions()
+	if options == nil || options.ProcessType == "" {
 		simpleType := getSimpleTypeNameFromReflect(wf)
 		return simpleType
 	}
-	return wfType
+	return options.ProcessType
 }
 
 func getSimpleTypeNameFromReflect(obj interface{}) string {
@@ -44,12 +40,12 @@ func getSimpleTypeNameFromReflect(obj interface{}) string {
 //	    ProcessDefaults
 //	}
 //
-// Then myPcImpl doesn't have to implement GetProcessType or GetAsyncStateSchema
+// Then myPcImpl doesn't have to implement GetProcessOptions or GetAsyncStateSchema
 type ProcessDefaults struct {
 }
 
-func (d ProcessDefaults) GetProcessType() string {
-	return ""
+func (d ProcessDefaults) GetProcessOptions() *ProcessOptions {
+	return nil
 }
 
 func (d ProcessDefaults) GetAsyncStateSchema() StateSchema {

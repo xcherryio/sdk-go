@@ -30,7 +30,7 @@ func (w *workerServiceImpl) HandleAsyncStateWaitUntil(ctx context.Context, reque
 		return nil, err
 	}
 	resp = &xdbapi.AsyncStateWaitUntilResponse{
-		CommandRequest: idlCommandRequest,
+		CommandRequest: *idlCommandRequest,
 	}
 
 	return resp, nil
@@ -45,7 +45,10 @@ func (w *workerServiceImpl) HandleAsyncStateExecute(ctx context.Context, request
 	reqContext := request.GetContext()
 	wfCtx := newXdbContext(reqContext)
 
-	var commandResults CommandResults
+	commandResults, err := fromApiCommandResults(request.CommandResults, w.options.ObjectEncoder)
+	if err != nil {
+		return nil, err
+	}
 	var pers Persistence   // TODO
 	var comm Communication // TODO
 	decision, err := stateDef.Execute(wfCtx, input, commandResults, pers, comm)
@@ -57,7 +60,7 @@ func (w *workerServiceImpl) HandleAsyncStateExecute(ctx context.Context, request
 		return nil, err
 	}
 	resp = &xdbapi.AsyncStateExecuteResponse{
-		StateDecision: idlDecision,
+		StateDecision: *idlDecision,
 	}
 	return resp, nil
 }

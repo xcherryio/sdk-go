@@ -6,11 +6,48 @@ import (
 )
 
 func toApiCommandRequest(request *CommandRequest) (*xdbapi.CommandRequest, error) {
-	// TODO
-	return nil, nil
+	if request == nil {
+		return nil, NewProcessDefinitionError("command request cannot be nil")
+	}
+	var timerCmds []xdbapi.TimerCommand
+	for _, t := range request.Commands {
+		if t.CommandType == CommandTypeTimer {
+			timerCmd := xdbapi.TimerCommand{
+				CommandId:                  t.CommandId,
+				FiringUnixTimestampSeconds: t.TimerCommand.FiringUnixTimestampSeconds,
+			}
+			timerCmds = append(timerCmds, timerCmd)
+		}
+	}
+	return &xdbapi.CommandRequest{
+			WaitingType:   request.CommandWaitingType,
+			TimerCommands: timerCmds,
+		},
+		nil
+}
+
+func fromApiCommandResults(results *xdbapi.CommandResults, _ ObjectEncoder) (CommandResults, error) {
+	if results == nil {
+		return CommandResults{}, nil
+	}
+	var timerResults []TimerCommandResult
+	for _, t := range results.TimerResults {
+		timerResult := TimerCommandResult{
+			CommandId: t.CommandId,
+			Status:    t.TimerStatus,
+		}
+		timerResults = append(timerResults, timerResult)
+	}
+
+	return CommandResults{
+		Timers: timerResults,
+	}, nil
 }
 
 func toIdlDecision(decision *StateDecision, prcType string, registry Registry, encoder ObjectEncoder) (*xdbapi.StateDecision, error) {
+	if decision == nil {
+		return nil, NewProcessDefinitionError("StateDecision cannot be nil")
+	}
 	if decision.ThreadCloseType != nil && len(decision.NextStates) > 0 {
 		return nil, NewProcessDefinitionError("cannot have both next state and closing in a single decision")
 	}
@@ -18,7 +55,7 @@ func toIdlDecision(decision *StateDecision, prcType string, registry Registry, e
 	if decision.ThreadCloseType != nil {
 		return &xdbapi.StateDecision{
 			ThreadCloseDecision: &xdbapi.ThreadCloseDecision{
-				CloseType: decision.ThreadCloseType,
+				CloseType: *decision.ThreadCloseType,
 			},
 		}, nil
 	}
@@ -29,13 +66,8 @@ func toIdlDecision(decision *StateDecision, prcType string, registry Registry, e
 		if err != nil {
 			return nil, err
 		}
-		var config *xdbapi.AsyncStateConfig
 		stateDef := registry.getProcessState(prcType, fromMv.NextStateId)
-		if ShouldSkipWaitUntilAPI(stateDef) {
-			config = &xdbapi.AsyncStateConfig{
-				SkipWaitUntil: ptr.Any(true),
-			}
-		}
+		config := fromStateToAsyncStateConfig(stateDef)
 		mv := xdbapi.StateMovement{
 			StateId:     fromMv.NextStateId,
 			StateInput:  input,
@@ -46,4 +78,19 @@ func toIdlDecision(decision *StateDecision, prcType string, registry Registry, e
 	return &xdbapi.StateDecision{
 		NextStates: mvs,
 	}, nil
+}
+
+func fromStateToAsyncStateConfig(state AsyncState) *xdbapi.AsyncStateConfig {
+	stateCfg := &xdbapi.AsyncStateConfig{}
+	if ShouldSkipWaitUntilAPI(state) {
+		stateCfg.SkipWaitUntil = ptr.Any(true)
+	}
+	options := state.GetStateOptions()
+	if options != nil {
+		stateCfg.WaitUntilApiTimeoutSeconds = &options.WaitUntilTimeoutSeconds
+		stateCfg.ExecuteApiTimeoutSeconds = &options.ExecuteTimeoutSeconds
+		stateCfg.WaitUntilApiRetryPolicy = options.WaitUntilRetryPolicy
+		stateCfg.ExecuteApiRetryPolicy = options.ExecuteRetryPolicy
+	}
+	return stateCfg
 }

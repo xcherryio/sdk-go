@@ -5,12 +5,8 @@ import (
 )
 
 type AsyncState interface {
-	// GetStateId defines the StateId of this state definition.
-	// the StateId is being used for WorkerService to choose the right AsyncState to execute Start/Execute APIs
-	// It is a default value when return empty string.
-	// Default is the package + struct name of the state definition and ignores the import paths and aliases.
-	// e.g. if the process is from myStruct{} under mywf package, the simple name is just "mywf.myStruct". Underneath, it's from reflect.TypeOf(wf).String().
-	GetStateId() string
+	// GetStateOptions defines the optional configuration of this state definition.
+	GetStateOptions() *AsyncStateOptions
 
 	// WaitUntil is the method to set up commands set up to wait for, before `Execute` API is invoked.
 	//           It's optional -- use xdb.AsyncStateNoWaitUntil to skip this( then Execute will be invoked directly instead)
@@ -37,11 +33,11 @@ type AsyncState interface {
 // GetFinalStateId returns the stateId that will be registered and used
 // if the asyncState is from myStruct{} under mywf package, the method returns "mywf.myStruct"
 func GetFinalStateId(asyncState AsyncState) string {
-	sid := asyncState.GetStateId()
-	if sid == "" {
+	options := asyncState.GetStateOptions()
+	if options == nil || options.StateId == "" {
 		return getSimpleTypeNameFromReflect(asyncState)
 	}
-	return sid
+	return options.StateId
 }
 
 // AsyncStateDefaults is a convenient struct to put into your state implementation to save the boilerplate code of returning default values
@@ -51,9 +47,9 @@ func GetFinalStateId(asyncState AsyncState) string {
 //	    AsyncStateDefaults
 //	}
 //
-// Then myStateImpl doesn't have to implement GetStateId
+// Then myStateImpl doesn't have to implement WaitUntil, Execute or GetStateOptions
 type AsyncStateDefaults struct {
-	defaultStateId
+	defaultStateOptions
 }
 
 // AsyncStateNoWaitUntil is required to skip WaitUntil
@@ -64,9 +60,9 @@ type AsyncStateDefaults struct {
 //	    AsyncStateNoWaitUntil
 //	}
 //
-// Then myStateImpl will skip WaitUntil, and doesn't have to implement GetStateId
+// Then myStateImpl will skip WaitUntil, and doesn't have to implement GetStateOptions
 type AsyncStateNoWaitUntil struct {
-	defaultStateId
+	defaultStateOptions
 	noWaitUntil
 }
 
@@ -91,10 +87,10 @@ func ShouldSkipWaitUntilAPI(state AsyncState) bool {
 	return false
 }
 
-type defaultStateId struct{}
+type defaultStateOptions struct{}
 
-func (d defaultStateId) GetStateId() string {
-	return ""
+func (d defaultStateOptions) GetStateOptions() *AsyncStateOptions {
+	return nil
 }
 
 type noWaitUntil struct{}

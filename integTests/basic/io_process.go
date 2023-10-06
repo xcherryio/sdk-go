@@ -24,7 +24,7 @@ type state1 struct {
 }
 
 func (b state1) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
-	return nil, nil
+	return xdb.EmptyCommandRequest(), nil
 }
 
 func (b state1) Execute(ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication) (*xdb.StateDecision, error) {
@@ -47,7 +47,7 @@ func (b state2) Execute(ctx xdb.XdbContext, input xdb.Object, commandResults xdb
 func TestStartIOProcess(t *testing.T, client xdb.Client) {
 	prcId := "TestProceedOnStateStartFailWorkflow" + strconv.Itoa(int(time.Now().Unix()))
 	prc := IOProcess{}
-	_, err := client.StartProcess(context.Background(), prc, prcId, 123, nil)
+	_, err := client.StartProcess(context.Background(), prc, prcId, 123)
 	assert.Nil(t, err)
 	resp, err := client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)

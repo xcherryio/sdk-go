@@ -2,8 +2,6 @@ package xdb
 
 import (
 	"context"
-	"github.com/xdblab/xdb-apis/goapi/xdbapi"
-	"github.com/xdblab/xdb-golang-sdk/xdb/ptr"
 )
 
 type clientImpl struct {
@@ -15,7 +13,7 @@ func (c *clientImpl) GetBasicClient() BasicClient {
 	return c.BasicClient
 }
 
-func (c *clientImpl) StartProcess(ctx context.Context, definition Process, processId string, input interface{}, options *ProcessOptions) (string, error) {
+func (c *clientImpl) StartProcess(ctx context.Context, definition Process, processId string, input interface{}) (string, error) {
 	prcType := GetFinalProcessType(definition)
 	prc := c.registry.getProcess(prcType)
 	if prc == nil {
@@ -29,13 +27,10 @@ func (c *clientImpl) StartProcess(ctx context.Context, definition Process, proce
 	startStateId := ""
 	if state != nil {
 		startStateId = GetFinalStateId(state)
-		startStateOpt := &xdbapi.AsyncStateConfig{}
-		if ShouldSkipWaitUntilAPI(state) {
-			startStateOpt.SkipWaitUntil = ptr.Any(true)
-		}
-		unregOpt.StartStateOptions = startStateOpt
+		unregOpt.StartStateOptions = fromStateToAsyncStateConfig(state)
 	}
 
+	options := prc.GetProcessOptions()
 	if options != nil {
 		unregOpt.ProcessIdReusePolicy = options.IdReusePolicy
 		unregOpt.TimeoutSeconds = options.TimeoutSeconds
