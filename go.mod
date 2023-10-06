@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/stretchr/testify v1.8.4
-	github.com/xdblab/xdb-apis v0.0.2-0.20231001195255-77af31bf957f
+	github.com/xdblab/xdb-apis v0.0.2-0.20231005051845-66e4a041c65f
 )
 
 require (

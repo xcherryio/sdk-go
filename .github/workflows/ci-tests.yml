@@ -14,7 +14,12 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v3
+      - name: "Set up xdb environment"
+        run: wget https://raw.githubusercontent.com/xdblab/xdb/main/docker-compose/docker-compose-postgres14-example.yaml && docker compose -f docker-compose-postgres14-example.yaml up -d
       - name: "Run test"
         run: make tests
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
+      - name: Dump docker logs
+        if: always()
+        uses: jwalton/gh-docker-logs@v2
