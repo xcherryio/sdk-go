@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: xdb
+      POSTGRES_PASSWORD: xdbxdb
+    ports:
+      - "5432:5432"
+        
+networks:
+  xdb:
+    driver: bridge
