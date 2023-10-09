@@ -2,11 +2,13 @@ package basic
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
-	"github.com/xdblab/xdb-golang-sdk/xdb"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/xdblab/xdb-apis/goapi/xdbapi"
+	"github.com/xdblab/xdb-golang-sdk/xdb"
 )
 
 type IOProcess struct {
@@ -44,7 +46,9 @@ func (b state2) Execute(ctx xdb.XdbContext, input xdb.Object, commandResults xdb
 func TestStartIOProcess(t *testing.T, client xdb.Client) {
 	prcId := "TestProceedOnStateStartFailWorkflow" + strconv.Itoa(int(time.Now().Unix()))
 	prc := IOProcess{}
-	_, err := client.StartProcess(context.Background(), prc, prcId, 123, nil)
+	_, err := client.StartProcess(context.Background(), prc, prcId, 123, &xdb.ProcessOptions{
+		IdReusePolicy: xdbapi.ALLOW_IF_NO_RUNNING.Ptr(),
+	})
 	assert.Nil(t, err)
 	resp, err := client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
