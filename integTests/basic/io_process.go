@@ -55,4 +55,11 @@ func TestStartIOProcess(t *testing.T, client xdb.Client) {
 	assert.Equal(t, xdb.DefaultWorkerUrl, resp.GetWorkerUrl())
 	assert.Equal(t, xdb.GetFinalProcessType(prc), resp.GetProcessType())
 	assert.NotNil(t, resp.ProcessExecutionId)
+	assert.Equal(t, xdbapi.RUNNING, resp.GetStatus())
+
+	time.Sleep(time.Second * 3)
+	resp, err = client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
+	assert.Nil(t, err)
+	assert.Equal(t, xdbapi.COMPLETED, resp.GetStatus())
+
 }
