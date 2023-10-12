@@ -2,6 +2,7 @@ package integTests
 
 import (
 	"github.com/xdblab/xdb-golang-sdk/integTests/basic"
+	"github.com/xdblab/xdb-golang-sdk/integTests/multi_states"
 	"github.com/xdblab/xdb-golang-sdk/xdb"
 )
 
@@ -12,6 +13,7 @@ var workerService = xdb.NewWorkerService(registry, nil)
 func init() {
 	err := registry.AddProcesses(
 		&basic.IOProcess{},
+		&multi_states.MultiStatesProcess{},
 	)
 	if err != nil {
 		panic(err)

@@ -39,3 +39,7 @@ func MultiNextStatesWithInput(movements ...StateMovement) *StateDecision {
 var ForceCompletingProcess = &StateDecision{
 	ThreadCloseType: xdbapi.FORCE_COMPLETE_PROCESS.Ptr(),
 }
+
+var DeadEnd = &StateDecision{
+	ThreadCloseType: xdbapi.DEAD_END.Ptr(),
+}

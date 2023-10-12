@@ -64,6 +64,20 @@ func (u *basicClientImpl) StartProcess(ctx context.Context, processType string, 
 	return resp.GetProcessExecutionId(), nil
 }
 
+func (u *basicClientImpl) StopProcess(ctx context.Context, processId string, stopType xdbapi.ProcessExecutionStopType) error {
+	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionStopPost(ctx)
+	httpResp, err := req.ProcessExecutionStopRequest(xdbapi.ProcessExecutionStopRequest{
+		Namespace: u.options.Namespace,
+		ProcessId: processId,
+		StopType:  stopType.Ptr(),
+	}).Execute()
+
+	if err := u.processError(err, httpResp); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (u *basicClientImpl) processError(err error, httpResp *http.Response) error {
 	if err == nil && httpResp != nil && httpResp.StatusCode == http.StatusOK {
 		return nil

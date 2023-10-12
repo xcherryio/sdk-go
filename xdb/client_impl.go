@@ -42,3 +42,11 @@ func (c *clientImpl) StartProcess(ctx context.Context, definition Process, proce
 	}
 	return c.BasicClient.StartProcess(ctx, prcType, startStateId, processId, input, unregOpt)
 }
+
+func (c *clientImpl) StopProcess(ctx context.Context, processId string, stopType xdbapi.ProcessExecutionStopType) error {
+	return c.BasicClient.StopProcess(ctx, processId, stopType)
+}
+
+func (c *clientImpl) DescribeCurrentProcessExecution(ctx context.Context, processId string) (*xdbapi.ProcessExecutionDescribeResponse, error) {
+	return c.BasicClient.DescribeCurrentProcessExecution(ctx, processId)
+}
