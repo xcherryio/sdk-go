@@ -10,11 +10,17 @@ type Client interface {
 	GetBasicClient() BasicClient
 	// StartProcess starts a process execution
 	// definition is the definition of the process
-	// processId is the required business identifier for the process execution(can be used with ProcessIdReusePolicy
+	// processId is the required business identifier for the process execution (can be used with ProcessIdReusePolicy)
 	// input the optional input for the startingState
 	// options is optional includes like ProcessIdReusePolicy.
 	// return the processExecutionId
 	StartProcess(ctx context.Context, definition Process, processId string, input interface{}, options *ProcessOptions) (string, error)
+	// StopProcess stops a process execution
+	// processId is the required business identifier for the process execution
+	StopProcess(ctx context.Context, processId string, stopType xdbapi.ProcessExecutionStopType) error
+	// DescribeCurrentProcessExecution returns a process execution info
+	// processId is the required business identifier for the process execution
+	DescribeCurrentProcessExecution(ctx context.Context, processId string) (*xdbapi.ProcessExecutionDescribeResponse, error)
 }
 
 // BasicClient is a base client without process registry
@@ -29,6 +35,11 @@ type BasicClient interface {
 	// options is optional includes like ProcessIdReusePolicy.
 	// return the processExecutionId
 	StartProcess(ctx context.Context, processType string, startStateId, processId string, input interface{}, options *BasicClientProcessOptions) (string, error)
+	// StopProcess stops a process execution
+	// processId is the required business identifier for the process execution
+	StopProcess(ctx context.Context, processId string, stopType xdbapi.ProcessExecutionStopType) error
+	// DescribeCurrentProcessExecution returns a process execution info
+	// processId is the required business identifier for the process execution
 	DescribeCurrentProcessExecution(ctx context.Context, processId string) (*xdbapi.ProcessExecutionDescribeResponse, error)
 }
 

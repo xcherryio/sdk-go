@@ -46,7 +46,6 @@ func (w worker) apiAsyncStateWaitUntil(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, resp)
-	return
 }
 func (w worker) apiAsyncStateExecute(c *gin.Context) {
 	var req xdbapi.AsyncStateExecuteRequest
@@ -61,5 +60,4 @@ func (w worker) apiAsyncStateExecute(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, resp)
-	return
 }
