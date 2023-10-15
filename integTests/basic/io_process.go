@@ -40,6 +40,7 @@ type state2 struct {
 func (b state2) Execute(ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication) (*xdb.StateDecision, error) {
 	var i int
 	input.Get(&i)
+	time.Sleep(time.Second * 1)
 	return xdb.ForceCompletingProcess, nil
 }
 
