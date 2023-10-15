@@ -40,6 +40,14 @@ var ForceCompletingProcess = &StateDecision{
 	ThreadCloseType: xdbapi.FORCE_COMPLETE_PROCESS.Ptr(),
 }
 
+var GracefulCompletingProcess = &StateDecision{
+	ThreadCloseType: xdbapi.GRACEFUL_COMPLETE_PROCESS.Ptr(),
+}
+
 var DeadEnd = &StateDecision{
 	ThreadCloseType: xdbapi.DEAD_END.Ptr(),
+}
+
+var ForceFailProcess = &StateDecision{
+	ThreadCloseType: xdbapi.FORCE_FAIL_PROCESS.Ptr(),
 }
