@@ -44,7 +44,7 @@ func fromApiCommandResults(results *xdbapi.CommandResults, _ ObjectEncoder) (Com
 	}, nil
 }
 
-func toIdlDecision(decision *StateDecision, prcType string, registry Registry, encoder ObjectEncoder) (*xdbapi.StateDecision, error) {
+func toApiDecision(decision *StateDecision, prcType string, registry Registry, encoder ObjectEncoder) (*xdbapi.StateDecision, error) {
 	if decision == nil {
 		return nil, NewProcessDefinitionError("StateDecision cannot be nil")
 	}

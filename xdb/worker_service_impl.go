@@ -10,7 +10,9 @@ type workerServiceImpl struct {
 	options  WorkerOptions
 }
 
-func (w *workerServiceImpl) HandleAsyncStateWaitUntil(ctx context.Context, request xdbapi.AsyncStateWaitUntilRequest) (resp *xdbapi.AsyncStateWaitUntilResponse, retErr error) {
+func (w *workerServiceImpl) HandleAsyncStateWaitUntil(
+	ctx context.Context, request xdbapi.AsyncStateWaitUntilRequest,
+) (resp *xdbapi.AsyncStateWaitUntilResponse, retErr error) {
 	defer func() { captureStateExecutionError(recover(), &retErr) }()
 
 	prcType := request.GetProcessType()
@@ -36,7 +38,9 @@ func (w *workerServiceImpl) HandleAsyncStateWaitUntil(ctx context.Context, reque
 	return resp, nil
 }
 
-func (w *workerServiceImpl) HandleAsyncStateExecute(ctx context.Context, request xdbapi.AsyncStateExecuteRequest) (resp *xdbapi.AsyncStateExecuteResponse, retErr error) {
+func (w *workerServiceImpl) HandleAsyncStateExecute(
+	ctx context.Context, request xdbapi.AsyncStateExecuteRequest,
+) (resp *xdbapi.AsyncStateExecuteResponse, retErr error) {
 	defer func() { captureStateExecutionError(recover(), &retErr) }()
 
 	prcType := request.GetProcessType()
@@ -55,7 +59,7 @@ func (w *workerServiceImpl) HandleAsyncStateExecute(ctx context.Context, request
 	if err != nil {
 		return nil, err
 	}
-	idlDecision, err := toIdlDecision(decision, prcType, w.registry, w.options.ObjectEncoder)
+	idlDecision, err := toApiDecision(decision, prcType, w.registry, w.options.ObjectEncoder)
 	if err != nil {
 		return nil, err
 	}
