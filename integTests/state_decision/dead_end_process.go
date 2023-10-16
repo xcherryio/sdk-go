@@ -26,7 +26,9 @@ func (b deadEndState1) GetStateId() string {
 	return "state1"
 }
 
-func (b deadEndState1) Execute(ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication) (*xdb.StateDecision, error) {
+func (b deadEndState1) Execute(
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+) (*xdb.StateDecision, error) {
 	return xdb.MultiNextStates(deadEndState2{}, deadEndState3{}), nil
 }
 
@@ -38,7 +40,9 @@ func (b deadEndState2) GetStateId() string {
 	return "state2"
 }
 
-func (b deadEndState2) Execute(ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication) (*xdb.StateDecision, error) {
+func (b deadEndState2) Execute(
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+) (*xdb.StateDecision, error) {
 	return xdb.DeadEnd, nil
 }
 
@@ -50,14 +54,16 @@ func (b deadEndState3) GetStateId() string {
 	return "state3"
 }
 
-func (b deadEndState3) Execute(ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication) (*xdb.StateDecision, error) {
+func (b deadEndState3) Execute(
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+) (*xdb.StateDecision, error) {
 	return xdb.DeadEnd, nil
 }
 
 func TestDeadEndProcess(t *testing.T, client xdb.Client) {
 	prcId := "TestDeadEndProcess-" + strconv.Itoa(int(time.Now().Unix()))
 	prc := DeadEndProcess{}
-	_, err := client.StartProcess(context.Background(), prc, prcId, struct{}{}, nil)
+	_, err := client.StartProcess(context.Background(), prc, prcId, struct{}{})
 	assert.Nil(t, err)
 
 	time.Sleep(time.Second * 3)

@@ -26,7 +26,9 @@ func (b gracefulCompleteState1) GetStateId() string {
 	return "state1"
 }
 
-func (b gracefulCompleteState1) Execute(ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication) (*xdb.StateDecision, error) {
+func (b gracefulCompleteState1) Execute(
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+) (*xdb.StateDecision, error) {
 	return xdb.MultiNextStates(gracefulCompleteState2{}, gracefulCompleteState3{}), nil
 }
 
@@ -38,7 +40,9 @@ func (b gracefulCompleteState2) GetStateId() string {
 	return "state2"
 }
 
-func (b gracefulCompleteState2) Execute(ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication) (*xdb.StateDecision, error) {
+func (b gracefulCompleteState2) Execute(
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+) (*xdb.StateDecision, error) {
 	return xdb.GracefulCompletingProcess, nil
 }
 
@@ -50,7 +54,9 @@ func (b gracefulCompleteState3) GetStateId() string {
 	return "state3"
 }
 
-func (b gracefulCompleteState3) Execute(ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication) (*xdb.StateDecision, error) {
+func (b gracefulCompleteState3) Execute(
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+) (*xdb.StateDecision, error) {
 	// TODO: add timer
 	return xdb.DeadEnd, nil
 }
@@ -58,7 +64,7 @@ func (b gracefulCompleteState3) Execute(ctx xdb.XdbContext, input xdb.Object, co
 func TestGracefulCompleteProcess(t *testing.T, client xdb.Client) {
 	prcId := "TestGracefulCompleteProcess-" + strconv.Itoa(int(time.Now().Unix()))
 	prc := GracefulCompleteProcess{}
-	_, err := client.StartProcess(context.Background(), prc, prcId, struct{}{}, nil)
+	_, err := client.StartProcess(context.Background(), prc, prcId, struct{}{})
 	assert.Nil(t, err)
 
 	time.Sleep(time.Second * 3)
