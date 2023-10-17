@@ -23,6 +23,7 @@ func (w *workerServiceImpl) HandleAsyncStateWaitUntil(
 
 	var comm Communication // TODO
 	commandRequest, err := stateDef.WaitUntil(wfCtx, input, comm)
+	
 	if err != nil {
 		return nil, err
 	}
@@ -56,6 +57,7 @@ func (w *workerServiceImpl) HandleAsyncStateExecute(
 	var pers Persistence   // TODO
 	var comm Communication // TODO
 	decision, err := stateDef.Execute(wfCtx, input, commandResults, pers, comm)
+
 	if err != nil {
 		return nil, err
 	}

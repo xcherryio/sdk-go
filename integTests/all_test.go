@@ -1,6 +1,7 @@
 package integTests
 
 import (
+	"github.com/xdblab/xdb-golang-sdk/integTests/stateretry"
 	"testing"
 
 	"github.com/xdblab/xdb-golang-sdk/integTests/basic"
@@ -10,6 +11,10 @@ import (
 
 func TestIOProcess(t *testing.T) {
 	basic.TestStartIOProcess(t, client)
+}
+
+func TestStateBackoffRetry(t *testing.T) {
+	stateretry.TestBackoff(t, client)
 }
 
 func TestTerminateProcess(t *testing.T) {
