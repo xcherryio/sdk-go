@@ -72,6 +72,7 @@ func TestProcessIdReusePolicyDisallowReuse(t *testing.T, client xdb.Client) {
 		IdReusePolicy: xdbapi.DISALLOW_REUSE.Ptr(),
 	})
 	assert.NotNil(t, err)
+	assert.True(t, xdb.IsProcessAlreadyStartedError(err))
 
 	time.Sleep(time.Second * 3)
 	resp, err := client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
