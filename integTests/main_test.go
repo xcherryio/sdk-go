@@ -2,9 +2,10 @@ package integTests
 
 import (
 	"fmt"
-	"github.com/xdblab/xdb-golang-sdk/integTests/worker"
 	"os"
 	"testing"
+
+	"github.com/xdblab/xdb-golang-sdk/integTests/worker"
 )
 
 func TestMain(m *testing.M) {
