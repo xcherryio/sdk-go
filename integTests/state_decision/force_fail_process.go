@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/xdblab/xdb-apis/goapi/xdbapi"
+	"github.com/xdblab/xdb-golang-sdk/integTests/common"
 	"github.com/xdblab/xdb-golang-sdk/xdb"
-	"strconv"
 	"testing"
 	"time"
 )
@@ -26,7 +26,9 @@ func (b forceFailState1) GetStateId() string {
 	return "state1"
 }
 
-func (b forceFailState1) Execute(ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication) (*xdb.StateDecision, error) {
+func (b forceFailState1) Execute(
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+) (*xdb.StateDecision, error) {
 	return xdb.MultiNextStates(forceFailState2{}, forceFailState3{}), nil
 }
 
@@ -38,7 +40,9 @@ func (b forceFailState2) GetStateId() string {
 	return "state2"
 }
 
-func (b forceFailState2) Execute(ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication) (*xdb.StateDecision, error) {
+func (b forceFailState2) Execute(
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+) (*xdb.StateDecision, error) {
 	return xdb.ForceFailProcess, nil
 }
 
@@ -50,15 +54,17 @@ func (b forceFailState3) GetStateId() string {
 	return "state3"
 }
 
-func (b forceFailState3) Execute(ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication) (*xdb.StateDecision, error) {
+func (b forceFailState3) Execute(
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+) (*xdb.StateDecision, error) {
 	// TODO: add timer
 	return xdb.DeadEnd, nil
 }
 
 func TestForceFailProcess(t *testing.T, client xdb.Client) {
-	prcId := "TestForceFailProcess-" + strconv.Itoa(int(time.Now().Unix()))
+	prcId := common.GenerateProcessId()
 	prc := ForceFailProcess{}
-	_, err := client.StartProcess(context.Background(), prc, prcId, struct{}{}, nil)
+	_, err := client.StartProcess(context.Background(), prc, prcId, struct{}{})
 	assert.Nil(t, err)
 
 	time.Sleep(time.Second * 3)

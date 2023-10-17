@@ -10,7 +10,9 @@ type workerServiceImpl struct {
 	options  WorkerOptions
 }
 
-func (w *workerServiceImpl) HandleAsyncStateWaitUntil(ctx context.Context, request xdbapi.AsyncStateWaitUntilRequest) (resp *xdbapi.AsyncStateWaitUntilResponse, retErr error) {
+func (w *workerServiceImpl) HandleAsyncStateWaitUntil(
+	ctx context.Context, request xdbapi.AsyncStateWaitUntilRequest,
+) (resp *xdbapi.AsyncStateWaitUntilResponse, retErr error) {
 	defer func() { captureStateExecutionError(recover(), &retErr) }()
 
 	prcType := request.GetProcessType()
@@ -21,6 +23,7 @@ func (w *workerServiceImpl) HandleAsyncStateWaitUntil(ctx context.Context, reque
 
 	var comm Communication // TODO
 	commandRequest, err := stateDef.WaitUntil(wfCtx, input, comm)
+
 	if err != nil {
 		return nil, err
 	}
@@ -30,13 +33,15 @@ func (w *workerServiceImpl) HandleAsyncStateWaitUntil(ctx context.Context, reque
 		return nil, err
 	}
 	resp = &xdbapi.AsyncStateWaitUntilResponse{
-		CommandRequest: idlCommandRequest,
+		CommandRequest: *idlCommandRequest,
 	}
 
 	return resp, nil
 }
 
-func (w *workerServiceImpl) HandleAsyncStateExecute(ctx context.Context, request xdbapi.AsyncStateExecuteRequest) (resp *xdbapi.AsyncStateExecuteResponse, retErr error) {
+func (w *workerServiceImpl) HandleAsyncStateExecute(
+	ctx context.Context, request xdbapi.AsyncStateExecuteRequest,
+) (resp *xdbapi.AsyncStateExecuteResponse, retErr error) {
 	defer func() { captureStateExecutionError(recover(), &retErr) }()
 
 	prcType := request.GetProcessType()
@@ -45,19 +50,23 @@ func (w *workerServiceImpl) HandleAsyncStateExecute(ctx context.Context, request
 	reqContext := request.GetContext()
 	wfCtx := newXdbContext(reqContext)
 
-	var commandResults CommandResults
-	var pers Persistence   // TODO
-	var comm Communication // TODO
-	decision, err := stateDef.Execute(wfCtx, input, commandResults, pers, comm)
+	commandResults, err := fromApiCommandResults(request.CommandResults, w.options.ObjectEncoder)
 	if err != nil {
 		return nil, err
 	}
-	idlDecision, err := toIdlDecision(decision, prcType, w.registry, w.options.ObjectEncoder)
+	var pers Persistence   // TODO
+	var comm Communication // TODO
+	decision, err := stateDef.Execute(wfCtx, input, commandResults, pers, comm)
+
+	if err != nil {
+		return nil, err
+	}
+	idlDecision, err := toApiDecision(decision, prcType, w.registry, w.options.ObjectEncoder)
 	if err != nil {
 		return nil, err
 	}
 	resp = &xdbapi.AsyncStateExecuteResponse{
-		StateDecision: idlDecision,
+		StateDecision: *idlDecision,
 	}
 	return resp, nil
 }

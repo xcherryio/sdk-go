@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/xdblab/xdb-apis/goapi/xdbapi"
+	"github.com/xdblab/xdb-golang-sdk/integTests/common"
 	"github.com/xdblab/xdb-golang-sdk/xdb"
-	"strconv"
 	"testing"
 	"time"
 )
@@ -33,10 +33,12 @@ func (b state1) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xd
 		panic("state1 WaitUntil: input is not expected. Expected: " + fmt.Sprint(INPUT) + ", actual: " + fmt.Sprint(i))
 	}
 
-	return nil, nil
+	return xdb.EmptyCommandRequest(), nil
 }
 
-func (b state1) Execute(ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication) (*xdb.StateDecision, error) {
+func (b state1) Execute(
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+) (*xdb.StateDecision, error) {
 	var i int
 	input.Get(&i)
 
@@ -51,7 +53,9 @@ type state2 struct {
 	xdb.AsyncStateNoWaitUntil
 }
 
-func (b state2) Execute(ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication) (*xdb.StateDecision, error) {
+func (b state2) Execute(
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+) (*xdb.StateDecision, error) {
 	var i int
 	input.Get(&i)
 
@@ -66,7 +70,9 @@ type state3 struct {
 	xdb.AsyncStateNoWaitUntil
 }
 
-func (b state3) Execute(ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication) (*xdb.StateDecision, error) {
+func (b state3) Execute(
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+) (*xdb.StateDecision, error) {
 	var i int
 	input.Get(&i)
 
@@ -78,9 +84,9 @@ func (b state3) Execute(ctx xdb.XdbContext, input xdb.Object, commandResults xdb
 }
 
 func TestTerminateMultiStatesProcess(t *testing.T, client xdb.Client) {
-	prcId := "TestTerminateMultiStatesProcess-" + strconv.Itoa(int(time.Now().Unix()))
+	prcId := common.GenerateProcessId()
 	prc := MultiStatesProcess{}
-	_, err := client.StartProcess(context.Background(), prc, prcId, INPUT, nil)
+	_, err := client.StartProcess(context.Background(), prc, prcId, INPUT)
 	assert.Nil(t, err)
 
 	time.Sleep(time.Second * 3)
@@ -101,9 +107,9 @@ func TestTerminateMultiStatesProcess(t *testing.T, client xdb.Client) {
 }
 
 func TestFailMultiStatesProcess(t *testing.T, client xdb.Client) {
-	prcId := "TestFailMultiStatesProcess-" + strconv.Itoa(int(time.Now().Unix()))
+	prcId := common.GenerateProcessId()
 	prc := MultiStatesProcess{}
-	_, err := client.StartProcess(context.Background(), prc, prcId, INPUT, nil)
+	_, err := client.StartProcess(context.Background(), prc, prcId, INPUT)
 	assert.Nil(t, err)
 
 	time.Sleep(time.Second * 3)

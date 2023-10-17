@@ -3,7 +3,6 @@ package xdb
 import (
 	"encoding/json"
 	"github.com/xdblab/xdb-apis/goapi/xdbapi"
-	"github.com/xdblab/xdb-golang-sdk/xdb/ptr"
 )
 
 func GetDefaultObjectEncoder() ObjectEncoder {
@@ -28,8 +27,8 @@ func (b *builtinJsonEncoder) Encode(obj interface{}) (*xdbapi.EncodedObject, err
 		return nil, err
 	}
 	return &xdbapi.EncodedObject{
-		Encoding: ptr.Any(encodingType),
-		Data:     ptr.Any(string(data)),
+		Encoding: encodingType,
+		Data:     string(data),
 	}, nil
 }
 
