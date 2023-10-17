@@ -2,6 +2,7 @@ package basic
 
 import (
 	"context"
+	"github.com/xdblab/xdb-golang-sdk/integTests/common"
 	"strconv"
 	"testing"
 	"time"
@@ -49,7 +50,7 @@ func (b state2) Execute(
 }
 
 func TestStartIOProcess(t *testing.T, client xdb.Client) {
-	prcId := "TestProceedOnStateStartFailWorkflow" + strconv.Itoa(int(time.Now().Unix()))
+	prcId := common.GenerateProcessId()
 	prc := IOProcess{}
 	_, err := client.StartProcess(context.Background(), prc, prcId, 123)
 	assert.Nil(t, err)
@@ -67,7 +68,7 @@ func TestStartIOProcess(t *testing.T, client xdb.Client) {
 }
 
 func TestProcessIdReusePolicyDisallowReuse(t *testing.T, client xdb.Client) {
-	prcId := "TestProcessIdReuseDisallowReuse" + strconv.Itoa(int(time.Now().Unix()))
+	prcId := common.GenerateProcessId()
 	prc := IOProcess{}
 	_, err := client.StartProcessWithOptions(context.Background(), prc, prcId, 123, nil)
 	assert.Nil(t, err)
@@ -90,7 +91,7 @@ func TestProcessIdReusePolicyDisallowReuse(t *testing.T, client xdb.Client) {
 }
 
 func TestProcessIdReusePolicyAllowIfNoRunning(t *testing.T, client xdb.Client) {
-	prcId := "TestProcessIdReuseAllowIfNoRunning" + strconv.Itoa(int(time.Now().Unix()))
+	prcId := common.GenerateProcessId()
 	prc := IOProcess{}
 	_, err := client.StartProcessWithOptions(context.Background(), prc, prcId, 123, nil)
 	assert.Nil(t, err)
@@ -113,7 +114,7 @@ func TestProcessIdReusePolicyAllowIfNoRunning(t *testing.T, client xdb.Client) {
 }
 
 func TestProcessIdReusePolicyTerminateIfRunning(t *testing.T, client xdb.Client) {
-	prcId := "TestProcessIdReuseTerminateIfRunning" + strconv.Itoa(int(time.Now().Unix()))
+	prcId := common.GenerateProcessId()
 	prc := IOProcess{}
 	_, err := client.StartProcessWithOptions(context.Background(), prc, prcId, 123, nil)
 	assert.Nil(t, err)
@@ -126,7 +127,7 @@ func TestProcessIdReusePolicyTerminateIfRunning(t *testing.T, client xdb.Client)
 
 func TestProcessIdReusePolicyAllowIfPreviousExitAbnormally(t *testing.T, client xdb.Client) {
 	// 1st case, if previous run finished normally, then the new run is not allowed
-	prcId := "TestProcessIdReusePolicyAllowIfPreviousExitAbnormally" + strconv.Itoa(int(time.Now().Unix()))
+	prcId := common.GenerateProcessId()
 	prc := IOProcess{}
 	_, err := client.StartProcessWithOptions(context.Background(), prc, prcId, 124, nil)
 	assert.Nil(t, err)

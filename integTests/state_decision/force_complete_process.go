@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/xdblab/xdb-apis/goapi/xdbapi"
+	"github.com/xdblab/xdb-golang-sdk/integTests/common"
 	"github.com/xdblab/xdb-golang-sdk/xdb"
-	"strconv"
 	"testing"
 	"time"
 )
@@ -62,7 +62,7 @@ func (b forceCompleteState3) Execute(
 }
 
 func TestForceCompleteProcess(t *testing.T, client xdb.Client) {
-	prcId := "TestForceCompleteProcess-" + strconv.Itoa(int(time.Now().Unix()))
+	prcId := common.GenerateProcessId()
 	prc := ForceCompleteProcess{}
 	_, err := client.StartProcess(context.Background(), prc, prcId, struct{}{})
 	assert.Nil(t, err)

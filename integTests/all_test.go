@@ -12,8 +12,11 @@ func TestIOProcess(t *testing.T) {
 	basic.TestStartIOProcess(t, client)
 }
 
-func TestStopProcess(t *testing.T) {
+func TestTerminateProcess(t *testing.T) {
 	multi_states.TestTerminateMultiStatesProcess(t, client)
+}
+
+func TestStopProcessByFail(t *testing.T) {
 	multi_states.TestFailMultiStatesProcess(t, client)
 }
 

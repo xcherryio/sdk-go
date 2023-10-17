@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/xdblab/xdb-apis/goapi/xdbapi"
+	"github.com/xdblab/xdb-golang-sdk/integTests/common"
 	"github.com/xdblab/xdb-golang-sdk/xdb"
-	"strconv"
 	"testing"
 	"time"
 )
@@ -61,7 +61,7 @@ func (b deadEndState3) Execute(
 }
 
 func TestDeadEndProcess(t *testing.T, client xdb.Client) {
-	prcId := "TestDeadEndProcess-" + strconv.Itoa(int(time.Now().Unix()))
+	prcId := common.GenerateProcessId()
 	prc := DeadEndProcess{}
 	_, err := client.StartProcess(context.Background(), prc, prcId, struct{}{})
 	assert.Nil(t, err)

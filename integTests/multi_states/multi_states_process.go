@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/xdblab/xdb-apis/goapi/xdbapi"
+	"github.com/xdblab/xdb-golang-sdk/integTests/common"
 	"github.com/xdblab/xdb-golang-sdk/xdb"
-	"strconv"
 	"testing"
 	"time"
 )
@@ -33,7 +33,7 @@ func (b state1) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xd
 		panic("state1 WaitUntil: input is not expected. Expected: " + fmt.Sprint(INPUT) + ", actual: " + fmt.Sprint(i))
 	}
 
-	return nil, nil
+	return xdb.EmptyCommandRequest(), nil
 }
 
 func (b state1) Execute(
@@ -84,7 +84,7 @@ func (b state3) Execute(
 }
 
 func TestTerminateMultiStatesProcess(t *testing.T, client xdb.Client) {
-	prcId := "TestTerminateMultiStatesProcess-" + strconv.Itoa(int(time.Now().Unix()))
+	prcId := common.GenerateProcessId()
 	prc := MultiStatesProcess{}
 	_, err := client.StartProcess(context.Background(), prc, prcId, INPUT)
 	assert.Nil(t, err)
@@ -107,7 +107,7 @@ func TestTerminateMultiStatesProcess(t *testing.T, client xdb.Client) {
 }
 
 func TestFailMultiStatesProcess(t *testing.T, client xdb.Client) {
-	prcId := "TestFailMultiStatesProcess-" + strconv.Itoa(int(time.Now().Unix()))
+	prcId := common.GenerateProcessId()
 	prc := MultiStatesProcess{}
 	_, err := client.StartProcess(context.Background(), prc, prcId, INPUT)
 	assert.Nil(t, err)
