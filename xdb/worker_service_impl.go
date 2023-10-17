@@ -23,7 +23,7 @@ func (w *workerServiceImpl) HandleAsyncStateWaitUntil(
 
 	var comm Communication // TODO
 	commandRequest, err := stateDef.WaitUntil(wfCtx, input, comm)
-	
+
 	if err != nil {
 		return nil, err
 	}
