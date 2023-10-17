@@ -7,6 +7,7 @@ import (
 	"github.com/xdblab/xdb-apis/goapi/xdbapi"
 	"github.com/xdblab/xdb-golang-sdk/integTests/common"
 	"github.com/xdblab/xdb-golang-sdk/xdb"
+	"github.com/xdblab/xdb-golang-sdk/xdb/ptr"
 	"testing"
 	"time"
 )
@@ -29,6 +30,14 @@ type stateDefaultPolicy struct {
 	ExecuteSuccess    bool
 }
 
+func (d stateDefaultPolicy) GetStateOptions() *xdb.AsyncStateOptions {
+	return &xdb.AsyncStateOptions{
+		WaitUntilRetryPolicy: &xdbapi.RetryPolicy{
+			InitialIntervalSeconds: ptr.Any(int32(2)),
+		},
+	}
+}
+
 func (b *stateDefaultPolicy) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
 	if ctx.GetProcessId() != currTestProcessId {
 		// ignore stale data
@@ -40,32 +49,35 @@ func (b *stateDefaultPolicy) WaitUntil(ctx xdb.XdbContext, input xdb.Object, com
 		return nil, fmt.Errorf("error for testing backoff retry")
 	} else if ctx.GetAttempt() == 2 {
 		elapsedMillis := getCurrentTimeMillis() - b.lastTimestampMill
-		if elapsedMillis < 500 || elapsedMillis > 1900 {
+		if elapsedMillis < 500 || elapsedMillis > 3500 { // ~2s for 1.5 sec buffer
 			b.WaiUntilFail = true
-			fmt.Println("backoff interval is not correct", elapsedMillis, "expected 500-1900")
+			fmt.Println("backoff interval is not correct", elapsedMillis, "expected 500-3500")
 		}
 		b.lastTimestampMill = getCurrentTimeMillis()
 		return nil, fmt.Errorf("error for testing backoff retry")
 	} else if ctx.GetAttempt() == 3 {
 		elapsedMillis := getCurrentTimeMillis() - b.lastTimestampMill
-		if elapsedMillis < 1500 || elapsedMillis > 2900 {
+		if elapsedMillis < 2000 || elapsedMillis > 6000 { // ~4s for 2 sec buffer
 			b.WaiUntilFail = true
-			fmt.Println("backoff interval is not correct", elapsedMillis, "expected 1500-2900")
+			fmt.Println("backoff interval is not correct", elapsedMillis, "expected 2000-6000")
 		}
 		b.lastTimestampMill = getCurrentTimeMillis()
 		return nil, fmt.Errorf("error for testing backoff retry")
 	} else {
 		elapsedMillis := getCurrentTimeMillis() - b.lastTimestampMill
-		if elapsedMillis < 3500 || elapsedMillis > 4900 {
+		if elapsedMillis < 6000 || elapsedMillis > 10000 { // ~8s for 2 sec buffer
 			b.WaiUntilFail = true
-			fmt.Println("backoff interval is not correct", elapsedMillis, "expected 3500-4900")
+			fmt.Println("backoff interval is not correct", elapsedMillis, "expected 6000-10000")
 		}
 		return xdb.EmptyCommandRequest(), nil
 	}
 }
 
 func getCurrentTimeMillis() int64 {
-	return time.Now().UnixNano() / 1000000
+	now := time.Now()
+	currMs := now.UnixNano() / 1000000
+	fmt.Println("current time millis", currMs, "currTime is ", now)
+	return currMs
 }
 
 func (b *stateDefaultPolicy) Execute(
@@ -111,7 +123,7 @@ func TestBackoff(t *testing.T, client xdb.Client) {
 	_, err := client.StartProcess(context.Background(), prc, currTestProcessId, nil)
 	assert.Nil(t, err)
 
-	time.Sleep(time.Second * 15) // （1+2+4）+1+1 = 9 seconds
+	time.Sleep(time.Second * 20) // （2+4+8）+1+1 = 9 seconds
 	resp, err := client.DescribeCurrentProcessExecution(context.Background(), currTestProcessId)
 	assert.Nil(t, err)
 	assert.Equal(t, xdbapi.COMPLETED, resp.GetStatus())
