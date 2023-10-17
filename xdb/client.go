@@ -14,6 +14,8 @@ type Client interface {
 	// input the optional input for the startingState
 	// return the processExecutionId
 	StartProcess(ctx context.Context, definition Process, processId string, input interface{}) (string, error)
+	// StartProcessWithOptions starts a process execution with options, which will override the options defined in process definition
+	StartProcessWithOptions(ctx context.Context, definition Process, processId string, input interface{}, optionsOverride *ProcessOptions) (string, error)
 	// StopProcess stops a process execution
 	// processId is the required business identifier for the process execution
 	StopProcess(ctx context.Context, processId string, stopType xdbapi.ProcessExecutionStopType) error
