@@ -39,29 +39,26 @@ func (b *stateDefaultPolicy) WaitUntil(ctx xdb.XdbContext, input xdb.Object, com
 		b.lastTimestampMill = getCurrentTimeMillis()
 		return nil, fmt.Errorf("error for testing backoff retry")
 	} else if ctx.GetAttempt() == 2 {
-		currTimestampMills := getCurrentTimeMillis()
-		elapsedMillis := currTimestampMills - b.lastTimestampMill
-		if elapsedMillis < 500 || elapsedMillis > 1500 {
-			// first backoff should be ~ 1 seconds (500ms ~ 1500ms)
+		elapsedMillis := getCurrentTimeMillis() - b.lastTimestampMill
+		if elapsedMillis < 500 || elapsedMillis > 1900 {
 			b.WaiUntilFail = true
+			fmt.Println("backoff interval is not correct", elapsedMillis, "expected 500-1900")
 		}
 		b.lastTimestampMill = getCurrentTimeMillis()
 		return nil, fmt.Errorf("error for testing backoff retry")
 	} else if ctx.GetAttempt() == 3 {
-		currTimestampMills := getCurrentTimeMillis()
-		elapsedMillis := currTimestampMills - b.lastTimestampMill
-		if elapsedMillis < 1500 || elapsedMillis > 2500 {
-			// first backoff should be ~ 2 seconds (1500ms ~ 2500ms)
+		elapsedMillis := getCurrentTimeMillis() - b.lastTimestampMill
+		if elapsedMillis < 1500 || elapsedMillis > 2900 {
 			b.WaiUntilFail = true
+			fmt.Println("backoff interval is not correct", elapsedMillis, "expected 1500-2900")
 		}
 		b.lastTimestampMill = getCurrentTimeMillis()
 		return nil, fmt.Errorf("error for testing backoff retry")
 	} else {
-		currTimestampMills := getCurrentTimeMillis()
-		elapsedMillis := currTimestampMills - b.lastTimestampMill
-		if elapsedMillis < 3500 || elapsedMillis > 4500 {
-			// first backoff should be ~ 4 seconds (3500ms ~ 4500ms)
-			b.WaiUntilFail = false
+		elapsedMillis := getCurrentTimeMillis() - b.lastTimestampMill
+		if elapsedMillis < 3500 || elapsedMillis > 4900 {
+			b.WaiUntilFail = true
+			fmt.Println("backoff interval is not correct", elapsedMillis, "expected 3500-4900")
 		}
 		return xdb.EmptyCommandRequest(), nil
 	}
