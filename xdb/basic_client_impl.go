@@ -41,8 +41,8 @@ func (u *basicClientImpl) StartProcess(
 	ctx context.Context, processType string, startStateId, processId string, input interface{}, options *BasicClientProcessOptions,
 ) (string, error) {
 	var encodedInput *xdbapi.EncodedObject
-	var err error
 	if input != nil {
+		var err error
 		encodedInput, err = u.options.ObjectEncoder.Encode(input)
 		if err != nil {
 			return "", err
@@ -84,7 +84,7 @@ func (u *basicClientImpl) StartProcess(
 		}()
 	}
 	resp, httpResp, httpErr := req.ProcessExecutionStartRequest(reqObj).Execute()
-	if err := u.processError(err, httpResp); err != nil {
+	if err := u.processError(httpErr, httpResp); err != nil {
 		return "", err
 	}
 	return resp.GetProcessExecutionId(), nil
