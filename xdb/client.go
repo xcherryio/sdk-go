@@ -61,16 +61,21 @@ func NewBasicClient(options *ClientOptions) BasicClient {
 		options = GetLocalDefaultClientOptions()
 	}
 
-	apiClient := xdbapi.NewAPIClient(&xdbapi.Configuration{
+	cfg := &xdbapi.Configuration{
 		Servers: []xdbapi.ServerConfiguration{
 			{
 				URL: options.ServerUrl,
 			},
 		},
-	})
+	}
+	if options.EnabledDebugLogging {
+		cfg.Debug = true
+	}
+	
+	apiClient := xdbapi.NewAPIClient(cfg)
 
 	return &basicClientImpl{
-		options:   options,
+		options:   *options,
 		apiClient: apiClient,
 	}
 }

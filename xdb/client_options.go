@@ -1,10 +1,11 @@
 package xdb
 
 type ClientOptions struct {
-	Namespace     string
-	ServerUrl     string
-	WorkerUrl     string
-	ObjectEncoder ObjectEncoder
+	Namespace           string
+	ServerUrl           string
+	WorkerUrl           string
+	ObjectEncoder       ObjectEncoder
+	EnabledDebugLogging bool
 	// TODO API timeout and retry policy
 }
 
