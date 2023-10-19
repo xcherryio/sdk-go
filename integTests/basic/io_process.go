@@ -3,7 +3,6 @@ package basic
 import (
 	"context"
 	"github.com/xdblab/xdb-golang-sdk/integTests/common"
-	"strconv"
 	"testing"
 	"time"
 
@@ -125,7 +124,7 @@ func TestProcessIdReusePolicyTerminateIfRunning(t *testing.T, client xdb.Client)
 	assert.Nil(t, err)
 }
 
-func TestProcessIdReusePolicyAllowIfPreviousExitAbnormally(t *testing.T, client xdb.Client) {
+func TestProcessIdReusePolicyAllowIfPreviousExitAbnormallyCase1(t *testing.T, client xdb.Client) {
 	// 1st case, if previous run finished normally, then the new run is not allowed
 	prcId := common.GenerateProcessId()
 	prc := IOProcess{}
@@ -146,19 +145,27 @@ func TestProcessIdReusePolicyAllowIfPreviousExitAbnormally(t *testing.T, client 
 		IdReusePolicy: xdbapi.ALLOW_IF_PREVIOUS_EXIT_ABNORMALLY.Ptr(),
 	})
 	assert.NotNil(t, err)
+}
 
+func TestProcessIdReusePolicyAllowIfPreviousExitAbnormallyCase2(t *testing.T, client xdb.Client) {
 	// 2nd case, if previous run finished abnormally, then the new run is allowed
-	prcId = "TestProcessIdReusePolicyAllowIfPreviousExitAbnormally" + strconv.Itoa(int(time.Now().Unix()))
-	prc = IOProcess{}
-	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, 124, nil)
+	prcId := common.GenerateProcessId()
+	prc := IOProcess{}
+	runId1, err := client.StartProcessWithOptions(context.Background(), prc, prcId, 124, nil)
 	assert.Nil(t, err)
 	err = client.StopProcess(context.Background(), prcId, xdbapi.FAIL)
 	assert.Nil(t, err)
-	resp, err = client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
+	resp, err := client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
 	assert.Equal(t, xdbapi.FAILED, resp.GetStatus())
-	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessOptions{
+	runId2, err := client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessOptions{
 		IdReusePolicy: xdbapi.ALLOW_IF_PREVIOUS_EXIT_ABNORMALLY.Ptr(),
 	})
 	assert.Nil(t, err)
+	assert.NotEqual(t, runId1, runId2)
+
+	time.Sleep(time.Second * 5)
+	resp, err = client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
+	assert.Nil(t, err)
+	assert.Equal(t, xdbapi.COMPLETED, resp.GetStatus())
 }
