@@ -22,16 +22,16 @@ func (u *basicClientImpl) DescribeCurrentProcessExecution(ctx context.Context, p
 	}
 
 	var resp *xdbapi.ProcessExecutionDescribeResponse
-	var err error
+	var httpErr error
 	if u.options.EnabledDebugLogging {
 		fmt.Println("DescribeCurrentProcessExecution is requested", anyToJson(reqObj))
 		defer func() {
-			fmt.Println("DescribeCurrentProcessExecution is responded", anyToJson(resp), anyToJson(err))
+			fmt.Println("DescribeCurrentProcessExecution is responded", anyToJson(resp), anyToJson(httpErr))
 		}()
 	}
 
-	resp, httpResp, err := req.ProcessExecutionDescribeRequest(reqObj).Execute()
-	if err := u.processError(err, httpResp); err != nil {
+	resp, httpResp, httpErr := req.ProcessExecutionDescribeRequest(reqObj).Execute()
+	if err := u.processError(httpErr, httpResp); err != nil {
 		return nil, err
 	}
 	return resp, nil
@@ -64,7 +64,7 @@ func (u *basicClientImpl) StartProcess(
 	}
 
 	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionStartPost(ctx)
-	resp, httpResp, err := req.ProcessExecutionStartRequest(xdbapi.ProcessExecutionStartRequest{
+	reqObj := xdbapi.ProcessExecutionStartRequest{
 		Namespace:          u.options.Namespace,
 		ProcessId:          processId,
 		ProcessType:        processType,
@@ -73,7 +73,17 @@ func (u *basicClientImpl) StartProcess(
 		StartStateInput:    encodedInput,
 		StartStateConfig:   startStateConfig,
 		ProcessStartConfig: processConfig,
-	}).Execute()
+	}
+
+	var resp *xdbapi.ProcessExecutionStartResponse
+	var httpErr error
+	if u.options.EnabledDebugLogging {
+		fmt.Println("ProcessExecutionStartRequest is requested", anyToJson(reqObj))
+		defer func() {
+			fmt.Println("ProcessExecutionStartRequest is responded", anyToJson(resp), anyToJson(httpErr))
+		}()
+	}
+	resp, httpResp, httpErr := req.ProcessExecutionStartRequest(reqObj).Execute()
 	if err := u.processError(err, httpResp); err != nil {
 		return "", err
 	}
@@ -82,19 +92,31 @@ func (u *basicClientImpl) StartProcess(
 
 func (u *basicClientImpl) StopProcess(ctx context.Context, processId string, stopType xdbapi.ProcessExecutionStopType) error {
 	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionStopPost(ctx)
-	httpResp, err := req.ProcessExecutionStopRequest(xdbapi.ProcessExecutionStopRequest{
+	reqObj := xdbapi.ProcessExecutionStopRequest{
 		Namespace: u.options.Namespace,
 		ProcessId: processId,
 		StopType:  stopType.Ptr(),
-	}).Execute()
+	}
 
-	if err := u.processError(err, httpResp); err != nil {
+	var httpErr error
+	if u.options.EnabledDebugLogging {
+		fmt.Println("ProcessExecutionStopRequest is requested", anyToJson(reqObj))
+		defer func() {
+			fmt.Println("ProcessExecutionStopRequest is responded", anyToJson(httpErr))
+		}()
+	}
+	httpResp, httpErr := req.ProcessExecutionStopRequest(reqObj).Execute()
+
+	if err := u.processError(httpErr, httpResp); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (u *basicClientImpl) processError(err error, httpResp *http.Response) error {
+	if httpResp != nil {
+		defer httpResp.Body.Close()
+	}
 	if err == nil && httpResp != nil && httpResp.StatusCode == http.StatusOK {
 		return nil
 	}
