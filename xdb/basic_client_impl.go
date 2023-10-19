@@ -2,28 +2,44 @@ package xdb
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"github.com/xdblab/xdb-apis/goapi/xdbapi"
 	"net/http"
 )
 
 type basicClientImpl struct {
-	options   *ClientOptions
+	options   ClientOptions
 	apiClient *xdbapi.APIClient
 }
 
 func (u *basicClientImpl) DescribeCurrentProcessExecution(ctx context.Context, processId string) (*xdbapi.ProcessExecutionDescribeResponse, error) {
 	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionDescribePost(ctx)
-	resp, httpResp, err := req.ProcessExecutionDescribeRequest(xdbapi.ProcessExecutionDescribeRequest{
+
+	reqObj := xdbapi.ProcessExecutionDescribeRequest{
 		Namespace: u.options.Namespace,
 		ProcessId: processId,
-	}).Execute()
+	}
+
+	var resp *xdbapi.ProcessExecutionDescribeResponse
+	var err error
+	if u.options.EnabledDebugLogging {
+		fmt.Println("DescribeCurrentProcessExecution is requested", anyToJson(reqObj))
+		defer func() {
+			fmt.Println("DescribeCurrentProcessExecution is responded", anyToJson(resp), anyToJson(err))
+		}()
+	}
+
+	resp, httpResp, err := req.ProcessExecutionDescribeRequest(reqObj).Execute()
 	if err := u.processError(err, httpResp); err != nil {
 		return nil, err
 	}
 	return resp, nil
 }
 
-func (u *basicClientImpl) StartProcess(ctx context.Context, processType string, startStateId, processId string, input interface{}, options *BasicClientProcessOptions) (string, error) {
+func (u *basicClientImpl) StartProcess(
+	ctx context.Context, processType string, startStateId, processId string, input interface{}, options *BasicClientProcessOptions,
+) (string, error) {
 	var encodedInput *xdbapi.EncodedObject
 	var err error
 	if input != nil {
@@ -91,4 +107,13 @@ func (u *basicClientImpl) processError(err error, httpResp *http.Response) error
 		}
 	}
 	return NewApiError(err, oerr, httpResp, resp)
+}
+
+func anyToJson(req any) string {
+	str, err := json.Marshal(req)
+	if err != nil {
+		fmt.Println("failed to encode to Json", err, req)
+		return "failed to encode to json"
+	}
+	return string(str)
 }

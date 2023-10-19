@@ -70,7 +70,7 @@ func NewBasicClient(options *ClientOptions) BasicClient {
 	})
 
 	return &basicClientImpl{
-		options:   options,
+		options:   *options,
 		apiClient: apiClient,
 	}
 }
