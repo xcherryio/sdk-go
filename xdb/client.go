@@ -71,7 +71,7 @@ func NewBasicClient(options *ClientOptions) BasicClient {
 	if options.EnabledDebugLogging {
 		cfg.Debug = true
 	}
-	
+
 	apiClient := xdbapi.NewAPIClient(cfg)
 
 	return &basicClientImpl{
