@@ -55,7 +55,9 @@ func (w *workerServiceImpl) HandleAsyncStateExecute(
 	if err != nil {
 		return nil, err
 	}
-	var pers Persistence   // TODO
+
+	pers := w.createPersistenceImpl(prcType, request.LoadedGlobalAttributes)
+
 	var comm Communication // TODO
 	decision, err := stateDef.Execute(wfCtx, input, commandResults, pers, comm)
 
@@ -69,5 +71,25 @@ func (w *workerServiceImpl) HandleAsyncStateExecute(
 	resp = &xdbapi.AsyncStateExecuteResponse{
 		StateDecision: *idlDecision,
 	}
+	if len(pers.getGlobalAttributesToUpdate()) > 0 {
+		resp.UpsertGlobalAttributes = pers.getGlobalAttributesToUpdate()
+	}
 	return resp, nil
+}
+
+func (w *workerServiceImpl) createPersistenceImpl(
+	prcType string, attributesResp *xdbapi.LoadGlobalAttributeResponse,
+) Persistence {
+	persSchema := w.registry.getPersistenceSchema(prcType)
+	gloAttrDefs := w.registry.getGlobalAttributeKeyToDefs(prcType)
+	gloTblColToKey := w.registry.getGlobalAttributeTableColumnToKey(prcType)
+	var currGloAttrs []xdbapi.GlobalAttributeValue
+	if attributesResp != nil {
+		currGloAttrs = attributesResp.GetAttributes()
+	}
+	defaultTable := ""
+	if persSchema.GlobalAttributeSchema != nil {
+		defaultTable = persSchema.GlobalAttributeSchema.DefaultTableName
+	}
+	return NewPersistenceImpl(w.options.ObjectEncoder, defaultTable, gloAttrDefs, gloTblColToKey, currGloAttrs)
 }

@@ -29,12 +29,15 @@ type AsyncStateOptions struct {
 	// FailureRecoveryOptions is information needed for failure recovery
 	// Default: FAIL_PROCESS_ON_STATE_FAILURE
 	FailureRecoveryOptions *xdbapi.StateFailureRecoveryOptions
+	// PersistenceLoadingPolicyName is the name of loading policy for persistence if not using default policy
+	PersistenceLoadingPolicyName *string
 }
 
 func (o *AsyncStateOptions) SetFailureRecoveryOption(
-	destState AsyncState, destStateOptions *AsyncStateOptions) *AsyncStateOptions {
+	destState AsyncState, destStateOptions *AsyncStateOptions,
+) *AsyncStateOptions {
 	if destState == nil {
-		return o
+		panic("destState is nil")
 	}
 
 	o.FailureRecoveryOptions = &xdbapi.StateFailureRecoveryOptions{

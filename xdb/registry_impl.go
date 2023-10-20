@@ -1,9 +1,16 @@
 package xdb
 
 type registryImpl struct {
-	processStore  map[string]Process
-	startingState map[string]AsyncState
-	stateStore    map[string]map[string]AsyncState
+	processStore                map[string]Process
+	persistenceSchemaStore      map[string]PersistenceSchema
+	globalAttributeDefs         map[string]map[string]internalGlobalAttrDef
+	globalAttrTableColNameToKey map[string]map[string]string
+	startingState               map[string]AsyncState
+	stateStore                  map[string]map[string]AsyncState
+}
+
+func (r *registryImpl) getGlobalAttributeTableColumnToKey(prcType string) map[string]string {
+	return r.globalAttrTableColNameToKey[prcType]
 }
 
 func (r *registryImpl) AddProcess(processDef Process) error {
@@ -11,6 +18,9 @@ func (r *registryImpl) AddProcess(processDef Process) error {
 		return err
 	}
 	if err := r.registerProcessState(processDef); err != nil {
+		return err
+	}
+	if err := r.registerPersistenceSchema(processDef); err != nil {
 		return err
 	}
 	return nil
@@ -28,8 +38,8 @@ func (r *registryImpl) AddProcesses(processDefs ...Process) error {
 
 func (r *registryImpl) GetAllRegisteredProcessTypes() []string {
 	var res []string
-	for wfType := range r.processStore {
-		res = append(res, wfType)
+	for prcType := range r.processStore {
+		res = append(res, prcType)
 	}
 	return res
 }
@@ -46,31 +56,52 @@ func (r *registryImpl) getProcessState(prcType string, stateId string) AsyncStat
 	return r.stateStore[prcType][stateId]
 }
 
+func (r *registryImpl) getPersistenceSchema(prcType string) PersistenceSchema {
+	return r.persistenceSchemaStore[prcType]
+}
+
+func (r *registryImpl) getGlobalAttributeKeyToDefs(prcType string) map[string]internalGlobalAttrDef {
+	return r.globalAttributeDefs[prcType]
+}
+
 func (r *registryImpl) registerProcessType(prc Process) error {
-	wfType := GetFinalProcessType(prc)
-	_, ok := r.processStore[wfType]
+	prcType := GetFinalProcessType(prc)
+	_, ok := r.processStore[prcType]
 	if ok {
-		return NewProcessDefinitionError("Process type conflict: " + wfType)
+		return NewProcessDefinitionError("Process type conflict: " + prcType)
 	}
-	r.processStore[wfType] = prc
+	r.processStore[prcType] = prc
 	return nil
 }
 
 func (r *registryImpl) registerProcessState(prc Process) error {
-	wfType := GetFinalProcessType(prc)
+	prcType := GetFinalProcessType(prc)
 	stateMap := map[string]AsyncState{}
 	for _, state := range prc.GetAsyncStateSchema().AllStates {
 		stateId := GetFinalStateId(state)
 		_, ok := stateMap[stateId]
 		if ok {
-			return NewProcessDefinitionError("Process %v cannot have duplicate stateId %v ", wfType, stateId)
+			return NewProcessDefinitionError("Process %v cannot have duplicate stateId %v ", prcType, stateId)
 		}
 		stateMap[stateId] = state
 	}
-	r.stateStore[wfType] = stateMap
+	r.stateStore[prcType] = stateMap
 	if prc.GetAsyncStateSchema().StartingState != nil {
-		r.startingState[wfType] = prc.GetAsyncStateSchema().StartingState
+		r.startingState[prcType] = prc.GetAsyncStateSchema().StartingState
 	}
 
+	return nil
+}
+
+func (r *registryImpl) registerPersistenceSchema(prc Process) error {
+	prcType := GetFinalProcessType(prc)
+	ps := prc.GetPersistenceSchema()
+	keyToDef, tableColNameToKey, err := ps.Validate()
+	if err != nil {
+		return err
+	}
+	r.persistenceSchemaStore[prcType] = ps
+	r.globalAttributeDefs[prcType] = keyToDef
+	r.globalAttrTableColNameToKey[prcType] = tableColNameToKey
 	return nil
 }

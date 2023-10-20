@@ -63,8 +63,9 @@ func (u *basicClientImpl) StartProcess(
 	if options != nil {
 		startStateConfig = options.StartStateOptions
 		processConfig = &xdbapi.ProcessStartConfig{
-			IdReusePolicy:  options.ProcessIdReusePolicy,
-			TimeoutSeconds: &options.TimeoutSeconds,
+			IdReusePolicy:         options.ProcessIdReusePolicy,
+			TimeoutSeconds:        &options.TimeoutSeconds,
+			GlobalAttributeConfig: options.GlobalAttributeConfig,
 		}
 	}
 

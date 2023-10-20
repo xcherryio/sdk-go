@@ -15,3 +15,11 @@ type ProcessOptions struct {
 	// e.g. if the process is from myStruct{} under mywf package, the simple name is just "mywf.myStruct". Underneath, it's from reflect.TypeOf(wf).String().
 	ProcessType string
 }
+
+func NewDefaultProcessOptions() ProcessOptions {
+	return ProcessOptions{
+		TimeoutSeconds: 0,
+		IdReusePolicy:  nil,
+		ProcessType:    "",
+	}
+}

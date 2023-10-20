@@ -16,7 +16,7 @@ type DeadEndProcess struct {
 }
 
 func (b DeadEndProcess) GetAsyncStateSchema() xdb.StateSchema {
-	return xdb.WithStartingState(&deadEndState1{}, &deadEndState2{}, &deadEndState3{})
+	return xdb.NewStateSchema(&deadEndState1{}, &deadEndState2{}, &deadEndState3{})
 }
 
 type deadEndState1 struct {

@@ -15,7 +15,7 @@ type Client interface {
 	// return the processExecutionId
 	StartProcess(ctx context.Context, definition Process, processId string, input interface{}) (string, error)
 	// StartProcessWithOptions starts a process execution with options, which will override the options defined in process definition
-	StartProcessWithOptions(ctx context.Context, definition Process, processId string, input interface{}, optionsOverride *ProcessOptions) (string, error)
+	StartProcessWithOptions(ctx context.Context, definition Process, processId string, input interface{}, options *ProcessStartOptions) (string, error)
 	// StopProcess stops a process execution
 	// processId is the required business identifier for the process execution
 	StopProcess(ctx context.Context, processId string, stopType xdbapi.ProcessExecutionStopType) error
@@ -49,17 +49,18 @@ func NewClient(registry Registry, options *ClientOptions) Client {
 	if registry == nil {
 		panic("A registry is required")
 	}
+	if options == nil {
+		options = GetLocalDefaultClientOptions()
+	}
 	return &clientImpl{
-		BasicClient: NewBasicClient(options),
-		registry:    registry,
+		BasicClient:   NewBasicClient(*options),
+		clientOptions: *options,
+		registry:      registry,
 	}
 }
 
 // NewBasicClient returns a BasicClient
-func NewBasicClient(options *ClientOptions) BasicClient {
-	if options == nil {
-		options = GetLocalDefaultClientOptions()
-	}
+func NewBasicClient(options ClientOptions) BasicClient {
 
 	cfg := &xdbapi.Configuration{
 		Servers: []xdbapi.ServerConfiguration{
@@ -75,7 +76,7 @@ func NewBasicClient(options *ClientOptions) BasicClient {
 	apiClient := xdbapi.NewAPIClient(cfg)
 
 	return &basicClientImpl{
-		options:   *options,
+		options:   options,
 		apiClient: apiClient,
 	}
 }

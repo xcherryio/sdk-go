@@ -17,7 +17,7 @@ type IOProcess struct {
 }
 
 func (b IOProcess) GetAsyncStateSchema() xdb.StateSchema {
-	return xdb.WithStartingState(&state1{}, &state2{})
+	return xdb.NewStateSchema(&state1{}, &state2{})
 }
 
 type state1 struct {
@@ -73,7 +73,7 @@ func TestProcessIdReusePolicyDisallowReuse(t *testing.T, client xdb.Client) {
 	_, err := client.StartProcessWithOptions(context.Background(), prc, prcId, 123, nil)
 	assert.Nil(t, err)
 
-	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessOptions{
+	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessStartOptions{
 		IdReusePolicy: xdbapi.DISALLOW_REUSE.Ptr(),
 	})
 	assert.NotNil(t, err)
@@ -84,7 +84,7 @@ func TestProcessIdReusePolicyDisallowReuse(t *testing.T, client xdb.Client) {
 	assert.Nil(t, err)
 	assert.Equal(t, xdbapi.COMPLETED, resp.GetStatus())
 
-	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessOptions{
+	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessStartOptions{
 		IdReusePolicy: xdbapi.DISALLOW_REUSE.Ptr(),
 	})
 	assert.NotNil(t, err)
@@ -96,7 +96,7 @@ func TestProcessIdReusePolicyAllowIfNoRunning(t *testing.T, client xdb.Client) {
 	_, err := client.StartProcessWithOptions(context.Background(), prc, prcId, 123, nil)
 	assert.Nil(t, err)
 	// immediate start with the same id is not allowed
-	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessOptions{
+	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessStartOptions{
 		IdReusePolicy: xdbapi.ALLOW_IF_NO_RUNNING.Ptr(),
 	})
 	assert.NotNil(t, err)
@@ -107,7 +107,7 @@ func TestProcessIdReusePolicyAllowIfNoRunning(t *testing.T, client xdb.Client) {
 	assert.Nil(t, err)
 	assert.Equal(t, xdbapi.COMPLETED, resp.GetStatus())
 
-	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessOptions{
+	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessStartOptions{
 		IdReusePolicy: xdbapi.ALLOW_IF_NO_RUNNING.Ptr(),
 	})
 	assert.Nil(t, err)
@@ -119,7 +119,7 @@ func TestProcessIdReusePolicyTerminateIfRunning(t *testing.T, client xdb.Client)
 	_, err := client.StartProcessWithOptions(context.Background(), prc, prcId, 123, nil)
 	assert.Nil(t, err)
 	// immediate start with the same id
-	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessOptions{
+	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessStartOptions{
 		IdReusePolicy: xdbapi.TERMINATE_IF_RUNNING.Ptr(),
 	})
 	assert.Nil(t, err)
@@ -132,7 +132,7 @@ func TestProcessIdReusePolicyAllowIfPreviousExitAbnormallyCase1(t *testing.T, cl
 	_, err := client.StartProcessWithOptions(context.Background(), prc, prcId, 124, nil)
 	assert.Nil(t, err)
 	// immediate start with the same id
-	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessOptions{
+	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessStartOptions{
 		IdReusePolicy: xdbapi.ALLOW_IF_PREVIOUS_EXIT_ABNORMALLY.Ptr(),
 	})
 	assert.NotNil(t, err)
@@ -142,7 +142,7 @@ func TestProcessIdReusePolicyAllowIfPreviousExitAbnormallyCase1(t *testing.T, cl
 	assert.Nil(t, err)
 	assert.Equal(t, xdbapi.COMPLETED, resp.GetStatus())
 
-	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessOptions{
+	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessStartOptions{
 		IdReusePolicy: xdbapi.ALLOW_IF_PREVIOUS_EXIT_ABNORMALLY.Ptr(),
 	})
 	assert.NotNil(t, err)
@@ -159,7 +159,7 @@ func TestProcessIdReusePolicyAllowIfPreviousExitAbnormallyCase2(t *testing.T, cl
 	resp, err := client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
 	assert.Equal(t, xdbapi.FAILED, resp.GetStatus())
-	runId2, err := client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessOptions{
+	runId2, err := client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessStartOptions{
 		IdReusePolicy: xdbapi.ALLOW_IF_PREVIOUS_EXIT_ABNORMALLY.Ptr(),
 	})
 	assert.Nil(t, err)

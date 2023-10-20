@@ -44,7 +44,9 @@ func fromApiCommandResults(results *xdbapi.CommandResults, _ ObjectEncoder) (Com
 	}, nil
 }
 
-func toApiDecision(decision *StateDecision, prcType string, registry Registry, encoder ObjectEncoder) (*xdbapi.StateDecision, error) {
+func toApiDecision(
+	decision *StateDecision, prcType string, registry Registry, encoder ObjectEncoder,
+) (*xdbapi.StateDecision, error) {
 	if decision == nil {
 		return nil, NewProcessDefinitionError("StateDecision cannot be nil")
 	}
@@ -67,7 +69,7 @@ func toApiDecision(decision *StateDecision, prcType string, registry Registry, e
 			return nil, err
 		}
 		stateDef := registry.getProcessState(prcType, fromMv.NextStateId)
-		config := fromStateToAsyncStateConfig(stateDef)
+		config := fromStateToAsyncStateConfig(stateDef, prcType, registry)
 		mv := xdbapi.StateMovement{
 			StateId:     fromMv.NextStateId,
 			StateInput:  input,
@@ -80,28 +82,82 @@ func toApiDecision(decision *StateDecision, prcType string, registry Registry, e
 	}, nil
 }
 
-func fromStateToAsyncStateConfig(state AsyncState) *xdbapi.AsyncStateConfig {
-	stateCfg := fromAsyncStateOptionsToAsyncStateConfg(state.GetStateOptions())
-	if stateCfg == nil {
-		stateCfg = &xdbapi.AsyncStateConfig{}
-	}
+func fromStateToAsyncStateConfig(
+	state AsyncState, prcType string, registry Registry,
+) *xdbapi.AsyncStateConfig {
+	preferredPersistencePolicyName, stateCfg := fromAsyncStateOptionsToAsyncStateConfig(state.GetStateOptions())
 	if ShouldSkipWaitUntilAPI(state) {
 		stateCfg.SkipWaitUntil = ptr.Any(true)
 	}
 
+	stateCfg.LoadGlobalAttributesRequest = createLoadGlobalAttributesRequest(registry, prcType, preferredPersistencePolicyName)
+
 	return stateCfg
 }
 
-func fromAsyncStateOptionsToAsyncStateConfg(stateOptions *AsyncStateOptions) *xdbapi.AsyncStateConfig {
-	if stateOptions == nil {
-		return nil
-	}
+func fromAsyncStateOptionsToAsyncStateConfig(
+	stateOptions *AsyncStateOptions,
+) (*string, *xdbapi.AsyncStateConfig) {
 	stateCfg := &xdbapi.AsyncStateConfig{}
+	if stateOptions == nil {
+		return nil, stateCfg
+	}
+
 	stateCfg.WaitUntilApiTimeoutSeconds = &stateOptions.WaitUntilTimeoutSeconds
 	stateCfg.ExecuteApiTimeoutSeconds = &stateOptions.ExecuteTimeoutSeconds
 	stateCfg.WaitUntilApiRetryPolicy = stateOptions.WaitUntilRetryPolicy
 	stateCfg.ExecuteApiRetryPolicy = stateOptions.ExecuteRetryPolicy
 	stateCfg.StateFailureRecoveryOptions = stateOptions.FailureRecoveryOptions
+	return stateOptions.PersistenceLoadingPolicyName, stateCfg
+}
 
-	return stateCfg
+func createLoadGlobalAttributesRequest(
+	registry Registry, prcType string, preferredPersistencePolicyName *string,
+) *xdbapi.LoadGlobalAttributesRequest {
+	persistenceSchema := registry.getPersistenceSchema(prcType)
+	if persistenceSchema.GlobalAttributeSchema != nil {
+		keyToDefs := registry.getGlobalAttributeKeyToDefs(prcType)
+		persistencePolicy := persistenceSchema.DefaultLoadingPolicy.GlobalAttributeLoadingPolicy
+		if preferredPersistencePolicyName != nil {
+			policy, ok := persistenceSchema.NamedLoadingPolicies[*preferredPersistencePolicyName]
+			if !ok {
+				panic("persistence loading policy not found " + *preferredPersistencePolicyName)
+			}
+			persistencePolicy = policy.GlobalAttributeLoadingPolicy
+		}
+		return convertGlobalAttributeLoadingPolicyToLoadingRequest(
+			keyToDefs,
+			persistencePolicy,
+		)
+	}
+	return nil
+}
+
+func convertGlobalAttributeLoadingPolicyToLoadingRequest(
+	keyToDefs map[string]internalGlobalAttrDef,
+	policy *GlobalAttributeLoadingPolicy,
+) *xdbapi.LoadGlobalAttributesRequest {
+	var attrs []xdbapi.GlobalAttributeKey
+	for _, k := range policy.LoadingKeys {
+		def := keyToDefs[k]
+		attr := xdbapi.GlobalAttributeKey{
+			DbColumn:                         def.colName,
+			AlternativeTable:                 def.altTableName,
+			AlternativeTableForeignKeyColumn: def.altTableForeignKey,
+		}
+		attrs = append(attrs, attr)
+	}
+
+	var tableReadLockingPolicyOverrides []xdbapi.TableReadLockingPolicy
+	for tbl, lockType := range policy.TableLockingTypeOverrides {
+		tableReadLockingPolicyOverrides = append(tableReadLockingPolicyOverrides, xdbapi.TableReadLockingPolicy{
+			TableName:       tbl,
+			ReadLockingType: lockType,
+		})
+	}
+	return &xdbapi.LoadGlobalAttributesRequest{
+		Attributes:                      attrs,
+		DefaultReadLockingType:          policy.TableLockingTypeDefault.Ptr(),
+		TableReadLockingPolicyOverrides: tableReadLockingPolicyOverrides,
+	}
 }
