@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/xdblab/xdb-apis/goapi/xdbapi"
 	"net/http"
+	"net/url"
+	"reflect"
 )
 
 type basicClientImpl struct {
@@ -13,7 +15,9 @@ type basicClientImpl struct {
 	apiClient *xdbapi.APIClient
 }
 
-func (u *basicClientImpl) DescribeCurrentProcessExecution(ctx context.Context, processId string) (*xdbapi.ProcessExecutionDescribeResponse, error) {
+func (u *basicClientImpl) DescribeCurrentProcessExecution(
+	ctx context.Context, processId string,
+) (*xdbapi.ProcessExecutionDescribeResponse, error) {
 	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionDescribePost(ctx)
 
 	reqObj := xdbapi.ProcessExecutionDescribeRequest{
@@ -38,7 +42,8 @@ func (u *basicClientImpl) DescribeCurrentProcessExecution(ctx context.Context, p
 }
 
 func (u *basicClientImpl) StartProcess(
-	ctx context.Context, processType string, startStateId, processId string, input interface{}, options *BasicClientProcessOptions,
+	ctx context.Context, processType string, startStateId, processId string, input interface{},
+	options *BasicClientProcessOptions,
 ) (string, error) {
 	var encodedInput *xdbapi.EncodedObject
 	if input != nil {
@@ -90,7 +95,9 @@ func (u *basicClientImpl) StartProcess(
 	return resp.GetProcessExecutionId(), nil
 }
 
-func (u *basicClientImpl) StopProcess(ctx context.Context, processId string, stopType xdbapi.ProcessExecutionStopType) error {
+func (u *basicClientImpl) StopProcess(
+	ctx context.Context, processId string, stopType xdbapi.ProcessExecutionStopType,
+) error {
 	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionStopPost(ctx)
 	reqObj := xdbapi.ProcessExecutionStopRequest{
 		Namespace: u.options.Namespace,
@@ -119,6 +126,16 @@ func (u *basicClientImpl) processError(err error, httpResp *http.Response) error
 	}
 	if err == nil && httpResp != nil && httpResp.StatusCode == http.StatusOK {
 		return nil
+	}
+	if u.options.EnabledDebugLogging {
+		if err != nil {
+			uerr, ok := err.(*url.Error)
+			if ok {
+				fmt.Println("encounter url.Error", uerr.Err, uerr.Err.Error())
+				uet := reflect.TypeOf(uerr.Err)
+				fmt.Println("url.Error.Err type", uet.String(), uet.Name(), uet.Kind())
+			}
+		}
 	}
 	var resp *xdbapi.ApiErrorResponse
 	oerr, ok := err.(*xdbapi.GenericOpenAPIError)
