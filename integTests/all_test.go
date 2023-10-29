@@ -57,3 +57,7 @@ func TestProcessIdReusePolicyAllowIfPreviousExitAbnormallyCase2(t *testing.T) {
 func TestStateFailureRecoveryProcess(t *testing.T) {
 	failure_recovery.TestStateFailureRecoveryTestProcess(t, client)
 }
+
+func TestStateFailureRecoveryWaitUntilProcess(t *testing.T) {
+	failure_recovery.TestStateFailureRecoveryTestWaitUntilProcess(t, client)
+}
