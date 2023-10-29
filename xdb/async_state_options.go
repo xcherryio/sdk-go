@@ -23,4 +23,7 @@ type AsyncStateOptions struct {
 	// Default: infinite retry with 1 second initial interval, 120 seconds max interval, and 2 backoff factor,
 	// when set as nil
 	ExecuteRetryPolicy *xdbapi.RetryPolicy
+	// AsyncStateFailureRecoveryInfo is information needed for failure recovery
+	// Default: FAIL_PROCESS_ON_STATE_FAILURE
+	FailureRecoveryInfo *AsyncStateFailureRecoveryInfo
 }

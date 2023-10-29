@@ -81,16 +81,38 @@ func toApiDecision(decision *StateDecision, prcType string, registry Registry, e
 }
 
 func fromStateToAsyncStateConfig(state AsyncState) *xdbapi.AsyncStateConfig {
-	stateCfg := &xdbapi.AsyncStateConfig{}
+	stateCfg := fromAsyncStateOptionsToAsyncStateConfg(state.GetStateOptions())
+	if stateCfg == nil {
+		stateCfg = &xdbapi.AsyncStateConfig{}
+	}
 	if ShouldSkipWaitUntilAPI(state) {
 		stateCfg.SkipWaitUntil = ptr.Any(true)
 	}
-	options := state.GetStateOptions()
-	if options != nil {
-		stateCfg.WaitUntilApiTimeoutSeconds = &options.WaitUntilTimeoutSeconds
-		stateCfg.ExecuteApiTimeoutSeconds = &options.ExecuteTimeoutSeconds
-		stateCfg.WaitUntilApiRetryPolicy = options.WaitUntilRetryPolicy
-		stateCfg.ExecuteApiRetryPolicy = options.ExecuteRetryPolicy
-	}
+
 	return stateCfg
+}
+
+func fromAsyncStateOptionsToAsyncStateConfg(stateOptions *AsyncStateOptions) *xdbapi.AsyncStateConfig {
+	if stateOptions == nil {
+		return nil
+	}
+	stateCfg := &xdbapi.AsyncStateConfig{}
+	stateCfg.WaitUntilApiTimeoutSeconds = &stateOptions.WaitUntilTimeoutSeconds
+	stateCfg.ExecuteApiTimeoutSeconds = &stateOptions.ExecuteTimeoutSeconds
+	stateCfg.WaitUntilApiRetryPolicy = stateOptions.WaitUntilRetryPolicy
+	stateCfg.ExecuteApiRetryPolicy = stateOptions.ExecuteRetryPolicy
+	stateCfg.StateFailureRecoveryInfo = fromAsyncStateFailureRecoveryInfoToGenerated(stateOptions.FailureRecoveryInfo)
+	return stateCfg
+}
+
+func fromAsyncStateFailureRecoveryInfoToGenerated(
+	recoveryInfo *AsyncStateFailureRecoveryInfo) *xdbapi.AsyncStateConfigStateFailureRecoveryInfo {
+	if recoveryInfo == nil {
+		return nil
+	}
+	info := &xdbapi.AsyncStateConfigStateFailureRecoveryInfo{}
+	info.Policy = recoveryInfo.Policy
+	info.StateFailureProceedStateId = recoveryInfo.StateFailureProceedStateId
+	info.StateFailureProceedStateConfig = fromAsyncStateOptionsToAsyncStateConfg(recoveryInfo.StateFailureProceedStateOptions)
+	return info
 }
