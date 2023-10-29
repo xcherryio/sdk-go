@@ -31,9 +31,9 @@ type AsyncStateOptions struct {
 	FailureRecoveryOptions *xdbapi.StateFailureRecoveryOptions
 }
 
-func (o *AsyncStateOptions) applyDefaults() {
+func (o *AsyncStateOptions) applyDefaults() *AsyncStateOptions {
 	if o == nil {
-		return
+		return o
 	}
 	if o.WaitUntilTimeoutSeconds == 0 {
 		o.WaitUntilTimeoutSeconds = 1
@@ -46,11 +46,14 @@ func (o *AsyncStateOptions) applyDefaults() {
 			Policy: xdbapi.FAIL_PROCESS_ON_STATE_FAILURE,
 		}
 	}
+
+	return o
 }
 
-func (o *AsyncStateOptions) SetFailureRecoveryOption(destState AsyncState, destStateOptions *AsyncStateOptions) {
+func (o *AsyncStateOptions) SetFailureRecoveryOption(
+	destState AsyncState, destStateOptions *AsyncStateOptions) *AsyncStateOptions {
 	if destState == nil {
-		return
+		return o
 	}
 
 	o.FailureRecoveryOptions = &xdbapi.StateFailureRecoveryOptions{
@@ -58,4 +61,6 @@ func (o *AsyncStateOptions) SetFailureRecoveryOption(destState AsyncState, destS
 		StateFailureProceedStateId:     ptr.Any(GetFinalStateId(destState)),
 		StateFailureProceedStateConfig: fromAsyncStateOptionsToAsyncStateConfg(destStateOptions),
 	}
+
+	return o
 }

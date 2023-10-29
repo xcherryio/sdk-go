@@ -29,6 +29,8 @@ type stateFailureRecoveryTestExecuteState1 struct {
 	xdb.AsyncStateDefaults
 }
 
+// TODO: investigate the issue of starting state options being applied to all states
+// TODO: change the options to state2
 func (d stateFailureRecoveryTestExecuteState1) GetStateOptions() *xdb.AsyncStateOptions {
 	stateOptions := &xdb.AsyncStateOptions{
 		ExecuteTimeoutSeconds:   1,
