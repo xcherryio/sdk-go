@@ -101,18 +101,7 @@ func fromAsyncStateOptionsToAsyncStateConfg(stateOptions *AsyncStateOptions) *xd
 	stateCfg.ExecuteApiTimeoutSeconds = &stateOptions.ExecuteTimeoutSeconds
 	stateCfg.WaitUntilApiRetryPolicy = stateOptions.WaitUntilRetryPolicy
 	stateCfg.ExecuteApiRetryPolicy = stateOptions.ExecuteRetryPolicy
-	stateCfg.StateFailureRecoveryInfo = fromAsyncStateFailureRecoveryInfoToGenerated(stateOptions.FailureRecoveryInfo)
-	return stateCfg
-}
+	stateCfg.StateFailureRecoveryOptions = stateOptions.FailureRecoveryOptions
 
-func fromAsyncStateFailureRecoveryInfoToGenerated(
-	recoveryInfo *AsyncStateFailureRecoveryInfo) *xdbapi.AsyncStateConfigStateFailureRecoveryInfo {
-	if recoveryInfo == nil {
-		return nil
-	}
-	info := &xdbapi.AsyncStateConfigStateFailureRecoveryInfo{}
-	info.Policy = recoveryInfo.Policy
-	info.StateFailureProceedStateId = recoveryInfo.StateFailureProceedStateId
-	info.StateFailureProceedStateConfig = fromAsyncStateOptionsToAsyncStateConfg(recoveryInfo.StateFailureProceedStateOptions)
-	return info
+	return stateCfg
 }

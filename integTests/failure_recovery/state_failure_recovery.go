@@ -1,4 +1,4 @@
-package basic
+package failure_recovery
 
 import (
 	"context"
@@ -22,26 +22,7 @@ func (b StateFailureRecoveryTestProcess) GetAsyncStateSchema() xdb.StateSchema {
 	return xdb.WithStartingState(&stateFailureRecoveryTestState1{}, &stateFailureRecoveryTestState2{}, &stateFailureRecoveryTestState3{})
 }
 
-// /////////////////
 type stateFailureRecoveryTestState1 struct {
-	xdb.AsyncStateDefaults
-}
-
-func (b stateFailureRecoveryTestState1) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
-	return xdb.EmptyCommandRequest(), nil
-}
-
-func (b stateFailureRecoveryTestState1) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
-) (*xdb.StateDecision, error) {
-	var i int
-	input.Get(&i)
-	return xdb.SingleNextState(stateFailureRecoveryTestState2{}, i+1), nil
-}
-
-// /////////////////
-
-type stateFailureRecoveryTestState2 struct {
 	xdb.AsyncStateDefaults
 }
 
@@ -63,12 +44,46 @@ func (d stateFailureRecoveryTestState1) GetStateOptions() *xdb.AsyncStateOptions
 			MaximumAttemptsDurationSeconds: ptr.Any(int32(1)),
 			MaximumAttempts:                ptr.Any(int32(1)),
 		},
-		FailureRecoveryInfo: &xdb.AsyncStateFailureRecoveryInfo{
-			Policy:                          xdbapi.PROCEED_TO_CONFIGURED_STATE,
-			StateFailureProceedStateId:      ptr.Any("basic.stateFailureRecoveryTestState3"),
-			StateFailureProceedStateOptions: &xdb.AsyncStateOptions{},
+		FailureRecoveryOptions: &xdbapi.StateFailureRecoveryOptions{
+			Policy:                     xdbapi.PROCEED_TO_CONFIGURED_STATE,
+			StateFailureProceedStateId: ptr.Any("failure_recovery.stateFailureRecoveryTestState3"),
+			StateFailureProceedStateConfig: &xdbapi.AsyncStateConfig{
+				WaitUntilApiRetryPolicy: &xdbapi.RetryPolicy{
+					BackoffCoefficient:             ptr.Any(float32(1.0)),
+					InitialIntervalSeconds:         ptr.Any(int32(1)),
+					MaximumIntervalSeconds:         ptr.Any(int32(1)),
+					MaximumAttemptsDurationSeconds: ptr.Any(int32(1)),
+					MaximumAttempts:                ptr.Any(int32(1)),
+				},
+				ExecuteApiRetryPolicy: &xdbapi.RetryPolicy{
+					BackoffCoefficient:             ptr.Any(float32(1.0)),
+					InitialIntervalSeconds:         ptr.Any(int32(1)),
+					MaximumIntervalSeconds:         ptr.Any(int32(1)),
+					MaximumAttemptsDurationSeconds: ptr.Any(int32(1)),
+					MaximumAttempts:                ptr.Any(int32(1)),
+				},
+				StateFailureRecoveryOptions: &xdbapi.StateFailureRecoveryOptions{
+					Policy: xdbapi.FAIL_PROCESS_ON_STATE_FAILURE,
+				},
+			},
 		},
 	}
+}
+
+func (b stateFailureRecoveryTestState1) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
+	return xdb.EmptyCommandRequest(), nil
+}
+
+func (b stateFailureRecoveryTestState1) Execute(
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+) (*xdb.StateDecision, error) {
+	var i int
+	input.Get(&i)
+	return xdb.SingleNextState(stateFailureRecoveryTestState2{}, i+1), nil
+}
+
+type stateFailureRecoveryTestState2 struct {
+	xdb.AsyncStateDefaults
 }
 
 func (b stateFailureRecoveryTestState2) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
@@ -80,8 +95,6 @@ func (b stateFailureRecoveryTestState2) Execute(
 ) (*xdb.StateDecision, error) {
 	return nil, fmt.Errorf("error for test")
 }
-
-// /////////////////
 
 type stateFailureRecoveryTestState3 struct {
 	xdb.AsyncStateDefaults
