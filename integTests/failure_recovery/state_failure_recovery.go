@@ -91,6 +91,14 @@ func (b stateFailureRecoveryTestState3) WaitUntil(ctx xdb.XdbContext, input xdb.
 func (b stateFailureRecoveryTestState3) Execute(
 	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
 ) (*xdb.StateDecision, error) {
+	if ctx.GetRecoverFromStateApi() == nil || *(ctx.GetRecoverFromStateApi()) != xdbapi.EXECUTE_API {
+		panic("should recover from execute api")
+	}
+
+	if ctx.GetRecoverFromStateExecutionId() == nil || *(ctx.GetRecoverFromStateExecutionId()) != "failure_recovery.stateFailureRecoveryTestState2" {
+		panic("should recover from state failure_recovery.stateFailureRecoveryTestState2")
+	}
+
 	var i int
 	input.Get(&i)
 

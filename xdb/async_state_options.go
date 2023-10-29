@@ -36,10 +36,10 @@ func (o *AsyncStateOptions) applyDefaults() {
 		return
 	}
 	if o.WaitUntilTimeoutSeconds == 0 {
-		o.WaitUntilTimeoutSeconds = 10
+		o.WaitUntilTimeoutSeconds = 1
 	}
 	if o.ExecuteTimeoutSeconds == 0 {
-		o.ExecuteTimeoutSeconds = 10
+		o.ExecuteTimeoutSeconds = 1
 	}
 	if o.FailureRecoveryOptions == nil {
 		o.FailureRecoveryOptions = &xdbapi.StateFailureRecoveryOptions{
