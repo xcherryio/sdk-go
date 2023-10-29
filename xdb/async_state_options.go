@@ -1,6 +1,9 @@
 package xdb
 
-import "github.com/xdblab/xdb-apis/goapi/xdbapi"
+import (
+	"github.com/xdblab/xdb-apis/goapi/xdbapi"
+	"github.com/xdblab/xdb-golang-sdk/xdb/ptr"
+)
 
 type AsyncStateOptions struct {
 	// StateId is the unique identifier of the state.
@@ -26,4 +29,33 @@ type AsyncStateOptions struct {
 	// FailureRecoveryOptions is information needed for failure recovery
 	// Default: FAIL_PROCESS_ON_STATE_FAILURE
 	FailureRecoveryOptions *xdbapi.StateFailureRecoveryOptions
+}
+
+func (o *AsyncStateOptions) applyDefaults() {
+	if o == nil {
+		return
+	}
+	if o.WaitUntilTimeoutSeconds == 0 {
+		o.WaitUntilTimeoutSeconds = 10
+	}
+	if o.ExecuteTimeoutSeconds == 0 {
+		o.ExecuteTimeoutSeconds = 10
+	}
+	if o.FailureRecoveryOptions == nil {
+		o.FailureRecoveryOptions = &xdbapi.StateFailureRecoveryOptions{
+			Policy: xdbapi.FAIL_PROCESS_ON_STATE_FAILURE,
+		}
+	}
+}
+
+func (o *AsyncStateOptions) SetFailureRecoveryOption(destState AsyncState, destStateOptions *AsyncStateOptions) {
+	if destState == nil {
+		return
+	}
+
+	o.FailureRecoveryOptions = &xdbapi.StateFailureRecoveryOptions{
+		Policy:                         xdbapi.PROCEED_TO_CONFIGURED_STATE,
+		StateFailureProceedStateId:     ptr.Any(GetFinalStateId(destState)),
+		StateFailureProceedStateConfig: fromAsyncStateOptionsToAsyncStateConfg(destStateOptions),
+	}
 }
