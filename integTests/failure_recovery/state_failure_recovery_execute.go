@@ -114,7 +114,7 @@ func (b stateFailureRecoveryTestExecuteState3) Execute(
 	return xdb.ForceFailProcess, nil
 }
 
-func TestStateFailureRecoveryTestProcess(t *testing.T, client xdb.Client) {
+func TestStateFailureRecoveryTestExecuteProcess(t *testing.T, client xdb.Client) {
 	prcId := common.GenerateProcessId()
 	prc := StateFailureRecoveryTestExecuteProcess{}
 	_, err := client.StartProcess(context.Background(), prc, prcId, 1)
