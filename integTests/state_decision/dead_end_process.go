@@ -2,12 +2,13 @@ package state_decision
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/xdblab/xdb-apis/goapi/xdbapi"
 	"github.com/xdblab/xdb-golang-sdk/integTests/common"
 	"github.com/xdblab/xdb-golang-sdk/xdb"
-	"testing"
-	"time"
 )
 
 type DeadEndProcess struct {
@@ -19,7 +20,7 @@ func (b DeadEndProcess) GetAsyncStateSchema() xdb.StateSchema {
 }
 
 type deadEndState1 struct {
-	xdb.AsyncStateNoWaitUntil
+	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b deadEndState1) GetStateId() string {
@@ -33,7 +34,7 @@ func (b deadEndState1) Execute(
 }
 
 type deadEndState2 struct {
-	xdb.AsyncStateNoWaitUntil
+	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b deadEndState2) GetStateId() string {
@@ -47,7 +48,7 @@ func (b deadEndState2) Execute(
 }
 
 type deadEndState3 struct {
-	xdb.AsyncStateNoWaitUntil
+	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b deadEndState3) GetStateId() string {

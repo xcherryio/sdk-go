@@ -14,24 +14,24 @@ import (
 	"github.com/xdblab/xdb-golang-sdk/xdb/ptr"
 )
 
-type StateFailureRecoveryTestExecuteProcess struct {
+type StateFailureRecoveryTestExecuteFailedAtStartProcess struct {
 	xdb.ProcessDefaults
 }
 
-func (b StateFailureRecoveryTestExecuteProcess) GetAsyncStateSchema() xdb.StateSchema {
+func (b StateFailureRecoveryTestExecuteFailedAtStartProcess) GetAsyncStateSchema() xdb.StateSchema {
 	return xdb.WithStartingState(
-		&executeInitState{},
-		&executeFailState{},
-		&executeRecoverState{})
+		&executeFailedAtStartInitState{},
+		&executeFailedAtStartSkippedState{},
+		&executeFailedAtStartRecoverState{})
 }
 
-type executeInitState struct {
+type executeFailedAtStartInitState struct {
 	xdb.AsyncStateDefaults
 }
 
 // TODO: investigate the issue of starting state options being applied to all states
 // TODO: change the options to state2
-func (d executeInitState) GetStateOptions() *xdb.AsyncStateOptions {
+func (d executeFailedAtStartInitState) GetStateOptions() *xdb.AsyncStateOptions {
 	stateOptions := &xdb.AsyncStateOptions{
 		ExecuteTimeoutSeconds:   1,
 		WaitUntilTimeoutSeconds: 1,
@@ -51,72 +51,72 @@ func (d executeInitState) GetStateOptions() *xdb.AsyncStateOptions {
 		},
 	}
 
-	stateOptions.SetFailureRecoveryOption(&executeRecoverState{}, &xdb.AsyncStateOptions{})
+	stateOptions.SetFailureRecoveryOption(&executeFailedAtStartRecoverState{}, &xdb.AsyncStateOptions{})
 
 	return stateOptions
 }
 
-func (b executeInitState) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
+func (b executeFailedAtStartInitState) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
 	return xdb.EmptyCommandRequest(), nil
 }
 
-func (b executeInitState) Execute(
+func (b executeFailedAtStartInitState) Execute(
 	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
 ) (*xdb.StateDecision, error) {
 	var i int
 	input.Get(&i)
-	return xdb.SingleNextState(&executeFailState{}, i+1), nil
+	return xdb.SingleNextState(&executeFailedAtStartSkippedState{}, i+1), fmt.Errorf("error for test")
 }
 
-type executeFailState struct {
+type executeFailedAtStartSkippedState struct {
 	xdb.AsyncStateDefaults
 }
 
-func (b executeFailState) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
+func (b executeFailedAtStartSkippedState) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
 	return xdb.EmptyCommandRequest(), nil
 }
 
-func (b executeFailState) Execute(
+func (b executeFailedAtStartSkippedState) Execute(
 	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
 ) (*xdb.StateDecision, error) {
 	var i int
 	input.Get(&i)
 
-	return xdb.SingleNextState(&executeRecoverState{}, i+2), fmt.Errorf("error for test")
+	return xdb.SingleNextState(&executeFailedAtStartRecoverState{}, i+2), nil
 }
 
-type executeRecoverState struct {
+type executeFailedAtStartRecoverState struct {
 	xdb.AsyncStateDefaults
 }
 
-func (b executeRecoverState) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
+func (b executeFailedAtStartRecoverState) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
 	return xdb.EmptyCommandRequest(), nil
 }
 
-func (b executeRecoverState) Execute(
+func (b executeFailedAtStartRecoverState) Execute(
 	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
 ) (*xdb.StateDecision, error) {
 	if ctx.GetRecoverFromStateApi() == nil || *(ctx.GetRecoverFromStateApi()) != xdbapi.EXECUTE_API {
 		panic("should recover from execute api")
 	}
 
-	if ctx.GetRecoverFromStateExecutionId() == nil || *(ctx.GetRecoverFromStateExecutionId()) != "failure_recovery.executeFailState" {
-		panic("should recover from state failure_recovery.executeFailState")
+	if ctx.GetRecoverFromStateExecutionId() == nil || *(ctx.GetRecoverFromStateExecutionId()) != "failure_recovery.executeFailedAtStartInitState" {
+		panic("should recover from state failure_recovery.executeFailedAtStartInitState")
 	}
 
 	var i int
 	input.Get(&i)
 
-	if i == 2 {
+	if i == 1 {
 		return xdb.GracefulCompletingProcess, nil
 	}
 
 	return xdb.ForceFailProcess, nil
 }
 
-func TestStateFailureRecoveryTestExecuteProcess(t *testing.T, client xdb.Client) {
+func TestStateFailureRecoveryTestExecuteFailedAtStartProcess(t *testing.T, client xdb.Client) {
 	prcId := common.GenerateProcessId()
-	prc := StateFailureRecoveryTestExecuteProcess{}
+	prc := StateFailureRecoveryTestExecuteFailedAtStartProcess{}
 	_, err := client.StartProcess(context.Background(), prc, prcId, 1)
 	require.NoError(t, err)
 

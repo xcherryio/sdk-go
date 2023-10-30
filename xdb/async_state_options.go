@@ -40,7 +40,7 @@ func (o *AsyncStateOptions) SetFailureRecoveryOption(
 	o.FailureRecoveryOptions = &xdbapi.StateFailureRecoveryOptions{
 		Policy:                         xdbapi.PROCEED_TO_CONFIGURED_STATE,
 		StateFailureProceedStateId:     ptr.Any(GetFinalStateId(destState)),
-		StateFailureProceedStateConfig: fromAsyncStateOptionsToAsyncStateConfg(destStateOptions),
+		StateFailureProceedStateConfig: fromStateToAsyncStateConfig(destState),
 	}
 
 	return o

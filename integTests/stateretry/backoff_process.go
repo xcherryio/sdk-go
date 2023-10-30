@@ -3,13 +3,14 @@ package stateretry
 import (
 	"context"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/xdblab/xdb-apis/goapi/xdbapi"
 	"github.com/xdblab/xdb-golang-sdk/integTests/common"
 	"github.com/xdblab/xdb-golang-sdk/xdb"
 	"github.com/xdblab/xdb-golang-sdk/xdb/ptr"
-	"testing"
-	"time"
 )
 
 type BackoffProcess struct {
@@ -96,7 +97,7 @@ func (b *stateDefaultPolicy) Execute(
 }
 
 type stateCustomizedPolicy struct {
-	xdb.AsyncStateNoWaitUntil
+	xdb.AsyncStateDefaultsSkipWaitUntil
 	Success bool
 }
 
