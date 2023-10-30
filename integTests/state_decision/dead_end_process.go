@@ -20,7 +20,7 @@ func (b DeadEndProcess) GetAsyncStateSchema() xdb.StateSchema {
 }
 
 type deadEndState1 struct {
-	xdb.AsyncStateSkipWaitUntil
+	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b deadEndState1) GetStateId() string {
@@ -34,7 +34,7 @@ func (b deadEndState1) Execute(
 }
 
 type deadEndState2 struct {
-	xdb.AsyncStateSkipWaitUntil
+	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b deadEndState2) GetStateId() string {
@@ -48,7 +48,7 @@ func (b deadEndState2) Execute(
 }
 
 type deadEndState3 struct {
-	xdb.AsyncStateSkipWaitUntil
+	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b deadEndState3) GetStateId() string {

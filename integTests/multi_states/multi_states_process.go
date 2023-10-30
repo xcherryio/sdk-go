@@ -51,7 +51,7 @@ func (b state1) Execute(
 }
 
 type state2 struct {
-	xdb.AsyncStateSkipWaitUntil
+	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b state2) Execute(
@@ -68,7 +68,7 @@ func (b state2) Execute(
 }
 
 type state3 struct {
-	xdb.AsyncStateSkipWaitUntil
+	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b state3) Execute(

@@ -97,7 +97,7 @@ func (b *stateDefaultPolicy) Execute(
 }
 
 type stateCustomizedPolicy struct {
-	xdb.AsyncStateSkipWaitUntil
+	xdb.AsyncStateDefaultsSkipWaitUntil
 	Success bool
 }
 

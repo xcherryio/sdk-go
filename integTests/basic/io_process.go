@@ -37,7 +37,7 @@ func (b state1) Execute(
 }
 
 type state2 struct {
-	xdb.AsyncStateSkipWaitUntil
+	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b state2) Execute(

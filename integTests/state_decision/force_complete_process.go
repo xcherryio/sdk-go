@@ -20,7 +20,7 @@ func (b ForceCompleteProcess) GetAsyncStateSchema() xdb.StateSchema {
 }
 
 type forceCompleteState1 struct {
-	xdb.AsyncStateSkipWaitUntil
+	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b forceCompleteState1) GetStateId() string {
@@ -34,7 +34,7 @@ func (b forceCompleteState1) Execute(
 }
 
 type forceCompleteState2 struct {
-	xdb.AsyncStateSkipWaitUntil
+	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b forceCompleteState2) GetStateId() string {
@@ -48,7 +48,7 @@ func (b forceCompleteState2) Execute(
 }
 
 type forceCompleteState3 struct {
-	xdb.AsyncStateSkipWaitUntil
+	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b forceCompleteState3) GetStateId() string {

@@ -26,7 +26,7 @@ func (b StateFailureRecoveryTestExecuteNoWaitUntilProcess) GetAsyncStateSchema()
 }
 
 type executeNoWaitUntilInitState struct {
-	xdb.AsyncStateSkipWaitUntil
+	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
 // TODO: investigate the issue of starting state options being applied to all states
@@ -67,7 +67,7 @@ func (b executeNoWaitUntilInitState) Execute(
 }
 
 type executeNoWaitUntilFailState struct {
-	xdb.AsyncStateSkipWaitUntil
+	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b executeNoWaitUntilFailState) Execute(
@@ -80,7 +80,7 @@ func (b executeNoWaitUntilFailState) Execute(
 }
 
 type executeNoWaitUntilRecoverState struct {
-	xdb.AsyncStateSkipWaitUntil
+	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b executeNoWaitUntilRecoverState) Execute(

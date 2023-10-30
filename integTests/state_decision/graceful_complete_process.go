@@ -20,7 +20,7 @@ func (b GracefulCompleteProcess) GetAsyncStateSchema() xdb.StateSchema {
 }
 
 type gracefulCompleteState1 struct {
-	xdb.AsyncStateSkipWaitUntil
+	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b gracefulCompleteState1) GetStateId() string {
@@ -34,7 +34,7 @@ func (b gracefulCompleteState1) Execute(
 }
 
 type gracefulCompleteState2 struct {
-	xdb.AsyncStateSkipWaitUntil
+	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b gracefulCompleteState2) GetStateId() string {
@@ -48,7 +48,7 @@ func (b gracefulCompleteState2) Execute(
 }
 
 type gracefulCompleteState3 struct {
-	xdb.AsyncStateSkipWaitUntil
+	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b gracefulCompleteState3) GetStateId() string {

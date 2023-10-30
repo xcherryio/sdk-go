@@ -52,16 +52,16 @@ type AsyncStateDefaults struct {
 	defaultStateOptions
 }
 
-// AsyncStateSkipWaitUntil is required to skip WaitUntil
+// AsyncStateDefaultsSkipWaitUntil is required to skip WaitUntil
 // put into your state implementation to save the boilerplate code of returning default values
 // Example usage:
 //
 //	type myStateImpl struct{
-//	    AsyncStateSkipWaitUntil
+//	    AsyncStateDefaultsSkipWaitUntil
 //	}
 //
 // Then myStateImpl will skip WaitUntil, and doesn't have to implement GetStateOptions
-type AsyncStateSkipWaitUntil struct {
+type AsyncStateDefaultsSkipWaitUntil struct {
 	defaultStateOptions
 	skipWaitUntil
 }
@@ -79,7 +79,7 @@ func ShouldSkipWaitUntilAPI(state AsyncState) bool {
 
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
-		if field.Type.String() == "xdb.AsyncStateNoWaitUntil" {
+		if field.Type.String() == "xdb.AsyncStateDefaultsSkipWaitUntil" {
 			return true
 		}
 	}
