@@ -85,33 +85,61 @@ func toApiDecision(
 func fromStateToAsyncStateConfig(
 	state AsyncState, prcType string, registry Registry,
 ) *xdbapi.AsyncStateConfig {
-	preferredPersistencePolicyName, stateCfg := fromAsyncStateOptionsToAsyncStateConfig(state.GetStateOptions())
+	stateCfg := fromAsyncStateOptionsToBasicAsyncStateConfig(state.GetStateOptions())
 	if ShouldSkipWaitUntilAPI(state) {
 		stateCfg.SkipWaitUntil = ptr.Any(true)
 	}
 
-	stateCfg.LoadGlobalAttributesRequest = createLoadGlobalAttributesRequest(registry, prcType, preferredPersistencePolicyName)
+	var preferredPersistencePolicyName *string
+	var recoverState AsyncState
+	if state.GetStateOptions() != nil {
+		preferredPersistencePolicyName = state.GetStateOptions().PersistenceLoadingPolicyName
+		recoverState = state.GetStateOptions().FailureRecoveryState
+	}
 
+	stateCfg.LoadGlobalAttributesRequest = createLoadGlobalAttributesRequestIfNeeded(registry, prcType, preferredPersistencePolicyName)
+	stateCfg.StateFailureRecoveryOptions = createFailureRecoveryOptionsIfNeeded(recoverState, prcType, registry)
 	return stateCfg
 }
 
-func fromAsyncStateOptionsToAsyncStateConfig(
+func createFailureRecoveryOptionsIfNeeded(
+	state AsyncState, prcType string, registry Registry,
+) *xdbapi.StateFailureRecoveryOptions {
+	if state == nil {
+		return nil
+	}
+
+	stateId := GetFinalStateId(state)
+	//NOTE: prevent stack overflow if the state recovering in a loop, e.g. state1 -> state2 -> state1
+	if state.GetStateOptions() != nil && state.GetStateOptions().FailureRecoveryState != nil {
+		panic("FailureRecoveryState cannot have FailureRecoveryState")
+	}
+	stateCfg := fromStateToAsyncStateConfig(state, prcType, registry)
+
+	options := &xdbapi.StateFailureRecoveryOptions{
+		Policy:                         xdbapi.PROCEED_TO_CONFIGURED_STATE,
+		StateFailureProceedStateId:     &stateId,
+		StateFailureProceedStateConfig: stateCfg,
+	}
+	return options
+}
+
+func fromAsyncStateOptionsToBasicAsyncStateConfig(
 	stateOptions *AsyncStateOptions,
-) (*string, *xdbapi.AsyncStateConfig) {
+) *xdbapi.AsyncStateConfig {
 	stateCfg := &xdbapi.AsyncStateConfig{}
 	if stateOptions == nil {
-		return nil, stateCfg
+		return stateCfg
 	}
 
 	stateCfg.WaitUntilApiTimeoutSeconds = &stateOptions.WaitUntilTimeoutSeconds
 	stateCfg.ExecuteApiTimeoutSeconds = &stateOptions.ExecuteTimeoutSeconds
 	stateCfg.WaitUntilApiRetryPolicy = stateOptions.WaitUntilRetryPolicy
 	stateCfg.ExecuteApiRetryPolicy = stateOptions.ExecuteRetryPolicy
-	stateCfg.StateFailureRecoveryOptions = stateOptions.FailureRecoveryOptions
-	return stateOptions.PersistenceLoadingPolicyName, stateCfg
+	return stateCfg
 }
 
-func createLoadGlobalAttributesRequest(
+func createLoadGlobalAttributesRequestIfNeeded(
 	registry Registry, prcType string, preferredPersistencePolicyName *string,
 ) *xdbapi.LoadGlobalAttributesRequest {
 	persistenceSchema := registry.getPersistenceSchema(prcType)
