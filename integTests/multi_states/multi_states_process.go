@@ -3,12 +3,13 @@ package multi_states
 import (
 	"context"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/xdblab/xdb-apis/goapi/xdbapi"
 	"github.com/xdblab/xdb-golang-sdk/integTests/common"
 	"github.com/xdblab/xdb-golang-sdk/xdb"
-	"testing"
-	"time"
 )
 
 const INPUT = 1
@@ -50,7 +51,7 @@ func (b state1) Execute(
 }
 
 type state2 struct {
-	xdb.AsyncStateNoWaitUntil
+	xdb.AsyncStateSkipWaitUntil
 }
 
 func (b state2) Execute(
@@ -67,7 +68,7 @@ func (b state2) Execute(
 }
 
 type state3 struct {
-	xdb.AsyncStateNoWaitUntil
+	xdb.AsyncStateSkipWaitUntil
 }
 
 func (b state3) Execute(

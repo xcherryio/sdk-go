@@ -2,9 +2,10 @@ package basic
 
 import (
 	"context"
-	"github.com/xdblab/xdb-golang-sdk/integTests/common"
 	"testing"
 	"time"
+
+	"github.com/xdblab/xdb-golang-sdk/integTests/common"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/xdblab/xdb-apis/goapi/xdbapi"
@@ -36,7 +37,7 @@ func (b state1) Execute(
 }
 
 type state2 struct {
-	xdb.AsyncStateNoWaitUntil
+	xdb.AsyncStateSkipWaitUntil
 }
 
 func (b state2) Execute(

@@ -20,7 +20,7 @@ func (b ForceFailProcess) GetAsyncStateSchema() xdb.StateSchema {
 }
 
 type forceFailState1 struct {
-	xdb.AsyncStateNoWaitUntil
+	xdb.AsyncStateSkipWaitUntil
 }
 
 func (b forceFailState1) GetStateId() string {
@@ -34,7 +34,7 @@ func (b forceFailState1) Execute(
 }
 
 type forceFailState2 struct {
-	xdb.AsyncStateNoWaitUntil
+	xdb.AsyncStateSkipWaitUntil
 }
 
 func (b forceFailState2) GetStateId() string {
@@ -48,7 +48,7 @@ func (b forceFailState2) Execute(
 }
 
 type forceFailState3 struct {
-	xdb.AsyncStateNoWaitUntil
+	xdb.AsyncStateSkipWaitUntil
 }
 
 func (b forceFailState3) GetStateId() string {

@@ -2,12 +2,13 @@ package state_decision
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/xdblab/xdb-apis/goapi/xdbapi"
 	"github.com/xdblab/xdb-golang-sdk/integTests/common"
 	"github.com/xdblab/xdb-golang-sdk/xdb"
-	"testing"
-	"time"
 )
 
 type ForceCompleteProcess struct {
@@ -19,7 +20,7 @@ func (b ForceCompleteProcess) GetAsyncStateSchema() xdb.StateSchema {
 }
 
 type forceCompleteState1 struct {
-	xdb.AsyncStateNoWaitUntil
+	xdb.AsyncStateSkipWaitUntil
 }
 
 func (b forceCompleteState1) GetStateId() string {
@@ -33,7 +34,7 @@ func (b forceCompleteState1) Execute(
 }
 
 type forceCompleteState2 struct {
-	xdb.AsyncStateNoWaitUntil
+	xdb.AsyncStateSkipWaitUntil
 }
 
 func (b forceCompleteState2) GetStateId() string {
@@ -47,7 +48,7 @@ func (b forceCompleteState2) Execute(
 }
 
 type forceCompleteState3 struct {
-	xdb.AsyncStateNoWaitUntil
+	xdb.AsyncStateSkipWaitUntil
 }
 
 func (b forceCompleteState3) GetStateId() string {
