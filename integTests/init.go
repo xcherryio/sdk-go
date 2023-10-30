@@ -18,6 +18,7 @@ func init() {
 		&basic.IOProcess{},
 		&failure_recovery.StateFailureRecoveryTestExecuteProcess{},
 		&failure_recovery.StateFailureRecoveryTestWaitUntilProcess{},
+		&failure_recovery.StateFailureRecoveryTestExecuteNoWaitUntilProcess{},
 		&multi_states.MultiStatesProcess{},
 		&state_decision.GracefulCompleteProcess{},
 		&state_decision.ForceCompleteProcess{},

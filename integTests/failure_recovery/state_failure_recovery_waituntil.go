@@ -100,8 +100,8 @@ func (b waitUntilRecoverState) Execute(
 		panic("should recover from execute api")
 	}
 
-	if ctx.GetRecoverFromStateExecutionId() == nil || *(ctx.GetRecoverFromStateExecutionId()) != "failure_recovery.stateFailureRecoveryTestWaitUntilState2" {
-		panic("should recover from state failure_recovery.stateFailureRecoveryTestWaitUntilState2")
+	if ctx.GetRecoverFromStateExecutionId() == nil || *(ctx.GetRecoverFromStateExecutionId()) != "failure_recovery.waitUntilFailedState" {
+		panic("should recover from state failure_recovery.waitUntilFailedState")
 	}
 
 	var i int
