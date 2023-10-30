@@ -20,18 +20,18 @@ type StateFailureRecoveryTestExecuteProcess struct {
 
 func (b StateFailureRecoveryTestExecuteProcess) GetAsyncStateSchema() xdb.StateSchema {
 	return xdb.WithStartingState(
-		&stateFailureRecoveryTestExecuteState1{},
-		&stateFailureRecoveryTestExecuteState2{},
-		&stateFailureRecoveryTestExecuteState3{})
+		&executeInitState{},
+		&executeFailState{},
+		&executeRecoverState{})
 }
 
-type stateFailureRecoveryTestExecuteState1 struct {
+type executeInitState struct {
 	xdb.AsyncStateDefaults
 }
 
 // TODO: investigate the issue of starting state options being applied to all states
 // TODO: change the options to state2
-func (d stateFailureRecoveryTestExecuteState1) GetStateOptions() *xdb.AsyncStateOptions {
+func (d executeInitState) GetStateOptions() *xdb.AsyncStateOptions {
 	stateOptions := &xdb.AsyncStateOptions{
 		ExecuteTimeoutSeconds:   1,
 		WaitUntilTimeoutSeconds: 1,
@@ -51,49 +51,49 @@ func (d stateFailureRecoveryTestExecuteState1) GetStateOptions() *xdb.AsyncState
 		},
 	}
 
-	stateOptions.SetFailureRecoveryOption(&stateFailureRecoveryTestExecuteState3{}, &xdb.AsyncStateOptions{})
+	stateOptions.SetFailureRecoveryOption(&executeRecoverState{}, &xdb.AsyncStateOptions{})
 
 	return stateOptions
 }
 
-func (b stateFailureRecoveryTestExecuteState1) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
+func (b executeInitState) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
 	return xdb.EmptyCommandRequest(), nil
 }
 
-func (b stateFailureRecoveryTestExecuteState1) Execute(
+func (b executeInitState) Execute(
 	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
 ) (*xdb.StateDecision, error) {
 	var i int
 	input.Get(&i)
-	return xdb.SingleNextState(&stateFailureRecoveryTestExecuteState2{}, i+1), nil
+	return xdb.SingleNextState(&executeFailState{}, i+1), nil
 }
 
-type stateFailureRecoveryTestExecuteState2 struct {
+type executeFailState struct {
 	xdb.AsyncStateDefaults
 }
 
-func (b stateFailureRecoveryTestExecuteState2) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
+func (b executeFailState) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
 	return xdb.EmptyCommandRequest(), nil
 }
 
-func (b stateFailureRecoveryTestExecuteState2) Execute(
+func (b executeFailState) Execute(
 	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
 ) (*xdb.StateDecision, error) {
 	var i int
 	input.Get(&i)
 
-	return xdb.SingleNextState(&stateFailureRecoveryTestExecuteState3{}, i+2), fmt.Errorf("error for test")
+	return xdb.SingleNextState(&executeRecoverState{}, i+2), fmt.Errorf("error for test")
 }
 
-type stateFailureRecoveryTestExecuteState3 struct {
+type executeRecoverState struct {
 	xdb.AsyncStateDefaults
 }
 
-func (b stateFailureRecoveryTestExecuteState3) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
+func (b executeRecoverState) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
 	return xdb.EmptyCommandRequest(), nil
 }
 
-func (b stateFailureRecoveryTestExecuteState3) Execute(
+func (b executeRecoverState) Execute(
 	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
 ) (*xdb.StateDecision, error) {
 	if ctx.GetRecoverFromStateApi() == nil || *(ctx.GetRecoverFromStateApi()) != xdbapi.EXECUTE_API {
