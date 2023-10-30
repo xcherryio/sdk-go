@@ -1,6 +1,9 @@
 package xdb
 
-import "github.com/xdblab/xdb-apis/goapi/xdbapi"
+import (
+	"github.com/xdblab/xdb-apis/goapi/xdbapi"
+	"github.com/xdblab/xdb-golang-sdk/xdb/ptr"
+)
 
 type AsyncStateOptions struct {
 	// StateId is the unique identifier of the state.
@@ -23,4 +26,22 @@ type AsyncStateOptions struct {
 	// Default: infinite retry with 1 second initial interval, 120 seconds max interval, and 2 backoff factor,
 	// when set as nil
 	ExecuteRetryPolicy *xdbapi.RetryPolicy
+	// FailureRecoveryOptions is information needed for failure recovery
+	// Default: FAIL_PROCESS_ON_STATE_FAILURE
+	FailureRecoveryOptions *xdbapi.StateFailureRecoveryOptions
+}
+
+func (o *AsyncStateOptions) SetFailureRecoveryOption(
+	destState AsyncState, destStateOptions *AsyncStateOptions) *AsyncStateOptions {
+	if destState == nil {
+		return o
+	}
+
+	o.FailureRecoveryOptions = &xdbapi.StateFailureRecoveryOptions{
+		Policy:                         xdbapi.PROCEED_TO_CONFIGURED_STATE,
+		StateFailureProceedStateId:     ptr.Any(GetFinalStateId(destState)),
+		StateFailureProceedStateConfig: fromAsyncStateOptionsToAsyncStateConfg(destStateOptions),
+	}
+
+	return o
 }
