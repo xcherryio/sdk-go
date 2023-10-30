@@ -51,14 +51,17 @@ func (b IOProcess) GetPersistenceSchema() xdb.PersistenceSchema {
 }
 
 func (b IOProcess) GetAsyncStateSchema() xdb.StateSchema {
-	return xdb.NewStateSchema(&state1{}, &state2{}, &state3{})
+	return xdb.NewStateSchema(
+		&stateForInitialReadWrite{}, // read from initial global attributes and write to them
+		&stateToVerifyGlobalAttrs{}, // verify the global attributes write from the prev state
+		&stateForTestLoadNothing{})  // test loading nothing policy
 }
 
-type state1 struct {
-	xdb.AsyncStateNoWaitUntil
+type stateForInitialReadWrite struct {
+	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
-func (b state1) Execute(
+func (b stateForInitialReadWrite) Execute(
 	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
 	communication xdb.Communication,
 ) (*xdb.StateDecision, error) {
@@ -85,14 +88,14 @@ func (b state1) Execute(
 	persistence.SetGlobalAttribute(attrKeyInt, 456)
 	persistence.SetGlobalAttribute(attrKeyStr, "def")
 
-	return xdb.SingleNextState(state2{}, i+1), nil
+	return xdb.SingleNextState(stateToVerifyGlobalAttrs{}, i+1), nil
 }
 
-type state2 struct {
-	xdb.AsyncStateNoWaitUntil
+type stateToVerifyGlobalAttrs struct {
+	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
-func (b state2) Execute(
+func (b stateToVerifyGlobalAttrs) Execute(
 	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
 	communication xdb.Communication,
 ) (*xdb.StateDecision, error) {
@@ -107,20 +110,20 @@ func (b state2) Execute(
 		panic(fmt.Sprintf("unexpected value %s", str))
 	}
 
-	return xdb.SingleNextState(state3{}, nil), nil
+	return xdb.SingleNextState(stateForTestLoadNothing{}, nil), nil
 }
 
-type state3 struct {
-	xdb.AsyncStateNoWaitUntil
+type stateForTestLoadNothing struct {
+	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
-func (b state3) GetStateOptions() *xdb.AsyncStateOptions {
+func (b stateForTestLoadNothing) GetStateOptions() *xdb.AsyncStateOptions {
 	return &xdb.AsyncStateOptions{
 		PersistenceLoadingPolicyName: ptr.Any(loadNothingPolicyName),
 	}
 }
 
-func (b state3) Execute(
+func (b stateForTestLoadNothing) Execute(
 	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
 	communication xdb.Communication,
 ) (*xdb.StateDecision, error) {
