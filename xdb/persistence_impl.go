@@ -3,7 +3,7 @@ package xdb
 import "github.com/xdblab/xdb-apis/goapi/xdbapi"
 
 type persistenceImpl struct {
-	encoder ObjectEncoder
+	dbConverter DBConverter
 
 	// for global attributes
 	globalAttrDefs              map[string]internalGlobalAttrDef
@@ -13,7 +13,7 @@ type persistenceImpl struct {
 }
 
 func NewPersistenceImpl(
-	encoder ObjectEncoder, defaultTable string,
+	dbConverter DBConverter, defaultTable string,
 	globalAttrDefs map[string]internalGlobalAttrDef, globalAttrTableColNameToKey map[string]string,
 	currGlobalAttrs []xdbapi.GlobalAttributeValue,
 ) Persistence {
@@ -31,7 +31,7 @@ func NewPersistenceImpl(
 	}
 
 	return &persistenceImpl{
-		encoder:                     encoder,
+		dbConverter:                 dbConverter,
 		globalAttrDefs:              globalAttrDefs,
 		globalAttrTableColNameToKey: globalAttrTableColNameToKey,
 		currGlobalAttrs:             currGlobalAttrsMap,
@@ -47,7 +47,7 @@ func (p persistenceImpl) GetGlobalAttribute(key string, resultPtr interface{}) {
 	if !ok {
 		return
 	}
-	err := p.encoder.FromDbValueToGlobalAttribute(curVal.DbQueryValue, def.hint, resultPtr)
+	err := p.dbConverter.FromDBValue(curVal.DbQueryValue, def.hint, resultPtr)
 	if err != nil {
 		panic(err)
 	}
@@ -58,7 +58,7 @@ func (p persistenceImpl) SetGlobalAttribute(key string, value interface{}) {
 	if !ok {
 		panic("global attribute not found " + key)
 	}
-	dbQueryValue, err := p.encoder.FromGlobalAttributeToDbValue(value, def.hint)
+	dbQueryValue, err := p.dbConverter.ToDBValue(value, def.hint)
 	if err != nil {
 		panic(err)
 	}

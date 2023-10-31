@@ -26,10 +26,10 @@ const (
 func (b IOProcess) GetPersistenceSchema() xdb.PersistenceSchema {
 	return xdb.NewPersistenceSchema(
 		xdb.NewGlobalAttributesSchema(
-			"sample-table-1",
-			"sample-str-pk",
-			xdb.NewGlobalAttributeDef(attrKeyInt, "sample-int-col"),
-			xdb.NewGlobalAttributeDef(attrKeyStr, "sample-string-col"),
+			"sample_user_table",
+			"userid",
+			xdb.NewGlobalAttributeDef(attrKeyInt, "create_timestamp"),
+			xdb.NewGlobalAttributeDef(attrKeyStr, "email"),
 		),
 		nil,
 		xdb.NewPersistenceLoadingPolicy(

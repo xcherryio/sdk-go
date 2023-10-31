@@ -91,5 +91,5 @@ func (w *workerServiceImpl) createPersistenceImpl(
 	if persSchema.GlobalAttributeSchema != nil {
 		defaultTable = persSchema.GlobalAttributeSchema.DefaultTableName
 	}
-	return NewPersistenceImpl(w.options.ObjectEncoder, defaultTable, gloAttrDefs, gloTblColToKey, currGloAttrs)
+	return NewPersistenceImpl(w.options.DBConverter, defaultTable, gloAttrDefs, gloTblColToKey, currGloAttrs)
 }

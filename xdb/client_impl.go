@@ -7,6 +7,7 @@ import (
 
 type clientImpl struct {
 	BasicClient
+	dbConverter   DBConverter
 	clientOptions ClientOptions
 	registry      Registry
 }
@@ -52,7 +53,7 @@ func (c *clientImpl) StartProcessWithOptions(
 		gaOptions := startOptions.GlobalAttributeOptions
 		schema := persSchema.GlobalAttributeSchema
 		gaDefs := c.registry.getGlobalAttributeKeyToDefs(prcType)
-		pkValue, err := c.clientOptions.ObjectEncoder.FromGlobalAttributeToDbValue(gaOptions.PrimaryAttributeValue, schema.DefaultTablePrimaryKeyHint)
+		pkValue, err := c.dbConverter.ToDBValue(gaOptions.PrimaryAttributeValue, schema.DefaultTablePrimaryKeyHint)
 		if err != nil {
 			return "", err
 		}
@@ -106,7 +107,7 @@ func (c *clientImpl) convertGlobalAttributeValues(
 		if !ok {
 			return nil, NewInvalidArgumentError("GlobalAttributeConfig.InitialAttributes has unknown key: " + k)
 		}
-		dbValue, err := c.clientOptions.ObjectEncoder.FromGlobalAttributeToDbValue(v, attr.hint)
+		dbValue, err := c.dbConverter.ToDBValue(v, attr.hint)
 		if err != nil {
 			return nil, err
 		}

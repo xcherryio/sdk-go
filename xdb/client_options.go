@@ -5,6 +5,7 @@ type ClientOptions struct {
 	ServerUrl           string
 	WorkerUrl           string
 	ObjectEncoder       ObjectEncoder
+	DBConverter         DBConverter
 	EnabledDebugLogging bool
 	// TODO API timeout and retry policy
 }
@@ -23,6 +24,7 @@ var localDefaultClientOptions = ClientOptions{
 	ServerUrl:     DefaultServerUrl,
 	WorkerUrl:     DefaultWorkerUrl,
 	ObjectEncoder: GetDefaultObjectEncoder(),
+	DBConverter:   NewBasicDBConverter(),
 }
 
 func GetLocalDefaultClientOptions() *ClientOptions {
