@@ -75,7 +75,7 @@ func (p persistenceImpl) SetGlobalAttribute(key string, value interface{}) {
 }
 
 func (p persistenceImpl) getGlobalAttributesToUpdate() []xdbapi.GlobalAttributeTableRowUpdate {
-	var res map[string]xdbapi.GlobalAttributeTableRowUpdate
+	res := map[string]xdbapi.GlobalAttributeTableRowUpdate{}
 	for k, v := range p.currUpdatedGlobalAttrs {
 		def := p.globalAttrDefs[k]
 		tblName := def.tableName
