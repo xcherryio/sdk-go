@@ -143,49 +143,52 @@ func createLoadGlobalAttributesRequestIfNeeded(
 	registry Registry, prcType string, preferredPersistencePolicyName *string,
 ) *xdbapi.LoadGlobalAttributesRequest {
 	persistenceSchema := registry.getPersistenceSchema(prcType)
+
+	var preferredPolicy *PersistenceLoadingPolicy
+	if preferredPersistencePolicyName != nil {
+		preferredPolicyS, ok := persistenceSchema.OverrideLoadingPolicies[*preferredPersistencePolicyName]
+		if !ok {
+			panic("persistence loading policy not found " + *preferredPersistencePolicyName)
+		}
+		preferredPolicy = &preferredPolicyS
+	}
+
+	var tblReqs []xdbapi.TableReadRequest
 	if persistenceSchema.GlobalAttributeSchema != nil {
 		keyToDefs := registry.getGlobalAttributeKeyToDefs(prcType)
-		persistencePolicy := persistenceSchema.DefaultLoadingPolicy.GlobalAttributeLoadingPolicy
-		if preferredPersistencePolicyName != nil {
-			policy, ok := persistenceSchema.NamedLoadingPolicies[*preferredPersistencePolicyName]
-			if !ok {
-				panic("persistence loading policy not found " + *preferredPersistencePolicyName)
+
+		for _, tblSchema := range persistenceSchema.GlobalAttributeSchema.Tables {
+			tblLoadingPolicy := getFinalTableLoadingPolicy(tblSchema, preferredPolicy)
+
+			var colsToRead []xdbapi.TableColumnDef
+			for _, key := range tblLoadingPolicy.LoadingKeys {
+				def := keyToDefs[key]
+				colsToRead = append(colsToRead, xdbapi.TableColumnDef{
+					DbColumn: def.colDef.ColumnName,
+				})
 			}
-			persistencePolicy = policy.GlobalAttributeLoadingPolicy
-		}
-		return convertGlobalAttributeLoadingPolicyToLoadingRequest(
-			keyToDefs,
-			persistencePolicy,
-		)
-	}
-	return nil
-}
 
-func convertGlobalAttributeLoadingPolicyToLoadingRequest(
-	keyToDefs map[string]internalGlobalAttrDef,
-	policy *GlobalAttributeLoadingPolicy,
-) *xdbapi.LoadGlobalAttributesRequest {
-	var attrs []xdbapi.GlobalAttributeKey
-	for _, k := range policy.LoadingKeys {
-		def := keyToDefs[k]
-		attr := xdbapi.GlobalAttributeKey{
-			DbColumn:                         def.colName,
-			AlternativeTable:                 def.altTableName,
-			AlternativeTableForeignKeyColumn: def.altTableForeignKey,
+			tblReqs = append(tblReqs, xdbapi.TableReadRequest{
+				TableName:     &tblSchema.TableName,
+				Columns:       colsToRead,
+				LockingPolicy: ptr.Any(tblLoadingPolicy.LockingType),
+			})
 		}
-		attrs = append(attrs, attr)
 	}
-
-	var tableReadLockingPolicyOverrides []xdbapi.TableReadLockingPolicy
-	for tbl, lockType := range policy.TableLockingTypeOverrides {
-		tableReadLockingPolicyOverrides = append(tableReadLockingPolicyOverrides, xdbapi.TableReadLockingPolicy{
-			TableName:       tbl,
-			ReadLockingType: lockType,
-		})
+	if len(tblReqs) == 0 {
+		return nil
 	}
 	return &xdbapi.LoadGlobalAttributesRequest{
-		Attributes:                      attrs,
-		DefaultReadLockingType:          policy.TableLockingTypeDefault.Ptr(),
-		TableReadLockingPolicyOverrides: tableReadLockingPolicyOverrides,
+		TableRequests: tblReqs,
 	}
+}
+
+func getFinalTableLoadingPolicy(schema DBTableSchema, policy *PersistenceLoadingPolicy) TableLoadingPolicy {
+	if policy != nil && policy.GlobalAttributeTableLoadingPolicy != nil {
+		p, ok := policy.GlobalAttributeTableLoadingPolicy[schema.TableName]
+		if ok {
+			return p
+		}
+	}
+	return schema.DefaultTableLoadingPolicy
 }

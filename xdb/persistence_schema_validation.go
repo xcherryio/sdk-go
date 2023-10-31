@@ -1,63 +1,43 @@
 package xdb
 
-func (s PersistenceSchema) Validate() (map[string]internalGlobalAttrDef, map[string]string, error) {
+type internalGlobalAttrDef struct {
+	tableName string
+	colDef    DBColumnDef
+}
+
+func (s PersistenceSchema) ValidateForRegistry() (map[string]internalGlobalAttrDef, map[string]string, error) {
 	keyToDef := map[string]internalGlobalAttrDef{}
 	tableColNameToKey := map[string]string{}
 
 	if s.GlobalAttributeSchema != nil {
-		gas := *s.GlobalAttributeSchema
-		if gas.DefaultTableName == "" {
-			return nil, nil, NewProcessDefinitionError("GlobalAttributeSchema.DefaultTableName is empty")
-		}
-		if gas.DefaultTablePrimaryKey == "" {
-			return nil, nil, NewProcessDefinitionError("GlobalAttributeSchema.DefaultTablePrimaryKey is empty")
-		}
-		if s.DefaultLoadingPolicy.GlobalAttributeLoadingPolicy == nil {
-			return nil, nil, NewProcessDefinitionError("GlobalAttributeSchema.DefaultLoadingPolicy.GlobalAttributeLoadingPolicy is empty")
-		}
+		for _, tableSchema := range s.GlobalAttributeSchema.Tables {
+			if tableSchema.TableName == "" {
+				return nil, nil, NewProcessDefinitionError("GlobalAttributeSchema.Tables.TableName is empty")
+			}
+			if tableSchema.PK == "" {
+				return nil, nil, NewProcessDefinitionError("GlobalAttributeSchema.Tables.PK is empty")
+			}
+			for _, colDef := range tableSchema.Columns {
+				if colDef.ColumnName == "" {
+					return nil, nil, NewProcessDefinitionError("GlobalAttributeSchema.Tables.Columns.ColumnName is empty")
+				}
+				key := colDef.GlobalAttributeKey
+				if key == "" {
+					return nil, nil, NewProcessDefinitionError("GlobalAttributeSchema.Tables.Columns.GlobalAttributeKey is empty")
+				}
+				if _, ok := keyToDef[key]; ok {
+					return nil, nil, NewProcessDefinitionError("GlobalAttributeSchema.Tables.Columns.GlobalAttributeKey is duplicated " + key)
+				}
+				keyToDef[key] = internalGlobalAttrDef{
+					tableName: tableSchema.TableName,
+					colDef:    colDef,
+				}
 
-		for _, attr := range gas.DefaultTableAttributeDefs {
-			if attr.Key == "" {
-				return nil, nil, NewProcessDefinitionError("GlobalAttributeSchema.DefaultTableAttributeDefs.Key is empty")
-			}
-			if attr.DBColumn == "" {
-				return nil, nil, NewProcessDefinitionError("GlobalAttributeSchema.DefaultTableAttributeDefs.DBColumn is empty")
-			}
-			if _, ok := keyToDef[attr.Key]; ok {
-				return nil, nil, NewProcessDefinitionError("GlobalAttributeSchema.DefaultTableAttributeDefs.Key is duplicated")
-			}
-			keyToDef[attr.Key] = internalGlobalAttrDef{
-				colName: attr.DBColumn,
-				hint:    attr.Hint,
-			}
-			tableColName := getTableColumnName(gas.DefaultTableName, attr.DBColumn)
-			if _, ok := tableColNameToKey[tableColName]; ok {
-				return nil, nil, NewProcessDefinitionError("GlobalAttributeSchema.DefaultTableAttributeDefs.DBColumn is duplicated")
-			}
-			tableColNameToKey[tableColName] = attr.Key
-		}
-		for _, secondaryTable := range gas.GASecondaryTableDefs {
-			for _, attr := range secondaryTable.Attributes {
-				if attr.Key == "" {
-					return nil, nil, NewProcessDefinitionError("GlobalAttributeSchema.GASecondaryTableDefs.Attributes.Key is empty")
+				tblColName := getTableColumnName(tableSchema.TableName, colDef.ColumnName)
+				if _, ok := tableColNameToKey[tblColName]; ok {
+					return nil, nil, NewProcessDefinitionError("GlobalAttributeSchema.Tables.Columns.ColumnName is duplicated " + tblColName)
 				}
-				if attr.DBColumn == "" {
-					return nil, nil, NewProcessDefinitionError("GlobalAttributeSchema.GASecondaryTableDefs.DBColumn is empty")
-				}
-				if _, ok := keyToDef[attr.Key]; ok {
-					return nil, nil, NewProcessDefinitionError("GlobalAttributeSchema.GASecondaryTableDefs.Key is duplicated")
-				}
-				keyToDef[attr.Key] = internalGlobalAttrDef{
-					colName:            attr.DBColumn,
-					hint:               attr.Hint,
-					altTableName:       &secondaryTable.DBTable,
-					altTableForeignKey: &secondaryTable.ForeignKey,
-				}
-				tableColName := secondaryTable.DBTable + "#" + attr.DBColumn
-				if _, ok := tableColNameToKey[tableColName]; ok {
-					return nil, nil, NewProcessDefinitionError("GlobalAttributeSchema.GASecondaryTableDefs.DBColumn is duplicated")
-				}
-				tableColNameToKey[tableColName] = attr.Key
+				tableColNameToKey[tblColName] = key
 			}
 		}
 	}

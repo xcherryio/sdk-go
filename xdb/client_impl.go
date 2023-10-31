@@ -47,30 +47,21 @@ func (c *clientImpl) StartProcessWithOptions(
 		}
 	}
 	if persSchema.GlobalAttributeSchema != nil {
-		if startOptions == nil || startOptions.GlobalAttributeOptions == nil {
+		if startOptions == nil || startOptions.GlobalAttributeOptions == nil ||
+			len(startOptions.GlobalAttributeOptions.DBTableConfigs) == 0 {
 			return "", NewInvalidArgumentError("GlobalAttributeConfig is required for process with GlobalAttributeSchema")
 		}
-		gaOptions := startOptions.GlobalAttributeOptions
+		dbTableCfgs := startOptions.GlobalAttributeOptions.DBTableConfigs
 		schema := persSchema.GlobalAttributeSchema
-		gaDefs := c.registry.getGlobalAttributeKeyToDefs(prcType)
-		pkValue, err := c.dbConverter.ToDBValue(gaOptions.PrimaryAttributeValue, schema.DefaultTablePrimaryKeyHint)
-		if err != nil {
-			return "", err
-		}
+		keyDefs := c.registry.getGlobalAttributeKeyToDefs(prcType)
 
-		gaVals, err := c.convertGlobalAttributeValues(gaOptions.InitialAttributes, gaDefs)
+		tableConfigs, err := c.convertToTableConfig(dbTableCfgs, *schema, keyDefs)
 		if err != nil {
 			return "", err
 		}
 
 		unregOpt.GlobalAttributeConfig = &xdbapi.GlobalAttributeConfig{
-			DefaultDbTable: &schema.DefaultTableName,
-			PrimaryGlobalAttribute: &xdbapi.GlobalAttributeValue{
-				DbColumn:     schema.DefaultTablePrimaryKey,
-				DbQueryValue: pkValue,
-			},
-			InitialGlobalAttributes:         gaVals,
-			InitialGlobalAttributeWriteMode: &gaOptions.InitialWriteConflictMode,
+			TableConfigs: tableConfigs,
 		}
 	}
 
@@ -98,25 +89,45 @@ func (c *clientImpl) DescribeCurrentProcessExecution(
 	return c.BasicClient.DescribeCurrentProcessExecution(ctx, processId)
 }
 
-func (c *clientImpl) convertGlobalAttributeValues(
-	rawAttributes map[string]interface{}, schema map[string]internalGlobalAttrDef,
-) ([]xdbapi.GlobalAttributeValue, error) {
-	var vals []xdbapi.GlobalAttributeValue
-	for k, v := range rawAttributes {
-		attr, ok := schema[k]
+func (c *clientImpl) convertToTableConfig(
+	dbCfgs map[string]DBTableConfig, schema GlobalAttributesSchema, keyToDefs map[string]internalGlobalAttrDef,
+) ([]xdbapi.GlobalAttributeTableConfig, error) {
+	var res []xdbapi.GlobalAttributeTableConfig
+	for _, tbl := range schema.Tables {
+		tblName := tbl.TableName
+		cfg, ok := dbCfgs[tblName]
 		if !ok {
-			return nil, NewInvalidArgumentError("GlobalAttributeConfig.InitialAttributes has unknown key: " + k)
+			return nil, NewInvalidArgumentError("GlobalAttributeConfig.DBTableConfigs missing table: " + tblName)
 		}
-		dbValue, err := c.dbConverter.ToDBValue(v, attr.hint)
+		dbVal, err := c.dbConverter.ToDBValue(cfg.PKValue, cfg.PKHint)
 		if err != nil {
 			return nil, err
 		}
-		vals = append(vals, xdbapi.GlobalAttributeValue{
-			DbColumn:                         attr.colName,
-			DbQueryValue:                     dbValue,
-			AlternativeTable:                 attr.altTableName,
-			AlternativeTableForeignKeyColumn: attr.altTableForeignKey,
-		})
+		var initWrite []xdbapi.TableColumnValue
+		for key, attr := range cfg.InitialAttributes {
+			def, ok := keyToDefs[key]
+			if !ok {
+				return nil, NewInvalidArgumentError("invalid attribute key for global attribute schema: " + key)
+			}
+			dbVal, err := c.dbConverter.ToDBValue(attr, def.colDef.Hint)
+			if err != nil {
+				return nil, err
+			}
+			initWrite = append(initWrite, xdbapi.TableColumnValue{
+				DbColumn:     def.colDef.ColumnName,
+				DbQueryValue: dbVal,
+			})
+		}
+		tblConfig := xdbapi.GlobalAttributeTableConfig{
+			TableName: tblName,
+			PrimaryKey: xdbapi.TableColumnValue{
+				DbColumn:     tbl.PK,
+				DbQueryValue: dbVal,
+			},
+			InitialWrite:     initWrite,
+			InitialWriteMode: cfg.InitialWriteConflictMode,
+		}
+		res = append(res, tblConfig)
 	}
-	return vals, nil
+	return res, nil
 }

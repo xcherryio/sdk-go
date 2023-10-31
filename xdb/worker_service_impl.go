@@ -72,24 +72,15 @@ func (w *workerServiceImpl) HandleAsyncStateExecute(
 		StateDecision: *idlDecision,
 	}
 	if len(pers.getGlobalAttributesToUpdate()) > 0 {
-		resp.UpsertGlobalAttributes = pers.getGlobalAttributesToUpdate()
+		resp.WriteToGlobalAttributes = pers.getGlobalAttributesToUpdate()
 	}
 	return resp, nil
 }
 
 func (w *workerServiceImpl) createPersistenceImpl(
-	prcType string, attributesResp *xdbapi.LoadGlobalAttributeResponse,
+	prcType string, currGlobalAttrs *xdbapi.LoadGlobalAttributeResponse,
 ) Persistence {
-	persSchema := w.registry.getPersistenceSchema(prcType)
 	gloAttrDefs := w.registry.getGlobalAttributeKeyToDefs(prcType)
 	gloTblColToKey := w.registry.getGlobalAttributeTableColumnToKey(prcType)
-	var currGloAttrs []xdbapi.GlobalAttributeValue
-	if attributesResp != nil {
-		currGloAttrs = attributesResp.GetAttributes()
-	}
-	defaultTable := ""
-	if persSchema.GlobalAttributeSchema != nil {
-		defaultTable = persSchema.GlobalAttributeSchema.DefaultTableName
-	}
-	return NewPersistenceImpl(w.options.DBConverter, defaultTable, gloAttrDefs, gloTblColToKey, currGloAttrs)
+	return NewPersistenceImpl(w.options.DBConverter, gloAttrDefs, gloTblColToKey, currGlobalAttrs)
 }

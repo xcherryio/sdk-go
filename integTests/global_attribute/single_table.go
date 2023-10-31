@@ -13,7 +13,7 @@ import (
 	"github.com/xdblab/xdb-golang-sdk/xdb"
 )
 
-type IOProcess struct {
+type SingleTableProcess struct {
 	xdb.ProcessDefaults
 }
 
@@ -21,36 +21,35 @@ const (
 	attrKeyInt            = "key1"
 	attrKeyStr            = "key2"
 	loadNothingPolicyName = "loadNothing"
+	tblName               = "sample_user_table"
 )
 
-func (b IOProcess) GetPersistenceSchema() xdb.PersistenceSchema {
-	return xdb.NewPersistenceSchema(
+func (b SingleTableProcess) GetPersistenceSchema() xdb.PersistenceSchema {
+	return xdb.NewPersistenceSchemaWithOptions(
 		xdb.NewGlobalAttributesSchema(
-			"sample_user_table",
-			"userid",
-			xdb.NewGlobalAttributeDef(attrKeyInt, "create_timestamp"),
-			xdb.NewGlobalAttributeDef(attrKeyStr, "email"),
+			xdb.NewDBTableSchema(
+				tblName, "user_id",
+				xdb.NewTableLoadingPolicy([]string{attrKeyInt, attrKeyStr}, xdbapi.NO_LOCKING),
+				xdb.NewDBColumnDef(attrKeyInt, "create_timestamp"),
+				xdb.NewDBColumnDef(attrKeyStr, "name")),
 		),
 		nil,
-		xdb.NewPersistenceLoadingPolicy(
-			xdb.NewGlobalAttributeLoadingPolicy(
-				xdbapi.NO_LOCKING,
-				attrKeyInt, attrKeyStr,
-			),
-			nil,
-		),
-		map[string]xdb.PersistenceLoadingPolicy{
-			loadNothingPolicyName: xdb.NewPersistenceLoadingPolicy(
-				xdb.NewGlobalAttributeLoadingPolicy(
-					xdbapi.NO_LOCKING,
-				),
-				nil,
-			),
+		xdb.PersistenceSchemaOptions{
+			NameToLoadingPolicies: map[string]xdb.PersistenceLoadingPolicy{
+				loadNothingPolicyName: xdb.NewPersistenceLoadingPolicy(
+					map[string]xdb.TableLoadingPolicy{
+						"sample_user_table": xdb.NewTableLoadingPolicy(
+							[]string{},
+							xdbapi.NO_LOCKING,
+						),
+					},
+					nil),
+			},
 		},
 	)
 }
 
-func (b IOProcess) GetAsyncStateSchema() xdb.StateSchema {
+func (b SingleTableProcess) GetAsyncStateSchema() xdb.StateSchema {
 	return xdb.NewStateSchema(
 		&stateForInitialReadWrite{}, // read from initial global attributes and write to them
 		&stateToVerifyGlobalAttrs{}, // verify the global attributes write from the prev state
@@ -143,17 +142,21 @@ func (b stateForTestLoadNothing) Execute(
 
 func TestGlobalAttributesWithSingleTable(t *testing.T, client xdb.Client) {
 	prcId := common.GenerateProcessId()
-	prc := IOProcess{}
+	prc := SingleTableProcess{}
 
 	runId1, err := client.StartProcessWithOptions(context.Background(), prc, prcId, xdbapi.RETURN_ERROR_ON_CONFLICT,
 		&xdb.ProcessStartOptions{
 			GlobalAttributeOptions: &xdb.GlobalAttributeOptions{
-				PrimaryAttributeValue: prcId, // use processId as the primary key value(string)
-				InitialAttributes: map[string]interface{}{
-					attrKeyInt: 123,
-					attrKeyStr: "abc",
+				DBTableConfigs: map[string]xdb.DBTableConfig{
+					tblName: xdb.DBTableConfig{
+						PKValue: prcId, // use processId as the primary key value(string)
+						InitialAttributes: map[string]interface{}{
+							attrKeyInt: 123,
+							attrKeyStr: "abc",
+						},
+						InitialWriteConflictMode: xdbapi.RETURN_ERROR_ON_CONFLICT.Ptr(),
+					},
 				},
-				InitialWriteConflictMode: xdbapi.RETURN_ERROR_ON_CONFLICT,
 			},
 		})
 	assert.Nil(t, err)
@@ -168,12 +171,16 @@ func TestGlobalAttributesWithSingleTable(t *testing.T, client xdb.Client) {
 		&xdb.ProcessStartOptions{
 			IdReusePolicy: xdbapi.ALLOW_IF_NO_RUNNING.Ptr(),
 			GlobalAttributeOptions: &xdb.GlobalAttributeOptions{
-				PrimaryAttributeValue: prcId,
-				InitialAttributes: map[string]interface{}{
-					attrKeyInt: 123,
-					attrKeyStr: "abc",
+				DBTableConfigs: map[string]xdb.DBTableConfig{
+					tblName: xdb.DBTableConfig{
+						PKValue: prcId, // use processId as the primary key value(string)
+						InitialAttributes: map[string]interface{}{
+							attrKeyInt: 123,
+							attrKeyStr: "abc",
+						},
+						InitialWriteConflictMode: xdbapi.RETURN_ERROR_ON_CONFLICT.Ptr(),
+					},
 				},
-				InitialWriteConflictMode: xdbapi.RETURN_ERROR_ON_CONFLICT,
 			},
 		})
 	assert.NotNil(t, err)
@@ -184,12 +191,16 @@ func TestGlobalAttributesWithSingleTable(t *testing.T, client xdb.Client) {
 		&xdb.ProcessStartOptions{
 			IdReusePolicy: xdbapi.ALLOW_IF_NO_RUNNING.Ptr(),
 			GlobalAttributeOptions: &xdb.GlobalAttributeOptions{
-				PrimaryAttributeValue: prcId,
-				InitialAttributes: map[string]interface{}{
-					attrKeyInt: "abc",
-					attrKeyStr: 123,
+				DBTableConfigs: map[string]xdb.DBTableConfig{
+					tblName: xdb.DBTableConfig{
+						PKValue: prcId, // use processId as the primary key value(string)
+						InitialAttributes: map[string]interface{}{
+							attrKeyInt: "abc",
+							attrKeyStr: "123",
+						},
+						InitialWriteConflictMode: xdbapi.RETURN_ERROR_ON_CONFLICT.Ptr(),
+					},
 				},
-				InitialWriteConflictMode: xdbapi.OVERRIDE_ON_CONFLICT,
 			},
 		})
 	assert.NotNil(t, err)
@@ -200,12 +211,16 @@ func TestGlobalAttributesWithSingleTable(t *testing.T, client xdb.Client) {
 		&xdb.ProcessStartOptions{
 			IdReusePolicy: xdbapi.ALLOW_IF_NO_RUNNING.Ptr(),
 			GlobalAttributeOptions: &xdb.GlobalAttributeOptions{
-				PrimaryAttributeValue: prcId,
-				InitialAttributes: map[string]interface{}{
-					attrKeyInt: 123456,
-					attrKeyStr: "abcdef",
+				DBTableConfigs: map[string]xdb.DBTableConfig{
+					tblName: xdb.DBTableConfig{
+						PKValue: prcId, // use processId as the primary key value(string)
+						InitialAttributes: map[string]interface{}{
+							attrKeyInt: 123,
+							attrKeyStr: "abc",
+						},
+						InitialWriteConflictMode: xdbapi.OVERRIDE_ON_CONFLICT.Ptr(),
+					},
 				},
-				InitialWriteConflictMode: xdbapi.OVERRIDE_ON_CONFLICT,
 			},
 		})
 	assert.Nil(t, err)
@@ -221,12 +236,16 @@ func TestGlobalAttributesWithSingleTable(t *testing.T, client xdb.Client) {
 		&xdb.ProcessStartOptions{
 			IdReusePolicy: xdbapi.ALLOW_IF_NO_RUNNING.Ptr(),
 			GlobalAttributeOptions: &xdb.GlobalAttributeOptions{
-				PrimaryAttributeValue: prcId,
-				InitialAttributes: map[string]interface{}{
-					attrKeyInt: 123456789,   // it will be ignored because of conflict
-					attrKeyStr: "abcdefefg", // it will be ignored because of conflict
+				DBTableConfigs: map[string]xdb.DBTableConfig{
+					tblName: xdb.DBTableConfig{
+						PKValue: prcId, // use processId as the primary key value(string)
+						InitialAttributes: map[string]interface{}{
+							attrKeyInt: 123,
+							attrKeyStr: "abc",
+						},
+						InitialWriteConflictMode: xdbapi.IGNORE_CONFLICT.Ptr(),
+					},
 				},
-				InitialWriteConflictMode: xdbapi.IGNORE_CONFLICT,
 			},
 		})
 	assert.Nil(t, err)

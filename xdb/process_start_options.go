@@ -17,12 +17,18 @@ type ProcessStartOptions struct {
 }
 
 type GlobalAttributeOptions struct {
-	// PrimaryKeyAttributeValue is the value of the primary key value for the default table
-	// required if using global attributes
-	PrimaryAttributeValue interface{}
+	// DBTableConfigs is the database table configs for global attributes
+	// key is the table name. All the tables defined in globalAttributeSchema must be included
+	DBTableConfigs map[string]DBTableConfig
+}
+
+type DBTableConfig struct {
+	PKValue interface{}
+	PKHint  *DBHint
 	// InitialAttributes is the initial attributes to be set when starting the process execution
 	// Key is the attribute key, value is the attribute value
 	InitialAttributes map[string]interface{}
 	// InitialWriteConflictMode is for how to resolve the write conflict when setting the initial attributes
-	InitialWriteConflictMode xdbapi.AttributeWriteConflictMode
+	// Required if InitialAttributes is not empty
+	InitialWriteConflictMode *xdbapi.AttributeWriteConflictMode
 }

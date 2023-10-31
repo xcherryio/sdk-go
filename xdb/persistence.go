@@ -8,5 +8,5 @@ type Persistence interface {
 	// SetGlobalAttribute sets the global attribute value
 	SetGlobalAttribute(key string, value interface{})
 	// GetGlobalAttributesToReturn returns the global attributes to update
-	getGlobalAttributesToUpdate() []xdbapi.GlobalAttributeValue
+	getGlobalAttributesToUpdate() []xdbapi.GlobalAttributeTableRowUpdate
 }

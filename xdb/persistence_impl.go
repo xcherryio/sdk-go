@@ -8,26 +8,28 @@ type persistenceImpl struct {
 	// for global attributes
 	globalAttrDefs              map[string]internalGlobalAttrDef
 	globalAttrTableColNameToKey map[string]string
-	currGlobalAttrs             map[string]xdbapi.GlobalAttributeValue
-	currUpdatedGlobalAttrs      map[string]xdbapi.GlobalAttributeValue
+	currGlobalAttrs             map[string]xdbapi.TableColumnValue
+	currUpdatedGlobalAttrs      map[string]xdbapi.TableColumnValue
 }
 
 func NewPersistenceImpl(
-	dbConverter DBConverter, defaultTable string,
+	dbConverter DBConverter,
 	globalAttrDefs map[string]internalGlobalAttrDef, globalAttrTableColNameToKey map[string]string,
-	currGlobalAttrs []xdbapi.GlobalAttributeValue,
+	currGlobalAttrs *xdbapi.LoadGlobalAttributeResponse,
 ) Persistence {
-	currGlobalAttrsMap := map[string]xdbapi.GlobalAttributeValue{}
-	for _, attr := range currGlobalAttrs {
-		tbl := defaultTable
-		if attr.AlternativeTable == nil {
-			tbl = *attr.AlternativeTable
+	currGlobalAttrsMap := map[string]xdbapi.TableColumnValue{}
+
+	if currGlobalAttrs != nil {
+		for _, tblResp := range currGlobalAttrs.TableResponses {
+			tblName := tblResp.GetTableName()
+			for _, colVal := range tblResp.GetColumns() {
+				key, ok := globalAttrTableColNameToKey[getTableColumnName(tblName, colVal.DbColumn)]
+				if !ok {
+					panic("global attribute not found " + colVal.DbColumn)
+				}
+				currGlobalAttrsMap[key] = colVal
+			}
 		}
-		key, ok := globalAttrTableColNameToKey[getTableColumnName(tbl, attr.DbColumn)]
-		if !ok {
-			panic("global attribute not found " + attr.DbColumn)
-		}
-		currGlobalAttrsMap[key] = attr
 	}
 
 	return &persistenceImpl{
@@ -35,6 +37,8 @@ func NewPersistenceImpl(
 		globalAttrDefs:              globalAttrDefs,
 		globalAttrTableColNameToKey: globalAttrTableColNameToKey,
 		currGlobalAttrs:             currGlobalAttrsMap,
+		// start from empty
+		currUpdatedGlobalAttrs: map[string]xdbapi.TableColumnValue{},
 	}
 }
 
@@ -47,7 +51,7 @@ func (p persistenceImpl) GetGlobalAttribute(key string, resultPtr interface{}) {
 	if !ok {
 		return
 	}
-	err := p.dbConverter.FromDBValue(curVal.DbQueryValue, def.hint, resultPtr)
+	err := p.dbConverter.FromDBValue(curVal.DbQueryValue, def.colDef.Hint, resultPtr)
 	if err != nil {
 		panic(err)
 	}
@@ -58,24 +62,38 @@ func (p persistenceImpl) SetGlobalAttribute(key string, value interface{}) {
 	if !ok {
 		panic("global attribute not found " + key)
 	}
-	dbQueryValue, err := p.dbConverter.ToDBValue(value, def.hint)
+	dbQueryValue, err := p.dbConverter.ToDBValue(value, def.colDef.Hint)
 	if err != nil {
 		panic(err)
 	}
-	val := xdbapi.GlobalAttributeValue{
-		DbQueryValue:                     dbQueryValue,
-		DbColumn:                         def.colName,
-		AlternativeTable:                 def.altTableName,
-		AlternativeTableForeignKeyColumn: def.altTableForeignKey,
+	val := xdbapi.TableColumnValue{
+		DbQueryValue: dbQueryValue,
+		DbColumn:     def.colDef.ColumnName,
 	}
 	p.currGlobalAttrs[key] = val
 	p.currUpdatedGlobalAttrs[key] = val
 }
 
-func (p persistenceImpl) getGlobalAttributesToUpdate() []xdbapi.GlobalAttributeValue {
-	var res []xdbapi.GlobalAttributeValue
-	for _, v := range p.currUpdatedGlobalAttrs {
-		res = append(res, v)
+func (p persistenceImpl) getGlobalAttributesToUpdate() []xdbapi.GlobalAttributeTableRowUpdate {
+	var res map[string]xdbapi.GlobalAttributeTableRowUpdate
+	for k, v := range p.currUpdatedGlobalAttrs {
+		def := p.globalAttrDefs[k]
+		tblName := def.tableName
+
+		tblUpdate, ok := res[tblName]
+		if !ok {
+			tblUpdate = xdbapi.GlobalAttributeTableRowUpdate{
+				TableName: tblName,
+			}
+		}
+
+		tblUpdate.UpdateColumns = append(tblUpdate.UpdateColumns, v)
+		res[tblName] = tblUpdate
 	}
-	return res
+
+	var res2 []xdbapi.GlobalAttributeTableRowUpdate
+	for _, v := range res {
+		res2 = append(res2, v)
+	}
+	return res2
 }

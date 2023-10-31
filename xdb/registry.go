@@ -23,7 +23,7 @@ func NewRegistry() Registry {
 		startingState:               map[string]AsyncState{},
 		stateStore:                  map[string]map[string]AsyncState{},
 		persistenceSchemaStore:      map[string]PersistenceSchema{},
-		globalAttributeDefs:         map[string]map[string]internalGlobalAttrDef{},
+		globalAttributeKeyToDef:     map[string]map[string]internalGlobalAttrDef{},
 		globalAttrTableColNameToKey: map[string]map[string]string{},
 	}
 }
