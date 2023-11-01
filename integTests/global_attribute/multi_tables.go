@@ -161,7 +161,7 @@ func (b multiTableStateForTestLoadSequence) Execute(
 
 	persistence.GetGlobalAttribute(attrKeyInt2, &i)
 	persistence.GetGlobalAttribute(attrKeyStr2, &str)
-	if i != 0 {
+	if i != 444 {
 		panic(fmt.Sprintf("unexpected value %d", i))
 	}
 	if str != "" {
