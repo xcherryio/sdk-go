@@ -22,30 +22,24 @@ const (
 	attrKeyStr            = "key2"
 	loadNothingPolicyName = "loadNothing"
 	tblName               = "sample_user_table"
+	pk                    = "user_id"
 )
 
 func (b SingleTableProcess) GetPersistenceSchema() xdb.PersistenceSchema {
 	return xdb.NewPersistenceSchemaWithOptions(
 		xdb.NewGlobalAttributesSchema(
 			xdb.NewDBTableSchema(
-				tblName, "user_id",
-				xdb.NewTableLoadingPolicy([]string{attrKeyInt, attrKeyStr}, xdbapi.NO_LOCKING),
-				xdb.NewDBColumnDef(attrKeyInt, "create_timestamp"),
-				xdb.NewDBColumnDef(attrKeyStr, "name")),
+				tblName, pk,
+				xdbapi.NO_LOCKING,
+				xdb.NewDBColumnDef(attrKeyInt, "create_timestamp", true),
+				xdb.NewDBColumnDef(attrKeyStr, "name", true)),
 		),
 		nil,
-		xdb.PersistenceSchemaOptions{
-			NameToLoadingPolicies: map[string]xdb.PersistenceLoadingPolicy{
-				loadNothingPolicyName: xdb.NewPersistenceLoadingPolicy(
-					map[string]xdb.TableLoadingPolicy{
-						"sample_user_table": xdb.NewTableLoadingPolicy(
-							[]string{},
-							xdbapi.NO_LOCKING,
-						),
-					},
-					nil),
-			},
-		},
+		xdb.NewPersistenceSchemaOptions(
+			xdb.NewNamedPersistenceLoadingPolicy(
+				loadNothingPolicyName, nil,
+				xdb.NewTableLoadingPolicy(tblName, xdbapi.NO_LOCKING)),
+		),
 	)
 }
 

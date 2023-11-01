@@ -12,7 +12,7 @@ type PersistenceSchema struct {
 	LocalAttributeSchema *LocalAttributesSchema
 	// OverrideLoadingPolicies is the loading policy with a name, which can be used as an override to the default
 	// loading policy for global and local attribute schemas
-	OverrideLoadingPolicies map[string]PersistenceLoadingPolicy
+	OverrideLoadingPolicies map[string]NamedPersistenceLoadingPolicy
 }
 
 type GlobalAttributesSchema struct {
@@ -32,19 +32,22 @@ type DBColumnDef struct {
 	GlobalAttributeKey string
 	ColumnName         string
 	Hint               *DBHint
+	defaultLoading     bool
 }
 
 // DBHint is the hint for the DBConverter to convert database column to query value and vice versa
 type DBHint string
 
 type TableLoadingPolicy struct {
+	TableName string
 	// LoadingKeys are the attribute keys that will be loaded from the database
 	LoadingKeys []string
 	// TableLockingTypeDefault is the locking type for all the loaded attributes
 	LockingType xdbapi.TableReadLockingPolicy
 }
 
-type PersistenceLoadingPolicy struct {
+type NamedPersistenceLoadingPolicy struct {
+	Name string
 	// GlobalAttributeLoadingPolicy is the loading policy for global attributes
 	// key is the table name
 	GlobalAttributeTableLoadingPolicy map[string]TableLoadingPolicy
@@ -90,7 +93,7 @@ func NewPersistenceSchemaWithOptions(
 
 type PersistenceSchemaOptions struct {
 	// NameToLoadingPolicies is the loading policy with a name, which can be used as an override to the default loading policy
-	NameToLoadingPolicies map[string]PersistenceLoadingPolicy
+	NameToLoadingPolicies map[string]NamedPersistenceLoadingPolicy
 }
 
 func NewGlobalAttributesSchema(
@@ -108,9 +111,19 @@ func NewGlobalAttributesSchema(
 func NewDBTableSchema(
 	tableName string,
 	pk string,
-	defaultLoadingPolicy TableLoadingPolicy,
+	defaultReadLocking xdbapi.TableReadLockingPolicy,
 	columns ...DBColumnDef,
 ) DBTableSchema {
+
+	var loadingKeys []string
+	for _, col := range columns {
+		if col.defaultLoading {
+			loadingKeys = append(loadingKeys, col.GlobalAttributeKey)
+		}
+	}
+
+	defaultLoadingPolicy := NewTableLoadingPolicy(tableName, defaultReadLocking, loadingKeys...)
+
 	return DBTableSchema{
 		TableName:                 tableName,
 		PK:                        pk,
@@ -120,40 +133,62 @@ func NewDBTableSchema(
 }
 
 func NewDBColumnDef(
-	key string, dbColumn string,
+	key string, dbColumn string, defaultLoading bool,
 ) DBColumnDef {
 	return DBColumnDef{
 		GlobalAttributeKey: key,
 		ColumnName:         dbColumn,
+		defaultLoading:     defaultLoading,
 	}
 }
 
 func NewDBColumnDefWithHint(
-	key string, dbColumn string, hint DBHint,
+	key string, dbColumn string, defaultLoading bool, hint DBHint,
 ) DBColumnDef {
 	return DBColumnDef{
 		GlobalAttributeKey: key,
 		ColumnName:         dbColumn,
 		Hint:               &hint,
+		defaultLoading:     defaultLoading,
 	}
 }
 
 func NewTableLoadingPolicy(
-	loadingKeys []string,
+	tableName string,
 	lockingType xdbapi.TableReadLockingPolicy,
+	loadingKeys ...string,
 ) TableLoadingPolicy {
 	return TableLoadingPolicy{
+		TableName:   tableName,
 		LoadingKeys: loadingKeys,
 		LockingType: lockingType,
 	}
 }
 
-func NewPersistenceLoadingPolicy(
-	globalAttributeTableLoadingPolicy map[string]TableLoadingPolicy,
+func NewNamedPersistenceLoadingPolicy(
+	name string,
 	localAttributesLoadingPolicy *LocalAttributeLoadingPolicy,
-) PersistenceLoadingPolicy {
-	return PersistenceLoadingPolicy{
-		GlobalAttributeTableLoadingPolicy: globalAttributeTableLoadingPolicy,
+	globalAttributeTableLoadingPolicy ...TableLoadingPolicy,
+) NamedPersistenceLoadingPolicy {
+	tblToPolicy := map[string]TableLoadingPolicy{}
+	for _, p := range globalAttributeTableLoadingPolicy {
+		tblToPolicy[p.TableName] = p
+	}
+	return NamedPersistenceLoadingPolicy{
+		Name:                              name,
+		GlobalAttributeTableLoadingPolicy: tblToPolicy,
 		LocalAttributeLoadingPolicy:       localAttributesLoadingPolicy,
+	}
+}
+
+func NewPersistenceSchemaOptions(
+	namedPolicies ...NamedPersistenceLoadingPolicy,
+) PersistenceSchemaOptions {
+	nameToPolicy := map[string]NamedPersistenceLoadingPolicy{}
+	for _, p := range namedPolicies {
+		nameToPolicy[p.Name] = p
+	}
+	return PersistenceSchemaOptions{
+		NameToLoadingPolicies: nameToPolicy,
 	}
 }

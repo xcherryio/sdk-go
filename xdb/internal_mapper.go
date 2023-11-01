@@ -144,7 +144,7 @@ func createLoadGlobalAttributesRequestIfNeeded(
 ) *xdbapi.LoadGlobalAttributesRequest {
 	persistenceSchema := registry.getPersistenceSchema(prcType)
 
-	var preferredPolicy *PersistenceLoadingPolicy
+	var preferredPolicy *NamedPersistenceLoadingPolicy
 	if preferredPersistencePolicyName != nil {
 		preferredPolicyS, ok := persistenceSchema.OverrideLoadingPolicies[*preferredPersistencePolicyName]
 		if !ok {
@@ -183,7 +183,7 @@ func createLoadGlobalAttributesRequestIfNeeded(
 	}
 }
 
-func getFinalTableLoadingPolicy(schema DBTableSchema, policy *PersistenceLoadingPolicy) TableLoadingPolicy {
+func getFinalTableLoadingPolicy(schema DBTableSchema, policy *NamedPersistenceLoadingPolicy) TableLoadingPolicy {
 	if policy != nil && policy.GlobalAttributeTableLoadingPolicy != nil {
 		p, ok := policy.GlobalAttributeTableLoadingPolicy[schema.TableName]
 		if ok {
