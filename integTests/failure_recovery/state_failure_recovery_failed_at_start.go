@@ -29,8 +29,6 @@ type executeFailedAtStartInitState struct {
 	xdb.AsyncStateDefaults
 }
 
-// TODO: investigate the issue of starting state options being applied to all states
-// TODO: change the options to state2
 func (d executeFailedAtStartInitState) GetStateOptions() *xdb.AsyncStateOptions {
 	stateOptions := &xdb.AsyncStateOptions{
 		ExecuteTimeoutSeconds:   1,
