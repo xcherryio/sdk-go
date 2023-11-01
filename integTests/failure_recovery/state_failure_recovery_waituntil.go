@@ -29,9 +29,23 @@ type waitUntilInitState struct {
 	xdb.AsyncStateDefaults
 }
 
-// TODO: investigate the issue of starting state options being applied to all states
-// TODO: change the options to state2
-func (d waitUntilInitState) GetStateOptions() *xdb.AsyncStateOptions {
+func (b waitUntilInitState) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
+	return xdb.EmptyCommandRequest(), nil
+}
+
+func (b waitUntilInitState) Execute(
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+) (*xdb.StateDecision, error) {
+	var i int
+	input.Get(&i)
+	return xdb.SingleNextState(waitUntilFailedState{}, i+1), nil
+}
+
+type waitUntilFailedState struct {
+	xdb.AsyncStateDefaults
+}
+
+func (d waitUntilFailedState) GetStateOptions() *xdb.AsyncStateOptions {
 	stateOptions := &xdb.AsyncStateOptions{
 		ExecuteTimeoutSeconds:   1,
 		WaitUntilTimeoutSeconds: 1,
@@ -54,25 +68,6 @@ func (d waitUntilInitState) GetStateOptions() *xdb.AsyncStateOptions {
 	stateOptions.SetFailureRecoveryOption(&waitUntilRecoverState{})
 
 	return stateOptions
-}
-
-func (b waitUntilInitState) WaitUntil(
-	ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication,
-) (*xdb.CommandRequest, error) {
-	return xdb.EmptyCommandRequest(), nil
-}
-
-func (b waitUntilInitState) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
-	communication xdb.Communication,
-) (*xdb.StateDecision, error) {
-	var i int
-	input.Get(&i)
-	return xdb.SingleNextState(waitUntilFailedState{}, i+1), nil
-}
-
-type waitUntilFailedState struct {
-	xdb.AsyncStateDefaults
 }
 
 func (b waitUntilFailedState) WaitUntil(

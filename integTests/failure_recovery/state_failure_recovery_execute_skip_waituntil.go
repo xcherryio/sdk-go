@@ -29,19 +29,21 @@ type executeNoWaitUntilInitState struct {
 	xdb.AsyncStateDefaultsSkipWaitUntil
 }
 
-// TODO: investigate the issue of starting state options being applied to all states
-// TODO: change the options to state2
-func (d executeNoWaitUntilInitState) GetStateOptions() *xdb.AsyncStateOptions {
+func (b executeNoWaitUntilInitState) Execute(
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+) (*xdb.StateDecision, error) {
+	var i int
+	input.Get(&i)
+	return xdb.SingleNextState(&executeNoWaitUntilFailState{}, i+1), nil
+}
+
+type executeNoWaitUntilFailState struct {
+	xdb.AsyncStateDefaultsSkipWaitUntil
+}
+
+func (d executeNoWaitUntilFailState) GetStateOptions() *xdb.AsyncStateOptions {
 	stateOptions := &xdb.AsyncStateOptions{
-		ExecuteTimeoutSeconds:   1,
-		WaitUntilTimeoutSeconds: 1,
-		WaitUntilRetryPolicy: &xdbapi.RetryPolicy{
-			BackoffCoefficient:             ptr.Any(float32(1.0)),
-			InitialIntervalSeconds:         ptr.Any(int32(1)),
-			MaximumIntervalSeconds:         ptr.Any(int32(1)),
-			MaximumAttemptsDurationSeconds: ptr.Any(int32(1)),
-			MaximumAttempts:                ptr.Any(int32(1)),
-		},
+		ExecuteTimeoutSeconds: 1,
 		ExecuteRetryPolicy: &xdbapi.RetryPolicy{
 			BackoffCoefficient:             ptr.Any(float32(1.0)),
 			InitialIntervalSeconds:         ptr.Any(int32(1)),
@@ -56,19 +58,6 @@ func (d executeNoWaitUntilInitState) GetStateOptions() *xdb.AsyncStateOptions {
 	return stateOptions
 }
 
-func (b executeNoWaitUntilInitState) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
-	communication xdb.Communication,
-) (*xdb.StateDecision, error) {
-	var i int
-	input.Get(&i)
-	return xdb.SingleNextState(&executeNoWaitUntilFailState{}, i+1), nil
-}
-
-type executeNoWaitUntilFailState struct {
-	xdb.AsyncStateDefaultsSkipWaitUntil
-}
-
 func (b executeNoWaitUntilFailState) Execute(
 	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
 	communication xdb.Communication,
@@ -76,7 +65,7 @@ func (b executeNoWaitUntilFailState) Execute(
 	var i int
 	input.Get(&i)
 
-	return xdb.SingleNextState(&executeRecoverState{}, i+2), fmt.Errorf("error for test")
+	return xdb.SingleNextState(&executeNoWaitUntilRecoverState{}, i+2), fmt.Errorf("error for test")
 }
 
 type executeNoWaitUntilRecoverState struct {
