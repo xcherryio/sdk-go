@@ -12,15 +12,18 @@ type Process interface {
 	// If there is no startingState, the process will not start any state execution after process stated.
 	// Application can still use RPC to invoke new state execution later.
 	GetAsyncStateSchema() StateSchema
-
-	GetProcessOptions() *ProcessOptions
+	// GetPersistenceSchema defines the persistence schema of the process
+	GetPersistenceSchema() PersistenceSchema
+	// GetProcessOptions defines the options for the process
+	// Note that they can be overridden by the ProcessStartOptions when starting a process
+	GetProcessOptions() ProcessOptions
 }
 
 // GetFinalProcessType returns the process type that will be registered
 // if the process is from &myStruct{} or myStruct{} under mywf package, the method returns "mywf.myStruct"
 func GetFinalProcessType(wf Process) string {
 	options := wf.GetProcessOptions()
-	if options == nil || options.ProcessType == "" {
+	if options.ProcessType == "" {
 		simpleType := getSimpleTypeNameFromReflect(wf)
 		return simpleType
 	}
@@ -44,10 +47,16 @@ func getSimpleTypeNameFromReflect(obj interface{}) string {
 type ProcessDefaults struct {
 }
 
-func (d ProcessDefaults) GetProcessOptions() *ProcessOptions {
-	return nil
-}
+var _ Process = (*ProcessDefaults)(nil)
 
 func (d ProcessDefaults) GetAsyncStateSchema() StateSchema {
 	return StateSchema{}
+}
+
+func (d ProcessDefaults) GetPersistenceSchema() PersistenceSchema {
+	return NewEmptyPersistenceSchema()
+}
+
+func (d ProcessDefaults) GetProcessOptions() ProcessOptions {
+	return NewDefaultProcessOptions()
 }

@@ -68,7 +68,10 @@ func (i *ApiError) Error() string {
 	return i.OriginalError.Error()
 }
 
-func NewApiError(originalError error, openApiError *xdbapi.GenericOpenAPIError, httpResponse *http.Response, response *xdbapi.ApiErrorResponse) error {
+func NewApiError(
+	originalError error, openApiError *xdbapi.GenericOpenAPIError, httpResponse *http.Response,
+	response *xdbapi.ApiErrorResponse,
+) error {
 	statusCode := 0
 	if httpResponse != nil {
 		statusCode = httpResponse.StatusCode
@@ -98,6 +101,14 @@ func IsProcessAlreadyStartedError(err error) bool {
 	return apiError.StatusCode == http.StatusConflict
 }
 
+func IsGlobalAttributeWriteFailure(err error) bool {
+	apiError, ok := err.(*ApiError)
+	if !ok || apiError.Response == nil {
+		return false
+	}
+	return apiError.StatusCode == http.StatusFailedDependency
+}
+
 func IsProcessNotExistsError(err error) bool {
 	apiError, ok := err.(*ApiError)
 	if !ok || apiError.Response == nil {
@@ -119,7 +130,7 @@ func IsRPCLockingFailure(err error) bool {
 	if !ok || apiError.Response == nil {
 		return false
 	}
-	return apiError.StatusCode == http.StatusPreconditionFailed
+	return apiError.StatusCode == http.StatusLocked
 }
 
 func IsWaitingExceedingTimeoutError(err error) bool {

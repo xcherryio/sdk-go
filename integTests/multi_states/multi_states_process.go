@@ -19,7 +19,7 @@ type MultiStatesProcess struct {
 }
 
 func (b MultiStatesProcess) GetAsyncStateSchema() xdb.StateSchema {
-	return xdb.WithStartingState(&state1{}, &state2{}, &state3{})
+	return xdb.NewStateSchema(&state1{}, &state2{}, &state3{})
 }
 
 type state1 struct {

@@ -44,7 +44,9 @@ func fromApiCommandResults(results *xdbapi.CommandResults, _ ObjectEncoder) (Com
 	}, nil
 }
 
-func toApiDecision(decision *StateDecision, prcType string, registry Registry, encoder ObjectEncoder) (*xdbapi.StateDecision, error) {
+func toApiDecision(
+	decision *StateDecision, prcType string, registry Registry, encoder ObjectEncoder,
+) (*xdbapi.StateDecision, error) {
 	if decision == nil {
 		return nil, NewProcessDefinitionError("StateDecision cannot be nil")
 	}
@@ -67,7 +69,7 @@ func toApiDecision(decision *StateDecision, prcType string, registry Registry, e
 			return nil, err
 		}
 		stateDef := registry.getProcessState(prcType, fromMv.NextStateId)
-		config := fromStateToAsyncStateConfig(stateDef)
+		config := fromStateToAsyncStateConfig(stateDef, prcType, registry)
 		mv := xdbapi.StateMovement{
 			StateId:     fromMv.NextStateId,
 			StateInput:  input,
@@ -80,28 +82,113 @@ func toApiDecision(decision *StateDecision, prcType string, registry Registry, e
 	}, nil
 }
 
-func fromStateToAsyncStateConfig(state AsyncState) *xdbapi.AsyncStateConfig {
-	stateCfg := fromAsyncStateOptionsToAsyncStateConfg(state.GetStateOptions())
-	if stateCfg == nil {
-		stateCfg = &xdbapi.AsyncStateConfig{}
-	}
+func fromStateToAsyncStateConfig(
+	state AsyncState, prcType string, registry Registry,
+) *xdbapi.AsyncStateConfig {
+	stateCfg := fromAsyncStateOptionsToBasicAsyncStateConfig(state.GetStateOptions())
 	if ShouldSkipWaitUntilAPI(state) {
 		stateCfg.SkipWaitUntil = ptr.Any(true)
 	}
 
+	var preferredPersistencePolicyName *string
+	var recoverState AsyncState
+	if state.GetStateOptions() != nil {
+		preferredPersistencePolicyName = state.GetStateOptions().PersistenceLoadingPolicyName
+		recoverState = state.GetStateOptions().FailureRecoveryState
+	}
+
+	stateCfg.LoadGlobalAttributesRequest = createLoadGlobalAttributesRequestIfNeeded(registry, prcType, preferredPersistencePolicyName)
+	stateCfg.StateFailureRecoveryOptions = createFailureRecoveryOptionsIfNeeded(recoverState, prcType, registry)
 	return stateCfg
 }
 
-func fromAsyncStateOptionsToAsyncStateConfg(stateOptions *AsyncStateOptions) *xdbapi.AsyncStateConfig {
-	if stateOptions == nil {
+func createFailureRecoveryOptionsIfNeeded(
+	state AsyncState, prcType string, registry Registry,
+) *xdbapi.StateFailureRecoveryOptions {
+	if state == nil {
 		return nil
 	}
+
+	stateId := GetFinalStateId(state)
+	//NOTE: prevent stack overflow if the state recovering in a loop, e.g. state1 -> state2 -> state1
+	if state.GetStateOptions() != nil && state.GetStateOptions().FailureRecoveryState != nil {
+		panic("FailureRecoveryState cannot have FailureRecoveryState")
+	}
+	stateCfg := fromStateToAsyncStateConfig(state, prcType, registry)
+
+	options := &xdbapi.StateFailureRecoveryOptions{
+		Policy:                         xdbapi.PROCEED_TO_CONFIGURED_STATE,
+		StateFailureProceedStateId:     &stateId,
+		StateFailureProceedStateConfig: stateCfg,
+	}
+	return options
+}
+
+func fromAsyncStateOptionsToBasicAsyncStateConfig(
+	stateOptions *AsyncStateOptions,
+) *xdbapi.AsyncStateConfig {
 	stateCfg := &xdbapi.AsyncStateConfig{}
+	if stateOptions == nil {
+		return stateCfg
+	}
+
 	stateCfg.WaitUntilApiTimeoutSeconds = &stateOptions.WaitUntilTimeoutSeconds
 	stateCfg.ExecuteApiTimeoutSeconds = &stateOptions.ExecuteTimeoutSeconds
 	stateCfg.WaitUntilApiRetryPolicy = stateOptions.WaitUntilRetryPolicy
 	stateCfg.ExecuteApiRetryPolicy = stateOptions.ExecuteRetryPolicy
-	stateCfg.StateFailureRecoveryOptions = stateOptions.FailureRecoveryOptions
-
 	return stateCfg
+}
+
+func createLoadGlobalAttributesRequestIfNeeded(
+	registry Registry, prcType string, preferredPersistencePolicyName *string,
+) *xdbapi.LoadGlobalAttributesRequest {
+	persistenceSchema := registry.getPersistenceSchema(prcType)
+
+	var preferredPolicy *NamedPersistenceLoadingPolicy
+	if preferredPersistencePolicyName != nil {
+		preferredPolicyS, ok := persistenceSchema.OverrideLoadingPolicies[*preferredPersistencePolicyName]
+		if !ok {
+			panic("persistence loading policy not found " + *preferredPersistencePolicyName)
+		}
+		preferredPolicy = &preferredPolicyS
+	}
+
+	var tblReqs []xdbapi.TableReadRequest
+	if persistenceSchema.GlobalAttributeSchema != nil {
+		keyToDefs := registry.getGlobalAttributeKeyToDefs(prcType)
+
+		for _, tblSchema := range persistenceSchema.GlobalAttributeSchema.Tables {
+			tblLoadingPolicy := getFinalTableLoadingPolicy(tblSchema, preferredPolicy)
+
+			var colsToRead []xdbapi.TableColumnDef
+			for _, key := range tblLoadingPolicy.LoadingKeys {
+				def := keyToDefs[key]
+				colsToRead = append(colsToRead, xdbapi.TableColumnDef{
+					DbColumn: def.colDef.ColumnName,
+				})
+			}
+
+			tblReqs = append(tblReqs, xdbapi.TableReadRequest{
+				TableName:     &tblSchema.TableName,
+				Columns:       colsToRead,
+				LockingPolicy: ptr.Any(tblLoadingPolicy.LockingType),
+			})
+		}
+	}
+	if len(tblReqs) == 0 {
+		return nil
+	}
+	return &xdbapi.LoadGlobalAttributesRequest{
+		TableRequests: tblReqs,
+	}
+}
+
+func getFinalTableLoadingPolicy(schema DBTableSchema, policy *NamedPersistenceLoadingPolicy) TableLoadingPolicy {
+	if policy != nil && policy.GlobalAttributeTableLoadingPolicy != nil {
+		p, ok := policy.GlobalAttributeTableLoadingPolicy[schema.TableName]
+		if ok {
+			return p
+		}
+	}
+	return schema.DefaultTableLoadingPolicy
 }

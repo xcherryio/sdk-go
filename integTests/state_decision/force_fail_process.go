@@ -16,7 +16,7 @@ type ForceFailProcess struct {
 }
 
 func (b ForceFailProcess) GetAsyncStateSchema() xdb.StateSchema {
-	return xdb.WithStartingState(&forceFailState1{}, &forceFailState2{}, &forceFailState3{})
+	return xdb.NewStateSchema(&forceFailState1{}, &forceFailState2{}, &forceFailState3{})
 }
 
 type forceFailState1 struct {
