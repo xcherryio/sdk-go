@@ -22,9 +22,22 @@ type GlobalAttributeOptions struct {
 	DBTableConfigs map[string]DBTableConfig
 }
 
+func NewGlobalAttributeOptions(
+	tableConfig ...DBTableConfig,
+) *GlobalAttributeOptions {
+	dbTableConfigs := map[string]DBTableConfig{}
+	for _, tblCfg := range tableConfig {
+		dbTableConfigs[tblCfg.TableName] = tblCfg
+	}
+	return &GlobalAttributeOptions{
+		DBTableConfigs: dbTableConfigs,
+	}
+}
+
 type DBTableConfig struct {
-	PKValue interface{}
-	PKHint  *DBHint
+	TableName string
+	PKValue   interface{}
+	PKHint    *DBHint
 	// InitialAttributes is the initial attributes to be set when starting the process execution
 	// Key is the attribute key, value is the attribute value
 	InitialAttributes map[string]interface{}
