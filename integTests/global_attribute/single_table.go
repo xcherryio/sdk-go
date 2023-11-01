@@ -17,14 +17,6 @@ type SingleTableProcess struct {
 	xdb.ProcessDefaults
 }
 
-const (
-	attrKeyInt            = "key1"
-	attrKeyStr            = "key2"
-	loadNothingPolicyName = "loadNothing"
-	tblName               = "sample_user_table"
-	pk                    = "user_id"
-)
-
 func (b SingleTableProcess) GetPersistenceSchema() xdb.PersistenceSchema {
 	return xdb.NewPersistenceSchemaWithOptions(
 		xdb.NewGlobalAttributesSchema(
@@ -246,6 +238,5 @@ func TestGlobalAttributesWithSingleTable(t *testing.T, client xdb.Client) {
 	assert.Equal(t, xdbapi.COMPLETED, resp.GetStatus())
 }
 
-// TODO test with multiple/alternative tables
 // TODO Test with different locking types
 // TODO test using a different loading policy on starting state
