@@ -70,25 +70,6 @@ func (d waitUntilFailedState) GetStateOptions() *xdb.AsyncStateOptions {
 	return stateOptions
 }
 
-func (b waitUntilInitState) WaitUntil(
-	ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication,
-) (*xdb.CommandRequest, error) {
-	return xdb.EmptyCommandRequest(), nil
-}
-
-func (b waitUntilInitState) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
-	communication xdb.Communication,
-) (*xdb.StateDecision, error) {
-	var i int
-	input.Get(&i)
-	return xdb.SingleNextState(waitUntilFailedState{}, i+1), nil
-}
-
-type waitUntilFailedState struct {
-	xdb.AsyncStateDefaults
-}
-
 func (b waitUntilFailedState) WaitUntil(
 	ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication,
 ) (*xdb.CommandRequest, error) {

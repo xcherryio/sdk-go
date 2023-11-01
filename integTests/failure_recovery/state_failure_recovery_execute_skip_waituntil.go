@@ -66,20 +66,6 @@ func (d executeNoWaitUntilFailState) GetStateOptions() *xdb.AsyncStateOptions {
 	return stateOptions
 }
 
-
-func (b executeNoWaitUntilInitState) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
-	communication xdb.Communication,
-) (*xdb.StateDecision, error) {
-	var i int
-	input.Get(&i)
-	return xdb.SingleNextState(&executeNoWaitUntilFailState{}, i+1), nil
-}
-
-type executeNoWaitUntilFailState struct {
-	xdb.AsyncStateDefaultsSkipWaitUntil
-}
-
 func (b executeNoWaitUntilFailState) Execute(
 	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
 	communication xdb.Communication,
