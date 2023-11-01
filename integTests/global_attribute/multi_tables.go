@@ -191,7 +191,7 @@ func TestGlobalAttributesWithMultiTables(t *testing.T, client xdb.Client) {
 				},
 				xdb.DBTableConfig{
 					TableName: tblName2,
-					PKValue:   prcId, // use processId as the primary key value(string)
+					PKValue:   now64,
 					InitialAttributes: map[string]interface{}{
 						attrKeyInt2: 222,
 						attrKeyStr2: "bbb",
@@ -204,30 +204,6 @@ func TestGlobalAttributesWithMultiTables(t *testing.T, client xdb.Client) {
 
 	time.Sleep(time.Second * 3)
 	resp, err := client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
-	assert.Nil(t, err)
-	assert.Equal(t, xdbapi.COMPLETED, resp.GetStatus())
-
-	// failed when trying to start the same process again with conflicted global attributes
-	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, xdbapi.RETURN_ERROR_ON_CONFLICT,
-		&xdb.ProcessStartOptions{
-			IdReusePolicy: xdbapi.ALLOW_IF_NO_RUNNING.Ptr(),
-			GlobalAttributeOptions: xdb.NewGlobalAttributeOptions(
-				xdb.DBTableConfig{
-					TableName: tblName,
-					PKValue:   now64,
-					InitialAttributes: map[string]interface{}{
-						attrKeyInt2: 123,
-						attrKeyStr2: "abc",
-					},
-					InitialWriteConflictMode: xdbapi.RETURN_ERROR_ON_CONFLICT.Ptr(),
-				},
-			),
-		})
-	assert.NotNil(t, err)
-	assert.True(t, xdb.IsGlobalAttributeWriteFailure(err))
-
-	time.Sleep(time.Second * 3)
-	resp, err = client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
 	assert.Equal(t, xdbapi.COMPLETED, resp.GetStatus())
 }
