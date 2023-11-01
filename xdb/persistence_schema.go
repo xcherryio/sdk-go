@@ -3,13 +3,13 @@ package xdb
 import "github.com/xdblab/xdb-apis/goapi/xdbapi"
 
 type PersistenceSchema struct {
+	// LocalAttributeSchema is the schema for local attributes
+	// LocalAttributes are attributes that are specific to a process execution
+	LocalAttributeSchema *LocalAttributesSchema
 	// GlobalAttributeSchema is the schema for global attributes
 	// GlobalAttributes are attributes that are shared across all process executions
 	// They are directly mapped to a table in the database
 	GlobalAttributeSchema *GlobalAttributesSchema
-	// LocalAttributeSchema is the schema for local attributes
-	// LocalAttributes are attributes that are specific to a process execution
-	LocalAttributeSchema *LocalAttributesSchema
 	// OverrideLoadingPolicies is the loading policy with a name, which can be used as an override to the default
 	// loading policy for global and local attribute schemas
 	OverrideLoadingPolicies map[string]NamedPersistenceLoadingPolicy
@@ -48,10 +48,11 @@ type TableLoadingPolicy struct {
 
 type NamedPersistenceLoadingPolicy struct {
 	Name string
+	// LocalAttributeLoadingPolicy is the loading policy for local attributes
+	LocalAttributeLoadingPolicy *LocalAttributeLoadingPolicy
 	// GlobalAttributeLoadingPolicy is the loading policy for global attributes
 	// key is the table name
 	GlobalAttributeTableLoadingPolicy map[string]TableLoadingPolicy
-	LocalAttributeLoadingPolicy       *LocalAttributeLoadingPolicy
 }
 
 type LocalAttributesSchema struct {
@@ -70,8 +71,8 @@ func NewEmptyPersistenceSchema() PersistenceSchema {
 // globalAttrSchema is the schema for global attributes
 // localAttrSchema is the schema for local attributes
 func NewPersistenceSchema(
-	globalAttrSchema *GlobalAttributesSchema,
 	localAttrSchema *LocalAttributesSchema,
+	globalAttrSchema *GlobalAttributesSchema,
 ) PersistenceSchema {
 	return PersistenceSchema{
 		GlobalAttributeSchema: globalAttrSchema,
@@ -80,8 +81,8 @@ func NewPersistenceSchema(
 }
 
 func NewPersistenceSchemaWithOptions(
-	globalAttrSchema *GlobalAttributesSchema,
 	localAttrSchema *LocalAttributesSchema,
+	globalAttrSchema *GlobalAttributesSchema,
 	options PersistenceSchemaOptions,
 ) PersistenceSchema {
 	return PersistenceSchema{

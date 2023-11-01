@@ -19,6 +19,7 @@ type SingleTableProcess struct {
 
 func (b SingleTableProcess) GetPersistenceSchema() xdb.PersistenceSchema {
 	return xdb.NewPersistenceSchemaWithOptions(
+		nil,
 		xdb.NewGlobalAttributesSchema(
 			xdb.NewDBTableSchema(
 				tblName, pk,
@@ -26,7 +27,6 @@ func (b SingleTableProcess) GetPersistenceSchema() xdb.PersistenceSchema {
 				xdb.NewDBColumnDef(attrKeyInt, "create_timestamp", true),
 				xdb.NewDBColumnDef(attrKeyStr, "first_name", true)),
 		),
-		nil,
 		xdb.NewPersistenceSchemaOptions(
 			xdb.NewNamedPersistenceLoadingPolicy(
 				loadNothingPolicyName, nil,

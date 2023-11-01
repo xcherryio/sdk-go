@@ -19,6 +19,7 @@ type MultiTablesProcess struct {
 
 func (b MultiTablesProcess) GetPersistenceSchema() xdb.PersistenceSchema {
 	return xdb.NewPersistenceSchemaWithOptions(
+		nil,
 		xdb.NewGlobalAttributesSchema(
 			xdb.NewDBTableSchema(
 				tblName, pk,
@@ -31,7 +32,6 @@ func (b MultiTablesProcess) GetPersistenceSchema() xdb.PersistenceSchema {
 				xdb.NewDBColumnDef(attrKeyInt2, "sequence", false),
 				xdb.NewDBColumnDef(attrKeyStr2, "item_name", true)),
 		),
-		nil,
 		xdb.NewPersistenceSchemaOptions(
 			xdb.NewNamedPersistenceLoadingPolicy(
 				loadNothingPolicyName, nil,
