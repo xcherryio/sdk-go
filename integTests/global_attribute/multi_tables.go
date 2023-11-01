@@ -19,7 +19,7 @@ type MultiTablesProcess struct {
 
 func (b MultiTablesProcess) GetPersistenceSchema() xdb.PersistenceSchema {
 	return xdb.NewPersistenceSchemaWithOptions(
-		nil,
+		xdb.NewEmptyLocalAttributesSchema(),
 		xdb.NewGlobalAttributesSchema(
 			xdb.NewDBTableSchema(
 				tblName, pk,

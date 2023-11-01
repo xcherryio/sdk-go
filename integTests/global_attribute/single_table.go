@@ -19,7 +19,7 @@ type SingleTableProcess struct {
 
 func (b SingleTableProcess) GetPersistenceSchema() xdb.PersistenceSchema {
 	return xdb.NewPersistenceSchemaWithOptions(
-		nil,
+		xdb.NewEmptyLocalAttributesSchema(),
 		xdb.NewGlobalAttributesSchema(
 			xdb.NewDBTableSchema(
 				tblName, pk,

@@ -97,6 +97,10 @@ type PersistenceSchemaOptions struct {
 	NameToLoadingPolicies map[string]NamedPersistenceLoadingPolicy
 }
 
+func NewEmptyLocalAttributesSchema() *LocalAttributesSchema {
+	return nil
+}
+
 func NewGlobalAttributesSchema(
 	table ...DBTableSchema,
 ) *GlobalAttributesSchema {
@@ -107,6 +111,10 @@ func NewGlobalAttributesSchema(
 	return &GlobalAttributesSchema{
 		m,
 	}
+}
+
+func NewEmptyGlobalAttributesSchema() *GlobalAttributesSchema {
+	return nil
 }
 
 func NewDBTableSchema(
