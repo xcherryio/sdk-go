@@ -16,7 +16,7 @@ type ForceCompleteProcess struct {
 }
 
 func (b ForceCompleteProcess) GetAsyncStateSchema() xdb.StateSchema {
-	return xdb.WithStartingState(&forceCompleteState1{}, &forceCompleteState2{}, &forceCompleteState3{})
+	return xdb.NewStateSchema(&forceCompleteState1{}, &forceCompleteState2{}, &forceCompleteState3{})
 }
 
 type forceCompleteState1 struct {

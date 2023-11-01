@@ -19,7 +19,7 @@ type StateFailureRecoveryTestExecuteProcess struct {
 }
 
 func (b StateFailureRecoveryTestExecuteProcess) GetAsyncStateSchema() xdb.StateSchema {
-	return xdb.WithStartingState(
+	return xdb.NewStateSchema(
 		&executeInitState{},
 		&executeFailState{},
 		&executeRecoverState{})
@@ -65,17 +65,39 @@ func (d executeFailState) GetStateOptions() *xdb.AsyncStateOptions {
 		},
 	}
 
-	stateOptions.SetFailureRecoveryOption(&executeRecoverState{}, &xdb.AsyncStateOptions{})
+	stateOptions.SetFailureRecoveryOption(&executeRecoverState{})
 
 	return stateOptions
 }
 
-func (b executeFailState) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
+func (b executeInitState) WaitUntil(
+	ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication,
+) (*xdb.CommandRequest, error) {
+	return xdb.EmptyCommandRequest(), nil
+}
+
+func (b executeInitState) Execute(
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
+	communication xdb.Communication,
+) (*xdb.StateDecision, error) {
+	var i int
+	input.Get(&i)
+	return xdb.SingleNextState(&executeFailState{}, i+1), nil
+}
+
+type executeFailState struct {
+	xdb.AsyncStateDefaults
+}
+
+func (b executeFailState) WaitUntil(
+	ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication,
+) (*xdb.CommandRequest, error) {
 	return xdb.EmptyCommandRequest(), nil
 }
 
 func (b executeFailState) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
+	communication xdb.Communication,
 ) (*xdb.StateDecision, error) {
 	var i int
 	input.Get(&i)
@@ -87,12 +109,15 @@ type executeRecoverState struct {
 	xdb.AsyncStateDefaults
 }
 
-func (b executeRecoverState) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
+func (b executeRecoverState) WaitUntil(
+	ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication,
+) (*xdb.CommandRequest, error) {
 	return xdb.EmptyCommandRequest(), nil
 }
 
 func (b executeRecoverState) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
+	communication xdb.Communication,
 ) (*xdb.StateDecision, error) {
 	if ctx.GetRecoverFromStateApi() == nil || *(ctx.GetRecoverFromStateApi()) != xdbapi.EXECUTE_API {
 		panic("should recover from execute api")

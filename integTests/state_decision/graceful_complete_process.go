@@ -16,7 +16,7 @@ type GracefulCompleteProcess struct {
 }
 
 func (b GracefulCompleteProcess) GetAsyncStateSchema() xdb.StateSchema {
-	return xdb.WithStartingState(&gracefulCompleteState1{}, &gracefulCompleteState2{}, &gracefulCompleteState3{})
+	return xdb.NewStateSchema(&gracefulCompleteState1{}, &gracefulCompleteState2{}, &gracefulCompleteState3{})
 }
 
 type gracefulCompleteState1 struct {

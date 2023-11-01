@@ -5,7 +5,7 @@ type StateSchema struct {
 	AllStates     []AsyncState
 }
 
-func WithStartingState(startingState AsyncState, nonStartingStates ...AsyncState) StateSchema {
+func NewStateSchema(startingState AsyncState, nonStartingStates ...AsyncState) StateSchema {
 	allStates := nonStartingStates
 	allStates = append(allStates, startingState)
 	return StateSchema{
@@ -14,7 +14,7 @@ func WithStartingState(startingState AsyncState, nonStartingStates ...AsyncState
 	}
 }
 
-func NoStartingState(nonStartingStates ...AsyncState) StateSchema {
+func NewStateSchemaNoStartingState(nonStartingStates ...AsyncState) StateSchema {
 	return StateSchema{
 		AllStates: nonStartingStates,
 	}

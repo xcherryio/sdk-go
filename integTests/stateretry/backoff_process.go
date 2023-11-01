@@ -21,7 +21,7 @@ var defaultState = &stateDefaultPolicy{}
 var customizedState = &stateCustomizedPolicy{}
 
 func (b BackoffProcess) GetAsyncStateSchema() xdb.StateSchema {
-	return xdb.WithStartingState(defaultState, customizedState)
+	return xdb.NewStateSchema(defaultState, customizedState)
 }
 
 type stateDefaultPolicy struct {

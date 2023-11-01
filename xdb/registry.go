@@ -9,15 +9,21 @@ type Registry interface {
 	GetAllRegisteredProcessTypes() []string
 
 	// below are all for internal implementation
-	getProcess(wfType string) Process
-	getProcessStartingState(wfType string) AsyncState
-	getProcessState(wfType string, id string) AsyncState
+	getProcess(prcType string) Process
+	getProcessStartingState(prcType string) AsyncState
+	getProcessState(prcType string, id string) AsyncState
+	getPersistenceSchema(prcType string) PersistenceSchema
+	getGlobalAttributeKeyToDefs(prcType string) map[string]internalGlobalAttrDef
+	getGlobalAttributeTableColumnToKey(prcType string) map[string]string
 }
 
 func NewRegistry() Registry {
 	return &registryImpl{
-		processStore:  map[string]Process{},
-		startingState: map[string]AsyncState{},
-		stateStore:    map[string]map[string]AsyncState{},
+		processStore:                map[string]Process{},
+		startingState:               map[string]AsyncState{},
+		stateStore:                  map[string]map[string]AsyncState{},
+		persistenceSchemaStore:      map[string]PersistenceSchema{},
+		globalAttributeKeyToDef:     map[string]map[string]internalGlobalAttrDef{},
+		globalAttrTableColNameToKey: map[string]map[string]string{},
 	}
 }
