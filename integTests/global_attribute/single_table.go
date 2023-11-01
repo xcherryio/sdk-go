@@ -32,7 +32,7 @@ func (b SingleTableProcess) GetPersistenceSchema() xdb.PersistenceSchema {
 				tblName, pk,
 				xdbapi.NO_LOCKING,
 				xdb.NewDBColumnDef(attrKeyInt, "create_timestamp", true),
-				xdb.NewDBColumnDef(attrKeyStr, "name", true)),
+				xdb.NewDBColumnDef(attrKeyStr, "first_name", true)),
 		),
 		nil,
 		xdb.NewPersistenceSchemaOptions(
