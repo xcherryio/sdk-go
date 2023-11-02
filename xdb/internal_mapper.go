@@ -13,8 +13,7 @@ func toApiCommandRequest(request *CommandRequest) (*xdbapi.CommandRequest, error
 	for _, t := range request.Commands {
 		if t.CommandType == CommandTypeTimer {
 			timerCmd := xdbapi.TimerCommand{
-				CommandId:                  t.CommandId,
-				FiringUnixTimestampSeconds: t.TimerCommand.FiringUnixTimestampSeconds,
+				DelayInSeconds: t.TimerCommand.DelayInSeconds,
 			}
 			timerCmds = append(timerCmds, timerCmd)
 		}
@@ -33,8 +32,7 @@ func fromApiCommandResults(results *xdbapi.CommandResults, _ ObjectEncoder) (Com
 	var timerResults []TimerCommandResult
 	for _, t := range results.TimerResults {
 		timerResult := TimerCommandResult{
-			CommandId: t.CommandId,
-			Status:    t.TimerStatus,
+			Status: t.Status,
 		}
 		timerResults = append(timerResults, timerResult)
 	}
