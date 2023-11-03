@@ -7,11 +7,10 @@ type CommandResults struct {
 }
 
 type TimerCommandResult struct {
-	CommandId *string
-	Status    xdbapi.TimerStatus
+	Status xdbapi.CommandStatus
 }
 
-func (c CommandResults) GetTimerStatus() xdbapi.TimerStatus {
+func (c CommandResults) GetTimerStatus() xdbapi.CommandStatus {
 	if len(c.Timers) != 1 {
 		panic("GetTimerCommandResult must be used when there is exactly one timer command")
 	}
