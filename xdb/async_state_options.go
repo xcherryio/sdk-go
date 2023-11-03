@@ -28,8 +28,8 @@ type AsyncStateOptions struct {
 	// FailureRecoveryState is the state to recover after current state execution fails
 	// Default: no recovery when set as nil
 	FailureRecoveryState AsyncState
-	// PersistenceLoadingPolicyName is the name of loading policy for persistence if not using default policy
-	PersistenceLoadingPolicyName *string
+	// PersistencePolicyName is the name of loading policy for persistence if not using default policy
+	PersistencePolicyName *string
 }
 
 func (o *AsyncStateOptions) SetFailureRecoveryOption(destState AsyncState) *AsyncStateOptions {

@@ -65,7 +65,7 @@ type multiTableStateForInitialReadWrite struct {
 
 func (b multiTableStateForInitialReadWrite) GetStateOptions() *xdb.AsyncStateOptions {
 	return &xdb.AsyncStateOptions{
-		PersistenceLoadingPolicyName: ptr.Any(loadAllPolicyName),
+		PersistencePolicyName: ptr.Any(loadAllPolicyName),
 	}
 }
 
@@ -142,7 +142,7 @@ type multiTableStateForTestLoadSequence struct {
 
 func (b multiTableStateForTestLoadSequence) GetStateOptions() *xdb.AsyncStateOptions {
 	return &xdb.AsyncStateOptions{
-		PersistenceLoadingPolicyName: ptr.Any(loadSequencePolicyName),
+		PersistencePolicyName: ptr.Any(loadSequencePolicyName),
 	}
 }
 

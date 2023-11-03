@@ -109,7 +109,7 @@ type stateForTestLoadNothing struct {
 
 func (b stateForTestLoadNothing) GetStateOptions() *xdb.AsyncStateOptions {
 	return &xdb.AsyncStateOptions{
-		PersistenceLoadingPolicyName: ptr.Any(loadNothingPolicyName),
+		PersistencePolicyName: ptr.Any(loadNothingPolicyName),
 	}
 }
 
