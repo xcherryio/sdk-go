@@ -33,20 +33,20 @@ func (b MultiTablesProcess) GetPersistenceSchema() xdb.PersistenceSchema {
 				xdb.NewDBColumnDef(attrKeyStr2, "item_name", true)),
 		),
 		xdb.NewPersistenceSchemaOptions(
-			xdb.NewNamedPersistenceLoadingPolicy(
+			xdb.NewNamedPersistencePolicy(
 				loadNothingPolicyName, nil,
-				xdb.NewTableLoadingPolicy(tblName, xdbapi.NO_LOCKING),
-				xdb.NewTableLoadingPolicy(tblName2, xdbapi.NO_LOCKING),
+				xdb.NewTablePolicy(tblName, xdbapi.NO_LOCKING),
+				xdb.NewTablePolicy(tblName2, xdbapi.NO_LOCKING),
 			),
-			xdb.NewNamedPersistenceLoadingPolicy(
+			xdb.NewNamedPersistencePolicy(
 				loadSequencePolicyName, nil,
-				xdb.NewTableLoadingPolicy(tblName, xdbapi.NO_LOCKING),
-				xdb.NewTableLoadingPolicy(tblName2, xdbapi.NO_LOCKING, attrKeyInt2),
+				xdb.NewTablePolicy(tblName, xdbapi.NO_LOCKING),
+				xdb.NewTablePolicy(tblName2, xdbapi.NO_LOCKING, attrKeyInt2),
 			),
-			xdb.NewNamedPersistenceLoadingPolicy(
+			xdb.NewNamedPersistencePolicy(
 				loadAllPolicyName, nil,
-				xdb.NewTableLoadingPolicy(tblName, xdbapi.NO_LOCKING, attrKeyInt, attrKeyStr),
-				xdb.NewTableLoadingPolicy(tblName2, xdbapi.NO_LOCKING, attrKeyInt2, attrKeyStr2),
+				xdb.NewTablePolicy(tblName, xdbapi.NO_LOCKING, attrKeyInt, attrKeyStr),
+				xdb.NewTablePolicy(tblName2, xdbapi.NO_LOCKING, attrKeyInt2, attrKeyStr2),
 			),
 		),
 	)
@@ -65,7 +65,7 @@ type multiTableStateForInitialReadWrite struct {
 
 func (b multiTableStateForInitialReadWrite) GetStateOptions() *xdb.AsyncStateOptions {
 	return &xdb.AsyncStateOptions{
-		PersistenceLoadingPolicyName: ptr.Any(loadAllPolicyName),
+		PersistencePolicyName: ptr.Any(loadAllPolicyName),
 	}
 }
 
@@ -122,12 +122,14 @@ func (b multiTableStateToVerifyGlobalAttrs) Execute(
 		panic(fmt.Sprintf("unexpected value %s", str))
 	}
 
-	persistence.GetGlobalAttribute(attrKeyInt2, &i)
-	persistence.GetGlobalAttribute(attrKeyStr2, &str)
-	if i != 0 { // because the default policy won't load this attribute
+	var i2 int
+	var str2 string
+	persistence.GetGlobalAttribute(attrKeyInt2, &i2)
+	persistence.GetGlobalAttribute(attrKeyStr2, &str2)
+	if i2 != 0 { // because the default policy won't load this attribute
 		panic(fmt.Sprintf("unexpected value %d", i))
 	}
-	if str != "ddd" {
+	if str2 != "ddd" {
 		panic(fmt.Sprintf("unexpected value %s", str))
 	}
 
@@ -140,7 +142,7 @@ type multiTableStateForTestLoadSequence struct {
 
 func (b multiTableStateForTestLoadSequence) GetStateOptions() *xdb.AsyncStateOptions {
 	return &xdb.AsyncStateOptions{
-		PersistenceLoadingPolicyName: ptr.Any(loadNothingPolicyName),
+		PersistencePolicyName: ptr.Any(loadSequencePolicyName),
 	}
 }
 
@@ -173,7 +175,7 @@ func (b multiTableStateForTestLoadSequence) Execute(
 
 func TestGlobalAttributesWithMultiTables(t *testing.T, client xdb.Client) {
 	prcId := common.GenerateProcessId()
-	prc := SingleTableProcess{}
+	prc := MultiTablesProcess{}
 
 	now64 := time.Now().UnixNano()
 
