@@ -6,12 +6,13 @@ type (
 	CommandType string
 
 	Command struct {
+		CommandId    *string
 		CommandType  CommandType
 		TimerCommand *TimerCommand
 	}
 
 	TimerCommand struct {
-		DelayInSeconds int64
+		FiringUnixTimestampSeconds int64
 	}
 )
 
@@ -20,10 +21,11 @@ const (
 )
 
 func NewTimerCommand(duration time.Duration) Command {
+	nowUnix := time.Now().Unix()
 	return Command{
 		CommandType: CommandTypeTimer,
 		TimerCommand: &TimerCommand{
-			DelayInSeconds: int64(duration.Seconds()),
+			FiringUnixTimestampSeconds: nowUnix + int64(duration.Seconds()),
 		},
 	}
 }
