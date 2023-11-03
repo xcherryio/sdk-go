@@ -144,9 +144,9 @@ func createLoadGlobalAttributesRequestIfNeeded(
 ) *xdbapi.LoadGlobalAttributesRequest {
 	persistenceSchema := registry.getPersistenceSchema(prcType)
 
-	var preferredPolicy *NamedPersistenceLoadingPolicy
+	var preferredPolicy *NamedPersistencePolicy
 	if preferredPersistencePolicyName != nil {
-		preferredPolicyS, ok := persistenceSchema.OverrideLoadingPolicies[*preferredPersistencePolicyName]
+		preferredPolicyS, ok := persistenceSchema.OverridePersistencePolicies[*preferredPersistencePolicyName]
 		if !ok {
 			panic("persistence loading policy not found " + *preferredPersistencePolicyName)
 		}
@@ -169,7 +169,7 @@ func createLoadGlobalAttributesRequestIfNeeded(
 			}
 
 			tblReqs = append(tblReqs, xdbapi.TableReadRequest{
-				TableName:     &tblSchema.TableName,
+				TableName:     ptr.Any(tblSchema.TableName),
 				Columns:       colsToRead,
 				LockingPolicy: ptr.Any(tblLoadingPolicy.LockingType),
 			})
@@ -183,12 +183,12 @@ func createLoadGlobalAttributesRequestIfNeeded(
 	}
 }
 
-func getFinalTableLoadingPolicy(schema DBTableSchema, policy *NamedPersistenceLoadingPolicy) TableLoadingPolicy {
-	if policy != nil && policy.GlobalAttributeTableLoadingPolicy != nil {
-		p, ok := policy.GlobalAttributeTableLoadingPolicy[schema.TableName]
+func getFinalTableLoadingPolicy(schema DBTableSchema, policy *NamedPersistencePolicy) TablePolicy {
+	if policy != nil && policy.GlobalAttributePolicy != nil {
+		p, ok := policy.GlobalAttributePolicy[schema.TableName]
 		if ok {
 			return p
 		}
 	}
-	return schema.DefaultTableLoadingPolicy
+	return schema.DefaultTablePolicy
 }

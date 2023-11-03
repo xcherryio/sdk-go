@@ -10,9 +10,9 @@ type PersistenceSchema struct {
 	// GlobalAttributes are attributes that are shared across all process executions
 	// They are directly mapped to a table in the database
 	GlobalAttributeSchema *GlobalAttributesSchema
-	// OverrideLoadingPolicies is the loading policy with a name, which can be used as an override to the default
-	// loading policy for global and local attribute schemas
-	OverrideLoadingPolicies map[string]NamedPersistenceLoadingPolicy
+	// OverridePersistencePolicies is the persistence policy with a name, which can be used as an override to the default
+	// policy for global and local attribute schemas
+	OverridePersistencePolicies map[string]NamedPersistencePolicy
 }
 
 type GlobalAttributesSchema struct {
@@ -24,8 +24,8 @@ type DBTableSchema struct {
 	TableName string
 	PK        string
 	Columns   []DBColumnDef
-	// DefaultTableLoadingPolicy is the default loading policy for this table
-	DefaultTableLoadingPolicy TableLoadingPolicy
+	// DefaultTablePolicy is the default loading policy for this table
+	DefaultTablePolicy TablePolicy
 }
 
 type DBColumnDef struct {
@@ -38,7 +38,7 @@ type DBColumnDef struct {
 // DBHint is the hint for the DBConverter to convert database column to query value and vice versa
 type DBHint string
 
-type TableLoadingPolicy struct {
+type TablePolicy struct {
 	TableName string
 	// LoadingKeys are the attribute keys that will be loaded from the database
 	LoadingKeys []string
@@ -46,20 +46,20 @@ type TableLoadingPolicy struct {
 	LockingType xdbapi.TableReadLockingPolicy
 }
 
-type NamedPersistenceLoadingPolicy struct {
+type NamedPersistencePolicy struct {
 	Name string
-	// LocalAttributeLoadingPolicy is the loading policy for local attributes
-	LocalAttributeLoadingPolicy *LocalAttributeLoadingPolicy
-	// GlobalAttributeLoadingPolicy is the loading policy for global attributes
+	// LocalAttributePolicy is the policy for local attributes
+	LocalAttributePolicy *LocalAttributePolicy
+	// GlobalAttributePolicy is the policy for global attributes
 	// key is the table name
-	GlobalAttributeTableLoadingPolicy map[string]TableLoadingPolicy
+	GlobalAttributePolicy map[string]TablePolicy
 }
 
 type LocalAttributesSchema struct {
 	// TODO
 }
 
-type LocalAttributeLoadingPolicy struct {
+type LocalAttributePolicy struct {
 	// TODO
 }
 
@@ -86,15 +86,16 @@ func NewPersistenceSchemaWithOptions(
 	options PersistenceSchemaOptions,
 ) PersistenceSchema {
 	return PersistenceSchema{
-		GlobalAttributeSchema:   globalAttrSchema,
-		LocalAttributeSchema:    localAttrSchema,
-		OverrideLoadingPolicies: options.NameToLoadingPolicies,
+		GlobalAttributeSchema:       globalAttrSchema,
+		LocalAttributeSchema:        localAttrSchema,
+		OverridePersistencePolicies: options.NameToPolicy,
 	}
 }
 
 type PersistenceSchemaOptions struct {
-	// NameToLoadingPolicies is the loading policy with a name, which can be used as an override to the default loading policy
-	NameToLoadingPolicies map[string]NamedPersistenceLoadingPolicy
+	// NameToPolicy is the persistence policy with a name,
+	// which can be used as an override to the default policy
+	NameToPolicy map[string]NamedPersistencePolicy
 }
 
 func NewEmptyLocalAttributesSchema() *LocalAttributesSchema {
@@ -131,13 +132,13 @@ func NewDBTableSchema(
 		}
 	}
 
-	defaultLoadingPolicy := NewTableLoadingPolicy(tableName, defaultReadLocking, loadingKeys...)
+	defaultPolicy := NewTablePolicy(tableName, defaultReadLocking, loadingKeys...)
 
 	return DBTableSchema{
-		TableName:                 tableName,
-		PK:                        pk,
-		Columns:                   columns,
-		DefaultTableLoadingPolicy: defaultLoadingPolicy,
+		TableName:          tableName,
+		PK:                 pk,
+		Columns:            columns,
+		DefaultTablePolicy: defaultPolicy,
 	}
 }
 
@@ -162,42 +163,42 @@ func NewDBColumnDefWithHint(
 	}
 }
 
-func NewTableLoadingPolicy(
+func NewTablePolicy(
 	tableName string,
 	lockingType xdbapi.TableReadLockingPolicy,
 	loadingKeys ...string,
-) TableLoadingPolicy {
-	return TableLoadingPolicy{
+) TablePolicy {
+	return TablePolicy{
 		TableName:   tableName,
 		LoadingKeys: loadingKeys,
 		LockingType: lockingType,
 	}
 }
 
-func NewNamedPersistenceLoadingPolicy(
+func NewNamedPersistencePolicy(
 	name string,
-	localAttributesLoadingPolicy *LocalAttributeLoadingPolicy,
-	globalAttributeTableLoadingPolicy ...TableLoadingPolicy,
-) NamedPersistenceLoadingPolicy {
-	tblToPolicy := map[string]TableLoadingPolicy{}
-	for _, p := range globalAttributeTableLoadingPolicy {
+	localAttributesPolicy *LocalAttributePolicy,
+	globalAttributeTablePolicy ...TablePolicy,
+) NamedPersistencePolicy {
+	tblToPolicy := map[string]TablePolicy{}
+	for _, p := range globalAttributeTablePolicy {
 		tblToPolicy[p.TableName] = p
 	}
-	return NamedPersistenceLoadingPolicy{
-		Name:                              name,
-		GlobalAttributeTableLoadingPolicy: tblToPolicy,
-		LocalAttributeLoadingPolicy:       localAttributesLoadingPolicy,
+	return NamedPersistencePolicy{
+		Name:                  name,
+		GlobalAttributePolicy: tblToPolicy,
+		LocalAttributePolicy:  localAttributesPolicy,
 	}
 }
 
 func NewPersistenceSchemaOptions(
-	namedPolicies ...NamedPersistenceLoadingPolicy,
+	namedPolicies ...NamedPersistencePolicy,
 ) PersistenceSchemaOptions {
-	nameToPolicy := map[string]NamedPersistenceLoadingPolicy{}
+	nameToPolicy := map[string]NamedPersistencePolicy{}
 	for _, p := range namedPolicies {
 		nameToPolicy[p.Name] = p
 	}
 	return PersistenceSchemaOptions{
-		NameToLoadingPolicies: nameToPolicy,
+		NameToPolicy: nameToPolicy,
 	}
 }

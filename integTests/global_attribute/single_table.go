@@ -28,9 +28,9 @@ func (b SingleTableProcess) GetPersistenceSchema() xdb.PersistenceSchema {
 				xdb.NewDBColumnDef(attrKeyStr, "first_name", true)),
 		),
 		xdb.NewPersistenceSchemaOptions(
-			xdb.NewNamedPersistenceLoadingPolicy(
+			xdb.NewNamedPersistencePolicy(
 				loadNothingPolicyName, nil,
-				xdb.NewTableLoadingPolicy(tblName, xdbapi.NO_LOCKING)),
+				xdb.NewTablePolicy(tblName, xdbapi.NO_LOCKING)),
 		),
 	)
 }
@@ -54,9 +54,14 @@ func (b stateForInitialReadWrite) Execute(
 	input.Get(&mode)
 	expectedI := 123
 	expectedStr := "abc"
-	if mode == xdbapi.OVERRIDE_ON_CONFLICT || mode == xdbapi.IGNORE_CONFLICT {
+	if mode == xdbapi.OVERRIDE_ON_CONFLICT {
 		expectedI = 123456
 		expectedStr = "abcdef"
+	}
+	if mode == xdbapi.IGNORE_CONFLICT {
+		// value from last execution
+		expectedI = 456
+		expectedStr = "def"
 	}
 
 	var i int
@@ -198,8 +203,8 @@ func TestGlobalAttributesWithSingleTable(t *testing.T, client xdb.Client) {
 					TableName: tblName,
 					PKValue:   prcId, // use processId as the primary key value(string)
 					InitialAttributes: map[string]interface{}{
-						attrKeyInt: 123,
-						attrKeyStr: "abc",
+						attrKeyInt: 123456,
+						attrKeyStr: "abcdef",
 					},
 					InitialWriteConflictMode: xdbapi.OVERRIDE_ON_CONFLICT.Ptr(),
 				},
@@ -222,8 +227,8 @@ func TestGlobalAttributesWithSingleTable(t *testing.T, client xdb.Client) {
 					TableName: tblName,
 					PKValue:   prcId, // use processId as the primary key value(string)
 					InitialAttributes: map[string]interface{}{
-						attrKeyInt: 123,
-						attrKeyStr: "abc",
+						attrKeyInt: 123456,
+						attrKeyStr: "abcdef",
 					},
 					InitialWriteConflictMode: xdbapi.IGNORE_CONFLICT.Ptr(),
 				},
