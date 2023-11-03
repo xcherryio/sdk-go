@@ -93,7 +93,7 @@ func fromStateToAsyncStateConfig(
 	var preferredPersistencePolicyName *string
 	var recoverState AsyncState
 	if state.GetStateOptions() != nil {
-		preferredPersistencePolicyName = state.GetStateOptions().PersistenceLoadingPolicyName
+		preferredPersistencePolicyName = state.GetStateOptions().PersistencePolicyName
 		recoverState = state.GetStateOptions().FailureRecoveryState
 	}
 
@@ -144,9 +144,9 @@ func createLoadGlobalAttributesRequestIfNeeded(
 ) *xdbapi.LoadGlobalAttributesRequest {
 	persistenceSchema := registry.getPersistenceSchema(prcType)
 
-	var preferredPolicy *NamedPersistenceLoadingPolicy
+	var preferredPolicy *NamedPersistencePolicy
 	if preferredPersistencePolicyName != nil {
-		preferredPolicyS, ok := persistenceSchema.OverrideLoadingPolicies[*preferredPersistencePolicyName]
+		preferredPolicyS, ok := persistenceSchema.OverridePersistencePolicies[*preferredPersistencePolicyName]
 		if !ok {
 			panic("persistence loading policy not found " + *preferredPersistencePolicyName)
 		}
@@ -158,10 +158,10 @@ func createLoadGlobalAttributesRequestIfNeeded(
 		keyToDefs := registry.getGlobalAttributeKeyToDefs(prcType)
 
 		for _, tblSchema := range persistenceSchema.GlobalAttributeSchema.Tables {
-			tblLoadingPolicy := getFinalTableLoadingPolicy(tblSchema, preferredPolicy)
+			tblPolicy := getFinalTablePolicy(tblSchema, preferredPolicy)
 
 			var colsToRead []xdbapi.TableColumnDef
-			for _, key := range tblLoadingPolicy.LoadingKeys {
+			for _, key := range tblPolicy.LoadingKeys {
 				def := keyToDefs[key]
 				colsToRead = append(colsToRead, xdbapi.TableColumnDef{
 					DbColumn: def.colDef.ColumnName,
@@ -169,9 +169,9 @@ func createLoadGlobalAttributesRequestIfNeeded(
 			}
 
 			tblReqs = append(tblReqs, xdbapi.TableReadRequest{
-				TableName:     &tblSchema.TableName,
+				TableName:     ptr.Any(tblSchema.TableName),
 				Columns:       colsToRead,
-				LockingPolicy: ptr.Any(tblLoadingPolicy.LockingType),
+				LockingPolicy: ptr.Any(tblPolicy.LockingType),
 			})
 		}
 	}
@@ -183,12 +183,12 @@ func createLoadGlobalAttributesRequestIfNeeded(
 	}
 }
 
-func getFinalTableLoadingPolicy(schema DBTableSchema, policy *NamedPersistenceLoadingPolicy) TableLoadingPolicy {
-	if policy != nil && policy.GlobalAttributeTableLoadingPolicy != nil {
-		p, ok := policy.GlobalAttributeTableLoadingPolicy[schema.TableName]
+func getFinalTablePolicy(schema DBTableSchema, policy *NamedPersistencePolicy) TablePolicy {
+	if policy != nil && policy.GlobalAttributePolicy != nil {
+		p, ok := policy.GlobalAttributePolicy[schema.TableName]
 		if ok {
 			return p
 		}
 	}
-	return schema.DefaultTableLoadingPolicy
+	return schema.DefaultTablePolicy
 }
