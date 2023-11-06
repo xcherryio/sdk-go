@@ -91,7 +91,7 @@ func (c *clientImpl) PublishToLocalQueue(
 		msg.DedupId = ptr.Any(dedupUUID)
 	}
 
-	return c.BasicClient.PublishMessagesToLocalQueue(ctx, processId, []xdbapi.LocalQueueMessage{msg})
+	return c.BasicClient.PublishToLocalQueue(ctx, processId, []xdbapi.LocalQueueMessage{msg})
 }
 
 func (c *clientImpl) StartProcess(

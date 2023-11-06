@@ -59,7 +59,7 @@ type BasicClient interface {
 		ctx context.Context, processId string,
 	) (*xdbapi.ProcessExecutionDescribeResponse, error)
 
-	PublishMessagesToLocalQueue(
+	PublishToLocalQueue(
 		ctx context.Context, processId string, messages []xdbapi.LocalQueueMessage,
 	) error
 }
