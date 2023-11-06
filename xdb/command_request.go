@@ -22,8 +22,8 @@ func AnyOf(commands ...Command) *CommandRequest {
 	}
 }
 
-// AllO will wait for all the commands to complete
-func AllO(commands ...Command) *CommandRequest {
+// AllOf will wait for all the commands to complete
+func AllOf(commands ...Command) *CommandRequest {
 	return &CommandRequest{
 		Commands:           commands,
 		CommandWaitingType: xdbapi.ALL_OF_COMPLETION,
