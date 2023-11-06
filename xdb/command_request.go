@@ -14,16 +14,16 @@ func EmptyCommandRequest() *CommandRequest {
 	}
 }
 
-// AnyOfCompletion will wait for any of the commands to complete
-func AnyOfCompletion(commands ...Command) *CommandRequest {
+// AnyOf will wait for any of the commands to complete
+func AnyOf(commands ...Command) *CommandRequest {
 	return &CommandRequest{
 		Commands:           commands,
 		CommandWaitingType: xdbapi.ANY_OF_COMPLETION,
 	}
 }
 
-// AllOfCompletion will wait for all the commands to complete
-func AllOfCompletion(commands ...Command) *CommandRequest {
+// AllO will wait for all the commands to complete
+func AllO(commands ...Command) *CommandRequest {
 	return &CommandRequest{
 		Commands:           commands,
 		CommandWaitingType: xdbapi.ALL_OF_COMPLETION,

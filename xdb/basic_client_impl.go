@@ -122,6 +122,32 @@ func (u *basicClientImpl) StopProcess(
 	return nil
 }
 
+func (u *basicClientImpl) PublishMessagesToLocalQueue(
+	ctx context.Context, processId string, messages []xdbapi.LocalQueueMessage,
+) error {
+	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionPublishToLocalQueuePost(ctx)
+
+	reqObj := xdbapi.PublishToLocalQueueRequest{
+		Namespace: u.options.Namespace,
+		ProcessId: processId,
+		Messages:  messages,
+	}
+
+	var httpErr error
+	if u.options.EnabledDebugLogging {
+		fmt.Println("PublishMessagesToLocalQueue is requested", anyToJson(reqObj))
+		defer func() {
+			fmt.Println("PublishMessagesToLocalQueue is responded", anyToJson(httpErr))
+		}()
+	}
+
+	httpResp, httpErr := req.PublishToLocalQueueRequest(reqObj).Execute()
+	if err := u.processError(httpErr, httpResp); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (u *basicClientImpl) processError(err error, httpResp *http.Response) error {
 	if httpResp != nil {
 		defer httpResp.Body.Close()

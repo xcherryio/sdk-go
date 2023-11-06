@@ -21,6 +21,13 @@ type Client interface {
 	// StopProcess stops a process execution
 	// processId is the required business identifier for the process execution
 	StopProcess(ctx context.Context, processId string, stopType xdbapi.ProcessExecutionStopType) error
+	// PublishToLocalQueue publishes a message to a local queue
+	// the payload can be empty(nil)
+	// dedupUUID is optional UUID for deduplication
+	// TODO add batch publish API
+	PublishToLocalQueue(
+		ctx context.Context, processId string, queueName string, payload interface{}, dedupUUID string,
+	) error
 	// DescribeCurrentProcessExecution returns a process execution info
 	// processId is the required business identifier for the process execution
 	DescribeCurrentProcessExecution(
@@ -51,6 +58,10 @@ type BasicClient interface {
 	DescribeCurrentProcessExecution(
 		ctx context.Context, processId string,
 	) (*xdbapi.ProcessExecutionDescribeResponse, error)
+
+	PublishMessagesToLocalQueue(
+		ctx context.Context, processId string, messages []xdbapi.LocalQueueMessage,
+	) error
 }
 
 // NewClient returns a Client

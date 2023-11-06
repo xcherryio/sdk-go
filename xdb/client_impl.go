@@ -3,6 +3,7 @@ package xdb
 import (
 	"context"
 	"github.com/xdblab/xdb-apis/goapi/xdbapi"
+	"github.com/xdblab/xdb-golang-sdk/xdb/ptr"
 )
 
 type clientImpl struct {
@@ -69,6 +70,28 @@ func (c *clientImpl) StartProcessWithOptions(
 	unregOpt.TimeoutSeconds = prcOptions.TimeoutSeconds
 
 	return c.BasicClient.StartProcess(ctx, prcType, startStateId, processId, input, unregOpt)
+}
+
+func (c *clientImpl) PublishToLocalQueue(
+	ctx context.Context, processId string, queueName string, payload interface{}, dedupUUID string,
+) error {
+	var pl *xdbapi.EncodedObject
+	var err error
+	if payload != nil {
+		pl, err = c.clientOptions.ObjectEncoder.Encode(payload)
+		if err != nil {
+			return err
+		}
+	}
+	msg := xdbapi.LocalQueueMessage{
+		QueueName: queueName,
+		Payload:   pl,
+	}
+	if dedupUUID != "" {
+		msg.DedupId = ptr.Any(dedupUUID)
+	}
+
+	return c.BasicClient.PublishMessagesToLocalQueue(ctx, processId, []xdbapi.LocalQueueMessage{msg})
 }
 
 func (c *clientImpl) StartProcess(
