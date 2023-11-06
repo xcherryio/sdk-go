@@ -121,7 +121,10 @@ var currTestProcessId string
 func TestBackoff(t *testing.T, client xdb.Client) {
 	currTestProcessId = common.GenerateProcessId()
 	prc := BackoffProcess{}
-	_, err := client.StartProcess(context.Background(), prc, currTestProcessId, nil)
+	_, err := client.StartProcessWithOptions(
+		context.Background(), prc, currTestProcessId, nil, &xdb.ProcessStartOptions{
+			TimeoutSeconds: ptr.Any(int32(30)),
+		})
 	assert.Nil(t, err)
 
 	time.Sleep(time.Second * 20) // （2+4+8）+1+1 = 9 seconds
