@@ -30,8 +30,9 @@ func toApiCommandRequest(request *CommandRequest) (*xdbapi.CommandRequest, error
 
 	}
 	return &xdbapi.CommandRequest{
-			WaitingType:   request.CommandWaitingType,
-			TimerCommands: timerCmds,
+			WaitingType:        request.CommandWaitingType,
+			TimerCommands:      timerCmds,
+			LocalQueueCommands: localQCmds,
 		},
 		nil
 }
@@ -40,10 +41,10 @@ func fromApiCommandResults(results *xdbapi.CommandResults, encoder ObjectEncoder
 	if results == nil {
 		return CommandResults{}, nil
 	}
-	var timerResults []TimerCommandResult
+	var timerResults []TimerResult
 	var localQResults []LocalQueueCommandResult
 	for _, t := range results.TimerResults {
-		timerResult := TimerCommandResult{
+		timerResult := TimerResult{
 			Status: t.Status,
 		}
 		timerResults = append(timerResults, timerResult)

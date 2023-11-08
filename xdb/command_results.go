@@ -3,11 +3,11 @@ package xdb
 import "github.com/xdblab/xdb-apis/goapi/xdbapi"
 
 type CommandResults struct {
-	Timers            []TimerCommandResult
+	Timers            []TimerResult
 	LocalQueueResults []LocalQueueCommandResult
 }
 
-type TimerCommandResult struct {
+type TimerResult struct {
 	Status xdbapi.CommandStatus
 }
 

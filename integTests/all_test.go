@@ -1,6 +1,7 @@
 package integTests
 
 import (
+	"github.com/xdblab/xdb-golang-sdk/integTests/command_request"
 	"testing"
 
 	"github.com/xdblab/xdb-golang-sdk/integTests/global_attribute"
@@ -95,4 +96,8 @@ func TestStartTimeoutProcessCase3(t *testing.T) {
 
 func TestStartTimeoutProcessCase4(t *testing.T) {
 	process_timeout.TestStartTimeoutProcessCase4(t, client)
+}
+
+func TestAnyOfTimerLocalQueueWithTimerFired(t *testing.T) {
+	command_request.TestAnyOfTimerLocalQueueWithTimerFired(t, client)
 }

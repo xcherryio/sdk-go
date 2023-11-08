@@ -2,6 +2,7 @@ package integTests
 
 import (
 	"github.com/xdblab/xdb-golang-sdk/integTests/basic"
+	"github.com/xdblab/xdb-golang-sdk/integTests/command_request"
 	"github.com/xdblab/xdb-golang-sdk/integTests/failure_recovery"
 	"github.com/xdblab/xdb-golang-sdk/integTests/global_attribute"
 	"github.com/xdblab/xdb-golang-sdk/integTests/multi_states"
@@ -12,7 +13,7 @@ import (
 )
 
 var registry = xdb.NewRegistry()
-var client = xdb.NewClient(registry, nil)
+var client = xdb.NewClient(registry, getTestClientOptions())
 var workerService = xdb.NewWorkerService(registry, nil)
 
 func init() {
@@ -31,8 +32,15 @@ func init() {
 		&global_attribute.SingleTableProcess{},
 		&global_attribute.MultiTablesProcess{},
 		&process_timeout.TimeoutProcess{},
+		&command_request.AnyOfTimerLocalQProcess{},
 	)
 	if err != nil {
 		panic(err)
 	}
+}
+
+func getTestClientOptions() *xdb.ClientOptions {
+	options := xdb.GetLocalDefaultClientOptions()
+	options.DefaultProcessTimeoutSecondsOverride = 10
+	return options
 }

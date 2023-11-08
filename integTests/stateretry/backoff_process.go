@@ -39,7 +39,9 @@ func (d stateDefaultPolicy) GetStateOptions() *xdb.AsyncStateOptions {
 	}
 }
 
-func (b *stateDefaultPolicy) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
+func (b *stateDefaultPolicy) WaitUntil(
+	ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication,
+) (*xdb.CommandRequest, error) {
 	if ctx.GetProcessId() != currTestProcessId {
 		// ignore stale data
 		return xdb.EmptyCommandRequest(), nil
@@ -82,7 +84,8 @@ func getCurrentTimeMillis() int64 {
 }
 
 func (b *stateDefaultPolicy) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
+	communication xdb.Communication,
 ) (*xdb.StateDecision, error) {
 	if ctx.GetProcessId() != currTestProcessId {
 		// ignore stale data
@@ -102,7 +105,8 @@ type stateCustomizedPolicy struct {
 }
 
 func (b *stateCustomizedPolicy) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
+	communication xdb.Communication,
 ) (*xdb.StateDecision, error) {
 	if ctx.GetProcessId() != currTestProcessId {
 		// ignore stale data

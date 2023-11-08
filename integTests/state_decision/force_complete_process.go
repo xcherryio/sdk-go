@@ -28,7 +28,8 @@ func (b forceCompleteState1) GetStateId() string {
 }
 
 func (b forceCompleteState1) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
+	communication xdb.Communication,
 ) (*xdb.StateDecision, error) {
 	return xdb.MultiNextStates(forceCompleteState2{}, forceCompleteState3{}), nil
 }
@@ -42,7 +43,8 @@ func (b forceCompleteState2) GetStateId() string {
 }
 
 func (b forceCompleteState2) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
+	communication xdb.Communication,
 ) (*xdb.StateDecision, error) {
 	return xdb.ForceCompletingProcess, nil
 }
@@ -56,7 +58,8 @@ func (b forceCompleteState3) GetStateId() string {
 }
 
 func (b forceCompleteState3) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
+	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
+	communication xdb.Communication,
 ) (*xdb.StateDecision, error) {
 	// TODO: add timer
 	return xdb.DeadEnd, nil

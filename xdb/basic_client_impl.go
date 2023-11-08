@@ -70,6 +70,15 @@ func (u *basicClientImpl) StartProcess(
 		}
 	}
 
+	if u.options.DefaultProcessTimeoutSecondsOverride > 0 {
+		if processConfig == nil {
+			processConfig = &xdbapi.ProcessStartConfig{}
+		}
+		if processConfig.TimeoutSeconds == nil || *processConfig.TimeoutSeconds == 0 {
+			processConfig.TimeoutSeconds = &u.options.DefaultProcessTimeoutSecondsOverride
+		}
+	}
+
 	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionStartPost(ctx)
 	reqObj := xdbapi.ProcessExecutionStartRequest{
 		Namespace:          u.options.Namespace,

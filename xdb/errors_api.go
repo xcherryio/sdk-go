@@ -62,10 +62,11 @@ type ApiError struct {
 }
 
 func (i *ApiError) Error() string {
+	errStr := fmt.Sprintf("StatusCode: %v OriginalError:%v", i.StatusCode, i.OriginalError)
 	if i.Response != nil {
-		return i.OriginalError.Error() + "\n" + i.Response.GetOriginalWorkerErrorDetail()
+		return errStr + i.Response.GetOriginalWorkerErrorDetail()
 	}
-	return i.OriginalError.Error()
+	return errStr
 }
 
 func NewApiError(
