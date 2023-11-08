@@ -1,8 +1,10 @@
 package integTests
 
 import (
-	"github.com/xdblab/xdb-golang-sdk/integTests/global_attribute"
 	"testing"
+
+	"github.com/xdblab/xdb-golang-sdk/integTests/global_attribute"
+	"github.com/xdblab/xdb-golang-sdk/integTests/process_timeout"
 
 	"github.com/xdblab/xdb-golang-sdk/integTests/failure_recovery"
 	"github.com/xdblab/xdb-golang-sdk/integTests/stateretry"
@@ -77,4 +79,20 @@ func TestGlobalAttributesWithSingleTable(t *testing.T) {
 
 func TestGlobalAttributesWithMultiTables(t *testing.T) {
 	global_attribute.TestGlobalAttributesWithMultiTables(t, client)
+}
+
+func TestStartTimeoutProcessCase1(t *testing.T) {
+	process_timeout.TestStartTimeoutProcessCase1(t, client)
+}
+
+func TestStartTimeoutProcessCase2(t *testing.T) {
+	process_timeout.TestStartTimeoutProcessCase2(t, client)
+}
+
+func TestStartTimeoutProcessCase3(t *testing.T) {
+	process_timeout.TestStartTimeoutProcessCase3(t, client)
+}
+
+func TestStartTimeoutProcessCase4(t *testing.T) {
+	process_timeout.TestStartTimeoutProcessCase4(t, client)
 }

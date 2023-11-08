@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/xdblab/xdb-apis/goapi/xdbapi"
 	"net/http"
 	"net/url"
 	"reflect"
+
+	"github.com/xdblab/xdb-apis/goapi/xdbapi"
 )
 
 type basicClientImpl struct {
