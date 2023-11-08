@@ -9,7 +9,6 @@ import (
 	"reflect"
 
 	"github.com/xdblab/xdb-apis/goapi/xdbapi"
-	"github.com/xdblab/xdb-golang-sdk/xdb/ptr"
 )
 
 type basicClientImpl struct {
@@ -69,11 +68,6 @@ func (u *basicClientImpl) StartProcess(
 			TimeoutSeconds:        &options.TimeoutSeconds,
 			GlobalAttributeConfig: options.GlobalAttributeConfig,
 		}
-	}
-
-	processConfig.TimeoutSeconds = ptr.Any(int32(10))
-	if options.TimeoutSeconds != 0 {
-		processConfig.TimeoutSeconds = &options.TimeoutSeconds
 	}
 
 	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionStartPost(ctx)
