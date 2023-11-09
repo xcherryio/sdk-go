@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"reflect"
 
+	"github.com/google/uuid"
 	"github.com/xdblab/xdb-apis/goapi/xdbapi"
 )
 
@@ -70,6 +71,15 @@ func (u *basicClientImpl) StartProcess(
 		}
 	}
 
+	if u.options.DefaultProcessTimeoutSecondsOverride > 0 {
+		if processConfig == nil {
+			processConfig = &xdbapi.ProcessStartConfig{}
+		}
+		if processConfig.TimeoutSeconds == nil || *processConfig.TimeoutSeconds == 0 {
+			processConfig.TimeoutSeconds = &u.options.DefaultProcessTimeoutSecondsOverride
+		}
+	}
+
 	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionStartPost(ctx)
 	reqObj := xdbapi.ProcessExecutionStartRequest{
 		Namespace:          u.options.Namespace,
@@ -116,6 +126,42 @@ func (u *basicClientImpl) StopProcess(
 	}
 	httpResp, httpErr := req.ProcessExecutionStopRequest(reqObj).Execute()
 
+	if err := u.processError(httpErr, httpResp); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *basicClientImpl) PublishToLocalQueue(
+	ctx context.Context, processId string, messages []xdbapi.LocalQueueMessage,
+) error {
+	for _, m := range messages {
+		if m.DedupId != nil {
+			_, err := uuid.Parse(*m.DedupId)
+			if err != nil {
+				return fmt.Errorf("invalid dedupUUId %v , err: %w", *m.DedupId, err)
+			}
+		}
+
+	}
+
+	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionPublishToLocalQueuePost(ctx)
+
+	reqObj := xdbapi.PublishToLocalQueueRequest{
+		Namespace: u.options.Namespace,
+		ProcessId: processId,
+		Messages:  messages,
+	}
+
+	var httpErr error
+	if u.options.EnabledDebugLogging {
+		fmt.Println("PublishToLocalQueue is requested", anyToJson(reqObj))
+		defer func() {
+			fmt.Println("PublishToLocalQueue is responded", anyToJson(httpErr))
+		}()
+	}
+
+	httpResp, httpErr := req.PublishToLocalQueueRequest(reqObj).Execute()
 	if err := u.processError(httpErr, httpResp); err != nil {
 		return err
 	}

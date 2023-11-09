@@ -22,7 +22,7 @@ func (w *workerServiceImpl) HandleAsyncStateWaitUntil(
 	reqContext := request.GetContext()
 	wfCtx := newXdbContext(reqContext)
 
-	var comm Communication // TODO
+	comm := NewCommunication(w.options.ObjectEncoder)
 	commandRequest, err := stateDef.WaitUntil(wfCtx, input, comm)
 
 	if err != nil {
@@ -34,7 +34,8 @@ func (w *workerServiceImpl) HandleAsyncStateWaitUntil(
 		return nil, err
 	}
 	resp = &xdbapi.AsyncStateWaitUntilResponse{
-		CommandRequest: *idlCommandRequest,
+		CommandRequest:      *idlCommandRequest,
+		PublishToLocalQueue: comm.GetLocalQueueMessagesToPublish(),
 	}
 
 	return resp, nil
@@ -58,7 +59,7 @@ func (w *workerServiceImpl) HandleAsyncStateExecute(
 
 	pers := w.createPersistenceImpl(prcType, request.LoadedGlobalAttributes)
 
-	var comm Communication // TODO
+	comm := NewCommunication(w.options.ObjectEncoder)
 	decision, err := stateDef.Execute(wfCtx, input, commandResults, pers, comm)
 
 	if err != nil {
@@ -69,7 +70,8 @@ func (w *workerServiceImpl) HandleAsyncStateExecute(
 		return nil, err
 	}
 	resp = &xdbapi.AsyncStateExecuteResponse{
-		StateDecision: *idlDecision,
+		StateDecision:       *idlDecision,
+		PublishToLocalQueue: comm.GetLocalQueueMessagesToPublish(),
 	}
 	if len(pers.getGlobalAttributesToUpdate()) > 0 {
 		resp.WriteToGlobalAttributes = pers.getGlobalAttributesToUpdate()

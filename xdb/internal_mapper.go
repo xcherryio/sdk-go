@@ -10,35 +10,57 @@ func toApiCommandRequest(request *CommandRequest) (*xdbapi.CommandRequest, error
 		return nil, NewProcessDefinitionError("command request cannot be nil")
 	}
 	var timerCmds []xdbapi.TimerCommand
+	var localQCmds []xdbapi.LocalQueueCommand
 	for _, t := range request.Commands {
-		if t.CommandType == CommandTypeTimer {
+		switch t.CommandType {
+		case CommandTypeTimer:
 			timerCmd := xdbapi.TimerCommand{
 				DelayInSeconds: t.TimerCommand.DelayInSeconds,
 			}
 			timerCmds = append(timerCmds, timerCmd)
+		case CommandTypeLocalQueue:
+			localQCommand := xdbapi.LocalQueueCommand{
+				QueueName: t.LocalQueueCommand.QueueName,
+				Count:     ptr.Any(int32(t.LocalQueueCommand.Count)),
+			}
+			localQCmds = append(localQCmds, localQCommand)
+		default:
+			panic("unknown command type " + t.CommandType)
 		}
+
 	}
 	return &xdbapi.CommandRequest{
-			WaitingType:   request.CommandWaitingType,
-			TimerCommands: timerCmds,
+			WaitingType:        request.CommandWaitingType,
+			TimerCommands:      timerCmds,
+			LocalQueueCommands: localQCmds,
 		},
 		nil
 }
 
-func fromApiCommandResults(results *xdbapi.CommandResults, _ ObjectEncoder) (CommandResults, error) {
+func fromApiCommandResults(results *xdbapi.CommandResults, encoder ObjectEncoder) (CommandResults, error) {
 	if results == nil {
 		return CommandResults{}, nil
 	}
-	var timerResults []TimerCommandResult
+	var timerResults []TimerResult
+	var localQResults []LocalQueueCommandResult
 	for _, t := range results.TimerResults {
-		timerResult := TimerCommandResult{
+		timerResult := TimerResult{
 			Status: t.Status,
 		}
 		timerResults = append(timerResults, timerResult)
 	}
 
+	for _, t := range results.LocalQueueResults {
+		localQResult := LocalQueueCommandResult{
+			Result:  t,
+			Encoder: encoder,
+		}
+		localQResults = append(localQResults, localQResult)
+	}
+
 	return CommandResults{
-		Timers: timerResults,
+		TimerResults:      timerResults,
+		LocalQueueResults: localQResults,
 	}, nil
 }
 
