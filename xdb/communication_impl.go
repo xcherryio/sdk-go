@@ -8,7 +8,10 @@ type communicationImpl struct {
 }
 
 func NewCommunication(encoder ObjectEncoder) Communication {
-	return &communicationImpl{}
+	return &communicationImpl{
+		encoder:                     encoder,
+		localQueueMessagesToPublish: nil,
+	}
 }
 
 func (c communicationImpl) PublishToLocalQueue(queueName string, payload interface{}) {
