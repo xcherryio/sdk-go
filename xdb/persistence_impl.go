@@ -42,7 +42,7 @@ func NewPersistenceImpl(
 	}
 }
 
-func (p persistenceImpl) GetGlobalAttribute(key string, resultPtr interface{}) {
+func (p *persistenceImpl) GetGlobalAttribute(key string, resultPtr interface{}) {
 	def, ok := p.globalAttrDefs[key]
 	if !ok {
 		panic("global attribute not found " + key)
@@ -57,7 +57,7 @@ func (p persistenceImpl) GetGlobalAttribute(key string, resultPtr interface{}) {
 	}
 }
 
-func (p persistenceImpl) SetGlobalAttribute(key string, value interface{}) {
+func (p *persistenceImpl) SetGlobalAttribute(key string, value interface{}) {
 	def, ok := p.globalAttrDefs[key]
 	if !ok {
 		panic("global attribute not found " + key)
@@ -74,7 +74,7 @@ func (p persistenceImpl) SetGlobalAttribute(key string, value interface{}) {
 	p.currUpdatedGlobalAttrs[key] = val
 }
 
-func (p persistenceImpl) getGlobalAttributesToUpdate() []xdbapi.GlobalAttributeTableRowUpdate {
+func (p *persistenceImpl) getGlobalAttributesToUpdate() []xdbapi.GlobalAttributeTableRowUpdate {
 	res := map[string]xdbapi.GlobalAttributeTableRowUpdate{}
 	for k, v := range p.currUpdatedGlobalAttrs {
 		def := p.globalAttrDefs[k]

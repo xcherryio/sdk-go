@@ -14,7 +14,7 @@ func NewCommunication(encoder ObjectEncoder) Communication {
 	}
 }
 
-func (c communicationImpl) PublishToLocalQueue(queueName string, payload interface{}) {
+func (c *communicationImpl) PublishToLocalQueue(queueName string, payload interface{}) {
 	pl, err := c.encoder.Encode(payload)
 	if err != nil {
 		panic(err)
@@ -26,6 +26,6 @@ func (c communicationImpl) PublishToLocalQueue(queueName string, payload interfa
 	c.localQueueMessagesToPublish = append(c.localQueueMessagesToPublish, msg)
 }
 
-func (c communicationImpl) GetLocalQueueMessagesToPublish() []xdbapi.LocalQueueMessage {
+func (c *communicationImpl) GetLocalQueueMessagesToPublish() []xdbapi.LocalQueueMessage {
 	return c.localQueueMessagesToPublish
 }
