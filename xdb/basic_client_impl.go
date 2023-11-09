@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"reflect"
 
+	"github.com/google/uuid"
 	"github.com/xdblab/xdb-apis/goapi/xdbapi"
 )
 
@@ -134,6 +135,16 @@ func (u *basicClientImpl) StopProcess(
 func (u *basicClientImpl) PublishToLocalQueue(
 	ctx context.Context, processId string, messages []xdbapi.LocalQueueMessage,
 ) error {
+	for _, m := range messages {
+		if m.DedupId != nil {
+			_, err := uuid.Parse(*m.DedupId)
+			if err != nil {
+				return fmt.Errorf("invalid dedupUUId %v , err: %w", *m.DedupId, err)
+			}
+		}
+
+	}
+
 	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionPublishToLocalQueuePost(ctx)
 
 	reqObj := xdbapi.PublishToLocalQueueRequest{

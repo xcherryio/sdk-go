@@ -2,6 +2,8 @@ package xdb
 
 import (
 	"context"
+	"fmt"
+	"github.com/google/uuid"
 	"github.com/xdblab/xdb-apis/goapi/xdbapi"
 	"github.com/xdblab/xdb-golang-sdk/xdb/ptr"
 )
@@ -73,25 +75,61 @@ func (c *clientImpl) StartProcessWithOptions(
 }
 
 func (c *clientImpl) PublishToLocalQueue(
-	ctx context.Context, processId string, queueName string, payload interface{}, dedupUUID string,
+	ctx context.Context, processId string, queueName string, payload interface{}, options *LocalQueuePublishOptions,
 ) error {
+	msg, err := c.convertToAPIMessage(queueName, payload, options)
+	if err != nil {
+		return err
+	}
+	return c.BasicClient.PublishToLocalQueue(ctx, processId, []xdbapi.LocalQueueMessage{msg})
+}
+
+func (c *clientImpl) BatchPublishToLocalQueue(
+	ctx context.Context, processId string, messages ...LocalQueuePublishMessage,
+) error {
+	var msgs []xdbapi.LocalQueueMessage
+	for _, m := range messages {
+		msg, err := c.convertToAPIMessage(m.QueueName, m.Payload, &LocalQueuePublishOptions{
+			DedupSeed: m.DedupSeed,
+			DedupUUID: m.DedupUUID,
+		})
+		if err != nil {
+			return err
+		}
+		msgs = append(msgs, msg)
+	}
+	return c.BasicClient.PublishToLocalQueue(ctx, processId, msgs)
+}
+
+func (c *clientImpl) convertToAPIMessage(
+	queueName string, payload interface{}, options *LocalQueuePublishOptions,
+) (xdbapi.LocalQueueMessage, error) {
 	var pl *xdbapi.EncodedObject
 	var err error
 	if payload != nil {
 		pl, err = c.clientOptions.ObjectEncoder.Encode(payload)
 		if err != nil {
-			return err
+			return xdbapi.LocalQueueMessage{}, err
 		}
 	}
 	msg := xdbapi.LocalQueueMessage{
 		QueueName: queueName,
 		Payload:   pl,
 	}
-	if dedupUUID != "" {
-		msg.DedupId = ptr.Any(dedupUUID)
+	if options != nil {
+		if options.DedupUUID != nil {
+			_, err := uuid.Parse(*options.DedupUUID)
+			if err != nil {
+				return xdbapi.LocalQueueMessage{}, fmt.Errorf("invalid DedupUUId %v , err: %w", *options.DedupUUID, err)
+			}
+			msg.DedupId = options.DedupUUID
+		}
+		if options.DedupSeed != nil {
+			guid := uuid.NewMD5(uuid.NameSpaceOID, []byte(*options.DedupSeed))
+			msg.DedupId = ptr.Any(guid.String())
+		}
 	}
-
-	return c.BasicClient.PublishToLocalQueue(ctx, processId, []xdbapi.LocalQueueMessage{msg})
+	return msg, nil
 }
 
 func (c *clientImpl) StartProcess(

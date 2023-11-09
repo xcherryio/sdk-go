@@ -101,3 +101,11 @@ func TestStartTimeoutProcessCase4(t *testing.T) {
 func TestAnyOfTimerLocalQueueWithTimerFired(t *testing.T) {
 	command_request.TestAnyOfTimerLocalQueueWithTimerFired(t, client)
 }
+
+func TestAnyOfTimerLocalQueueWithLocalQueueMessagesReceived(t *testing.T) {
+	command_request.TestAnyOfTimerLocalQueueWithLocalQueueMessagesReceived(t, client)
+}
+
+func TestAllOfTimerLocalQueue(t *testing.T) {
+	command_request.TestAllOfTimerLocalQueue(t, client)
+}

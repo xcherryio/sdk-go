@@ -33,6 +33,7 @@ func init() {
 		&global_attribute.MultiTablesProcess{},
 		&process_timeout.TimeoutProcess{},
 		&command_request.AnyOfTimerLocalQProcess{},
+		&command_request.AllOfTimerLocalQProcess{},
 	)
 	if err != nil {
 		panic(err)
