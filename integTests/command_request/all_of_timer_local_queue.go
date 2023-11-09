@@ -90,7 +90,7 @@ func TestAllOfTimerLocalQueue(t *testing.T, client xdb.Client) {
 			DedupUUID: ptr.Any(tuid.String()),
 		})
 	assert.Nil(t, err)
-	
+
 	time.Sleep(time.Second * 6)
 	resp, err := client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
