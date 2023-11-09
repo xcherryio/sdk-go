@@ -149,7 +149,6 @@ func TestGlobalAttributesWithSingleTable(t *testing.T, client xdb.Client) {
 				},
 			),
 		})
-	fmt.Println(err)
 	assert.Nil(t, err)
 
 	time.Sleep(time.Second * 3)
