@@ -58,20 +58,26 @@ type ApiError struct {
 	OriginalError error
 	OpenApiError  *xdbapi.GenericOpenAPIError
 	HttpResponse  *http.Response
-	Response      *xdbapi.ApiErrorResponse
+	ErrResponse   *xdbapi.ApiErrorResponse
 }
 
 func (i *ApiError) Error() string {
-	errStr := fmt.Sprintf("StatusCode: %v OriginalError:%v", i.StatusCode, i.OriginalError)
-	if i.Response != nil {
-		return errStr + i.Response.GetOriginalWorkerErrorDetail()
+	if i.ErrResponse != nil {
+		bs, err := i.ErrResponse.MarshalJSON()
+		if err != nil {
+			return fmt.Errorf("failed to MarshalJSON for ApiErrorResponse: %w", err).Error()
+		}
+		return fmt.Sprintf("StatusCode: %v , error details: %v", i.StatusCode, string(bs))
 	}
+
+	errStr := fmt.Sprintf("StatusCode: %v OriginalError:%v", i.StatusCode, i.OriginalError)
+
 	return errStr
 }
 
 func NewApiError(
 	originalError error, openApiError *xdbapi.GenericOpenAPIError, httpResponse *http.Response,
-	response *xdbapi.ApiErrorResponse,
+	errResponse *xdbapi.ApiErrorResponse,
 ) error {
 	statusCode := 0
 	if httpResponse != nil {
@@ -82,7 +88,7 @@ func NewApiError(
 		OriginalError: originalError,
 		OpenApiError:  openApiError,
 		HttpResponse:  httpResponse,
-		Response:      response,
+		ErrResponse:   errResponse,
 	}
 }
 
@@ -96,7 +102,7 @@ func IsClientError(err error) bool {
 
 func IsProcessAlreadyStartedError(err error) bool {
 	apiError, ok := err.(*ApiError)
-	if !ok || apiError.Response == nil {
+	if !ok || apiError.ErrResponse == nil {
 		return false
 	}
 	return apiError.StatusCode == http.StatusConflict
@@ -104,7 +110,7 @@ func IsProcessAlreadyStartedError(err error) bool {
 
 func IsGlobalAttributeWriteFailure(err error) bool {
 	apiError, ok := err.(*ApiError)
-	if !ok || apiError.Response == nil {
+	if !ok || apiError.ErrResponse == nil {
 		return false
 	}
 	return apiError.StatusCode == http.StatusFailedDependency
@@ -112,7 +118,7 @@ func IsGlobalAttributeWriteFailure(err error) bool {
 
 func IsProcessNotExistsError(err error) bool {
 	apiError, ok := err.(*ApiError)
-	if !ok || apiError.Response == nil {
+	if !ok || apiError.ErrResponse == nil {
 		return false
 	}
 	return apiError.StatusCode == http.StatusNotFound
@@ -120,7 +126,7 @@ func IsProcessNotExistsError(err error) bool {
 
 func IsRPCExecutionError(err error) bool {
 	apiError, ok := err.(*ApiError)
-	if !ok || apiError.Response == nil {
+	if !ok || apiError.ErrResponse == nil {
 		return false
 	}
 	return apiError.StatusCode == http.StatusFailedDependency
@@ -128,7 +134,7 @@ func IsRPCExecutionError(err error) bool {
 
 func IsRPCLockingFailure(err error) bool {
 	apiError, ok := err.(*ApiError)
-	if !ok || apiError.Response == nil {
+	if !ok || apiError.ErrResponse == nil {
 		return false
 	}
 	return apiError.StatusCode == http.StatusLocked
@@ -136,7 +142,7 @@ func IsRPCLockingFailure(err error) bool {
 
 func IsWaitingExceedingTimeoutError(err error) bool {
 	apiError, ok := err.(*ApiError)
-	if !ok || apiError.Response == nil {
+	if !ok || apiError.ErrResponse == nil {
 		return false
 	}
 	return apiError.StatusCode == http.StatusRequestTimeout
