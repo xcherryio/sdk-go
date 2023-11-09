@@ -6,7 +6,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.4.0
 	github.com/stretchr/testify v1.8.4
-	github.com/xdblab/xdb-apis v0.0.2-0.20231103162847-5f8bbf8de28c
+	github.com/xdblab/xdb-apis v0.0.2-0.20231109205241-83a802654b63
 )
 
 require (
