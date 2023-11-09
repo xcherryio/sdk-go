@@ -3,7 +3,7 @@ package xdb
 import "github.com/xdblab/xdb-apis/goapi/xdbapi"
 
 type CommandResults struct {
-	Timers            []TimerResult
+	TimerResults      []TimerResult
 	LocalQueueResults []LocalQueueCommandResult
 }
 
@@ -21,7 +21,7 @@ func (c CommandResults) GetFirstTimerStatus() xdbapi.CommandStatus {
 }
 
 func (c CommandResults) GetTimerStatus(index int) xdbapi.CommandStatus {
-	cmd := c.Timers[index]
+	cmd := c.TimerResults[index]
 	return cmd.Status
 }
 

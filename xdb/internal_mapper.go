@@ -59,7 +59,7 @@ func fromApiCommandResults(results *xdbapi.CommandResults, encoder ObjectEncoder
 	}
 
 	return CommandResults{
-		Timers:            timerResults,
+		TimerResults:      timerResults,
 		LocalQueueResults: localQResults,
 	}, nil
 }

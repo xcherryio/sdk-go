@@ -117,16 +117,16 @@ func (c *clientImpl) convertToAPIMessage(
 		Payload:   pl,
 	}
 	if options != nil {
+		if options.DedupSeed != nil {
+			guid := uuid.NewMD5(uuid.NameSpaceOID, []byte(*options.DedupSeed))
+			msg.DedupId = ptr.Any(guid.String())
+		}
 		if options.DedupUUID != nil {
 			_, err := uuid.Parse(*options.DedupUUID)
 			if err != nil {
 				return xdbapi.LocalQueueMessage{}, fmt.Errorf("invalid DedupUUId %v , err: %w", *options.DedupUUID, err)
 			}
 			msg.DedupId = options.DedupUUID
-		}
-		if options.DedupSeed != nil {
-			guid := uuid.NewMD5(uuid.NameSpaceOID, []byte(*options.DedupSeed))
-			msg.DedupId = ptr.Any(guid.String())
 		}
 	}
 	return msg, nil
