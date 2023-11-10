@@ -157,7 +157,7 @@ func NewDBTableSchemaMultiColumnPKWithPKHint(
 	if len(pks) != len(pkHints) {
 		panic("pks and pkHints must have the same length")
 	}
-	
+
 	var loadingKeys []string
 	for _, col := range columns {
 		if col.defaultLoading {
