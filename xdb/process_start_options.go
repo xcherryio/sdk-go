@@ -37,7 +37,8 @@ func NewGlobalAttributeOptions(
 type DBTableConfig struct {
 	TableName string
 	PKValue   interface{}
-	PKHint    *DBHint
+	// MultiColumnPKValues is needed for multi-column primary key
+	MultiColumnPKValues []interface{}
 	// InitialAttributes is the initial attributes to be set when starting the process execution
 	// Key is the attribute key, value is the attribute value
 	InitialAttributes map[string]interface{}

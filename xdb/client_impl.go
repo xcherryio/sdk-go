@@ -160,10 +160,30 @@ func (c *clientImpl) convertToTableConfig(
 		if !ok {
 			return nil, NewInvalidArgumentError("GlobalAttributeConfig.DBTableConfigs missing table: " + tblName)
 		}
-		dbVal, err := c.dbConverter.ToDBValue(cfg.PKValue, cfg.PKHint)
-		if err != nil {
-			return nil, err
+
+		// convert for primary key
+		var originPKValues []interface{}
+		if len(tbl.PrimaryKeyNames) == 1 {
+			originPKValues = []interface{}{cfg.PKValue}
+		} else {
+			originPKValues = cfg.MultiColumnPKValues
 		}
+
+		dbVals := make([]xdbapi.TableColumnValue, len(tbl.PrimaryKeyNames))
+		for i := range tbl.PrimaryKeyNames {
+			pkName := tbl.PrimaryKeyNames[i]
+			hint := tbl.PrimaryKeyHints[i]
+			dbVal, err := c.dbConverter.ToDBValue(originPKValues[i], hint)
+			if err != nil {
+				return nil, err
+			}
+			dbVals[i] = xdbapi.TableColumnValue{
+				DbColumn:     pkName,
+				DbQueryValue: dbVal,
+			}
+		}
+
+		// convert for initial attributes
 		var initWrite []xdbapi.TableColumnValue
 		for key, attr := range cfg.InitialAttributes {
 			def, ok := keyToDefs[key]
@@ -179,12 +199,11 @@ func (c *clientImpl) convertToTableConfig(
 				DbQueryValue: dbVal,
 			})
 		}
+
+		// assemble for the config
 		tblConfig := xdbapi.GlobalAttributeTableConfig{
-			TableName: tblName,
-			PrimaryKey: xdbapi.TableColumnValue{
-				DbColumn:     tbl.PK,
-				DbQueryValue: dbVal,
-			},
+			TableName:        tblName,
+			PrimaryKey:       dbVals,
 			InitialWrite:     initWrite,
 			InitialWriteMode: cfg.InitialWriteConflictMode,
 		}

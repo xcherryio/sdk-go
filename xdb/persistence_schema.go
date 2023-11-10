@@ -21,9 +21,10 @@ type GlobalAttributesSchema struct {
 }
 
 type DBTableSchema struct {
-	TableName string
-	PK        string
-	Columns   []DBColumnDef
+	TableName       string
+	PrimaryKeyNames []string
+	PrimaryKeyHints []*DBHint
+	Columns         []DBColumnDef
 	// DefaultTablePolicy is the default loading policy for this table
 	DefaultTablePolicy TablePolicy
 }
@@ -124,7 +125,39 @@ func NewDBTableSchema(
 	defaultReadLocking xdbapi.TableReadLockingPolicy,
 	columns ...DBColumnDef,
 ) DBTableSchema {
+	return NewDBTableSchemaWithPKHint(tableName, pk, nil, defaultReadLocking, columns...)
+}
 
+func NewDBTableSchemaMultiColumnPK(
+	tableName string,
+	pks []string,
+	defaultReadLocking xdbapi.TableReadLockingPolicy,
+	columns ...DBColumnDef,
+) DBTableSchema {
+	return NewDBTableSchemaMultiColumnPKWithPKHint(tableName, pks, make([]*DBHint, len(pks)),
+		defaultReadLocking, columns...)
+}
+
+func NewDBTableSchemaWithPKHint(
+	tableName string,
+	pk string, pkHint *DBHint,
+	defaultReadLocking xdbapi.TableReadLockingPolicy,
+	columns ...DBColumnDef,
+) DBTableSchema {
+	return NewDBTableSchemaMultiColumnPKWithPKHint(tableName, []string{pk}, []*DBHint{pkHint},
+		defaultReadLocking, columns...)
+}
+
+func NewDBTableSchemaMultiColumnPKWithPKHint(
+	tableName string,
+	pks []string, pkHints []*DBHint,
+	defaultReadLocking xdbapi.TableReadLockingPolicy,
+	columns ...DBColumnDef,
+) DBTableSchema {
+	if len(pks) != len(pkHints) {
+		panic("pks and pkHints must have the same length")
+	}
+	
 	var loadingKeys []string
 	for _, col := range columns {
 		if col.defaultLoading {
@@ -136,7 +169,8 @@ func NewDBTableSchema(
 
 	return DBTableSchema{
 		TableName:          tableName,
-		PK:                 pk,
+		PrimaryKeyNames:    pks,
+		PrimaryKeyHints:    pkHints,
 		Columns:            columns,
 		DefaultTablePolicy: defaultPolicy,
 	}

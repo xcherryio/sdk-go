@@ -14,8 +14,10 @@ func (s PersistenceSchema) ValidateForRegistry() (map[string]internalGlobalAttrD
 			if tableSchema.TableName == "" {
 				return nil, nil, NewProcessDefinitionError("GlobalAttributeSchema.Tables.TableName is empty")
 			}
-			if tableSchema.PK == "" {
-				return nil, nil, NewProcessDefinitionError("GlobalAttributeSchema.Tables.PK is empty")
+			for _, name := range tableSchema.PrimaryKeyNames {
+				if name == "" {
+					return nil, nil, NewProcessDefinitionError("GlobalAttributeSchema.Tables.PK is empty")
+				}
 			}
 			for _, colDef := range tableSchema.Columns {
 				if colDef.ColumnName == "" {
