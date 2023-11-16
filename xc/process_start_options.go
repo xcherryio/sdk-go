@@ -14,6 +14,14 @@ type ProcessStartOptions struct {
 	// GlobalAttributeOptions is the options for global attributes
 	// Required if using global attribute feature
 	GlobalAttributeOptions *GlobalAttributeOptions
+	// LocalAttributeOptions is the options for local attributes
+	// Required if using local attribute feature
+	LocalAttributeOptions *LocalAttributeOptions
+}
+
+type LocalAttributeOptions struct {
+	// InitialAttributes is the initial local attributes to be set when starting the process execution
+	InitialAttributes map[string]xdbapi.EncodedObject
 }
 
 type GlobalAttributeOptions struct {

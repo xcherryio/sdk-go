@@ -56,11 +56,14 @@ type NamedPersistencePolicy struct {
 }
 
 type LocalAttributesSchema struct {
-	// TODO
+	LocalAttributeKeys          map[string]bool
+	DefaultLocalAttributePolicy LocalAttributePolicy
 }
 
 type LocalAttributePolicy struct {
-	// TODO
+	LocalAttributeKeysNoLock   map[string]bool
+	LocalAttributeKeysWithLock map[string]bool
+	LockingType                *xdbapi.TableReadLockingPolicy
 }
 
 func NewEmptyPersistenceSchema() PersistenceSchema {

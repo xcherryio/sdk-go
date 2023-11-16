@@ -67,6 +67,24 @@ func (c *clientImpl) StartProcessWithOptions(
 			TableConfigs: tableConfigs,
 		}
 	}
+	if persSchema.LocalAttributeSchema != nil {
+		if startOptions == nil || startOptions.LocalAttributeOptions == nil ||
+			len(startOptions.LocalAttributeOptions.InitialAttributes) == 0 {
+			return "", NewInvalidArgumentError("LocalAttributeConfig is required for process with LocalAttributeSchema")
+		}
+
+		var initialWrite []xdbapi.KeyValue
+		for key, attr := range startOptions.LocalAttributeOptions.InitialAttributes {
+			if _, ok := persSchema.LocalAttributeSchema.LocalAttributeKeys[key]; !ok {
+				return "", NewInvalidArgumentError("invalid attribute key for local attribute schema: " + key)
+			}
+			initialWrite = append(initialWrite, *xdbapi.NewKeyValue(key, attr))
+		}
+
+		unregOpt.LocalAttributeConfig = &xdbapi.LocalAttributeConfig{
+			InitialWrite: initialWrite,
+		}
+	}
 
 	unregOpt.ProcessIdReusePolicy = prcOptions.IdReusePolicy
 	unregOpt.TimeoutSeconds = prcOptions.TimeoutSeconds

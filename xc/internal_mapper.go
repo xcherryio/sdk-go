@@ -118,6 +118,7 @@ func fromStateToAsyncStateConfig(
 	}
 
 	stateCfg.LoadGlobalAttributesRequest = createLoadGlobalAttributesRequestIfNeeded(registry, prcType, preferredPersistencePolicyName)
+	stateCfg.LoadLocalAttributesRequest = createLoadLocalAttributesRequestIfNeeded(registry, prcType, preferredPersistencePolicyName)
 	stateCfg.StateFailureRecoveryOptions = createFailureRecoveryOptionsIfNeeded(recoverState, prcType, registry)
 	return stateCfg
 }
@@ -211,4 +212,42 @@ func getFinalTablePolicy(schema DBTableSchema, policy *NamedPersistencePolicy) T
 		}
 	}
 	return schema.DefaultTablePolicy
+}
+
+func createLoadLocalAttributesRequestIfNeeded(
+	registry Registry, prcType string, preferredPersistencePolicyName *string,
+) *xdbapi.LoadLocalAttributesRequest {
+	persistenceSchema := registry.getPersistenceSchema(prcType)
+
+	var preferredPolicy *NamedPersistencePolicy
+	if preferredPersistencePolicyName != nil {
+		preferredPolicyS, ok := persistenceSchema.OverridePersistencePolicies[*preferredPersistencePolicyName]
+		if !ok {
+			panic("persistence loading policy not found " + *preferredPersistencePolicyName)
+		}
+		preferredPolicy = &preferredPolicyS
+	}
+
+	if preferredPolicy.LocalAttributePolicy == nil {
+		return nil
+	}
+	if len(preferredPolicy.LocalAttributePolicy.LocalAttributeKeysWithLock)+
+		len(preferredPolicy.LocalAttributePolicy.LocalAttributeKeysNoLock) == 0 {
+		return nil
+	}
+
+	var keysToLoadWithLock []string
+	for key, _ := range preferredPolicy.LocalAttributePolicy.LocalAttributeKeysWithLock {
+		keysToLoadWithLock = append(keysToLoadWithLock, key)
+	}
+	var keysToLoadNoLock []string
+	for key, _ := range preferredPolicy.LocalAttributePolicy.LocalAttributeKeysNoLock {
+		keysToLoadNoLock = append(keysToLoadNoLock, key)
+	}
+
+	return &xdbapi.LoadLocalAttributesRequest{
+		LockingPolicy:      preferredPolicy.LocalAttributePolicy.LockingType,
+		KeysToLoadNoLock:   keysToLoadNoLock,
+		KeysToLoadWithLock: keysToLoadWithLock,
+	}
 }

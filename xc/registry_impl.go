@@ -5,6 +5,7 @@ type registryImpl struct {
 	persistenceSchemaStore      map[string]PersistenceSchema
 	globalAttributeKeyToDef     map[string]map[string]internalGlobalAttrDef
 	globalAttrTableColNameToKey map[string]map[string]string
+	localAttrKeys               map[string]map[string]bool
 	startingState               map[string]AsyncState
 	stateStore                  map[string]map[string]AsyncState
 }
@@ -96,12 +97,23 @@ func (r *registryImpl) registerProcessState(prc Process) error {
 func (r *registryImpl) registerPersistenceSchema(prc Process) error {
 	prcType := GetFinalProcessType(prc)
 	ps := prc.GetPersistenceSchema()
-	keyToDef, tableColNameToKey, err := ps.ValidateForRegistry()
+	keyToDef, tableColNameToKey, err := ps.ValidateGlobalAttributeForRegistry()
 	if err != nil {
 		return err
 	}
 	r.persistenceSchemaStore[prcType] = ps
 	r.globalAttributeKeyToDef[prcType] = keyToDef
 	r.globalAttrTableColNameToKey[prcType] = tableColNameToKey
+
+	localAttrKeys, err := ps.ValidateLocalAttributeForRegistry()
+	if err != nil {
+		return err
+	}
+	r.localAttrKeys[prcType] = localAttrKeys
+
 	return nil
+}
+
+func (r *registryImpl) getLocalAttributeKeys(prcType string) map[string]bool {
+	return r.localAttrKeys[prcType]
 }
