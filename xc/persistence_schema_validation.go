@@ -62,7 +62,7 @@ func (s PersistenceSchema) ValidateLocalAttributeForRegistry() (map[string]bool,
 			}
 		}
 
-		for key, _ := range s.LocalAttributeSchema.DefaultLocalAttributePolicy.LocalAttributeKeysNoLock {
+		for key := range s.LocalAttributeSchema.DefaultLocalAttributePolicy.LocalAttributeKeysNoLock {
 			if _, ok := localAttributeKeys[key]; !ok {
 				return nil, NewProcessDefinitionError(
 					"DefaultLocalAttributePolicy KeysNoLock contains invalid key " + key)
