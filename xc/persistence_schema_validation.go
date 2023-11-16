@@ -55,7 +55,7 @@ func (s PersistenceSchema) ValidateLocalAttributeForRegistry() (map[string]bool,
 				"DefaultLocalAttributePolicy KeysWithLock is not empty but locking type is not specified")
 		}
 
-		for key, _ := range s.LocalAttributeSchema.DefaultLocalAttributePolicy.LocalAttributeKeysWithLock {
+		for key := range s.LocalAttributeSchema.DefaultLocalAttributePolicy.LocalAttributeKeysWithLock {
 			if _, ok := localAttributeKeys[key]; !ok {
 				return nil, NewProcessDefinitionError(
 					"DefaultLocalAttributePolicy KeysWithLock contains invalid key " + key)

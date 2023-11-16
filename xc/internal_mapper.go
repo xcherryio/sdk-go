@@ -237,11 +237,11 @@ func createLoadLocalAttributesRequestIfNeeded(
 	}
 
 	var keysToLoadWithLock []string
-	for key, _ := range preferredPolicy.LocalAttributePolicy.LocalAttributeKeysWithLock {
+	for key := range preferredPolicy.LocalAttributePolicy.LocalAttributeKeysWithLock {
 		keysToLoadWithLock = append(keysToLoadWithLock, key)
 	}
 	var keysToLoadNoLock []string
-	for key, _ := range preferredPolicy.LocalAttributePolicy.LocalAttributeKeysNoLock {
+	for key := range preferredPolicy.LocalAttributePolicy.LocalAttributeKeysNoLock {
 		keysToLoadNoLock = append(keysToLoadNoLock, key)
 	}
 
