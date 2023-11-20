@@ -1,20 +1,20 @@
 package integTests
 
 import (
-	"github.com/xdblab/xdb-golang-sdk/integTests/basic"
-	"github.com/xdblab/xdb-golang-sdk/integTests/command_request"
-	"github.com/xdblab/xdb-golang-sdk/integTests/failure_recovery"
-	"github.com/xdblab/xdb-golang-sdk/integTests/global_attribute"
-	"github.com/xdblab/xdb-golang-sdk/integTests/multi_states"
-	"github.com/xdblab/xdb-golang-sdk/integTests/process_timeout"
-	"github.com/xdblab/xdb-golang-sdk/integTests/state_decision"
-	"github.com/xdblab/xdb-golang-sdk/integTests/stateretry"
-	"github.com/xdblab/xdb-golang-sdk/xdb"
+	"github.com/xcherryio/sdk-go/integTests/basic"
+	"github.com/xcherryio/sdk-go/integTests/command_request"
+	"github.com/xcherryio/sdk-go/integTests/failure_recovery"
+	"github.com/xcherryio/sdk-go/integTests/global_attribute"
+	"github.com/xcherryio/sdk-go/integTests/multi_states"
+	"github.com/xcherryio/sdk-go/integTests/process_timeout"
+	"github.com/xcherryio/sdk-go/integTests/state_decision"
+	"github.com/xcherryio/sdk-go/integTests/stateretry"
+	"github.com/xcherryio/sdk-go/xc"
 )
 
-var registry = xdb.NewRegistry()
-var client = xdb.NewClient(registry, getTestClientOptions())
-var workerService = xdb.NewWorkerService(registry, nil)
+var registry = xc.NewRegistry()
+var client = xc.NewClient(registry, getTestClientOptions())
+var workerService = xc.NewWorkerService(registry, nil)
 
 func init() {
 	err := registry.AddProcesses(
@@ -40,8 +40,8 @@ func init() {
 	}
 }
 
-func getTestClientOptions() *xdb.ClientOptions {
-	options := xdb.GetLocalDefaultClientOptions()
+func getTestClientOptions() *xc.ClientOptions {
+	options := xc.GetLocalDefaultClientOptions()
 	options.DefaultProcessTimeoutSecondsOverride = 10
 	return options
 }

@@ -7,44 +7,44 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/xdblab/xdb-apis/goapi/xdbapi"
-	"github.com/xdblab/xdb-golang-sdk/integTests/common"
-	"github.com/xdblab/xdb-golang-sdk/xdb"
-	"github.com/xdblab/xdb-golang-sdk/xdb/ptr"
+	"github.com/xcherryio/apis/goapi/xcapi"
+	"github.com/xcherryio/sdk-go/integTests/common"
+	"github.com/xcherryio/sdk-go/xc"
+	"github.com/xcherryio/sdk-go/xc/ptr"
 )
 
 type BackoffProcess struct {
-	xdb.ProcessDefaults
+	xc.ProcessDefaults
 }
 
 var defaultState = &stateDefaultPolicy{}
 var customizedState = &stateCustomizedPolicy{}
 
-func (b BackoffProcess) GetAsyncStateSchema() xdb.StateSchema {
-	return xdb.NewStateSchema(defaultState, customizedState)
+func (b BackoffProcess) GetAsyncStateSchema() xc.StateSchema {
+	return xc.NewStateSchema(defaultState, customizedState)
 }
 
 type stateDefaultPolicy struct {
-	xdb.AsyncStateDefaults
+	xc.AsyncStateDefaults
 	lastTimestampMill int64
 	WaiUntilFail      bool // for testing
 	ExecuteSuccess    bool
 }
 
-func (d stateDefaultPolicy) GetStateOptions() *xdb.AsyncStateOptions {
-	return &xdb.AsyncStateOptions{
-		WaitUntilRetryPolicy: &xdbapi.RetryPolicy{
+func (d stateDefaultPolicy) GetStateOptions() *xc.AsyncStateOptions {
+	return &xc.AsyncStateOptions{
+		WaitUntilRetryPolicy: &xcapi.RetryPolicy{
 			InitialIntervalSeconds: ptr.Any(int32(2)),
 		},
 	}
 }
 
 func (b *stateDefaultPolicy) WaitUntil(
-	ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication,
-) (*xdb.CommandRequest, error) {
+	ctx xc.Context, input xc.Object, communication xc.Communication,
+) (*xc.CommandRequest, error) {
 	if ctx.GetProcessId() != currTestProcessId {
 		// ignore stale data
-		return xdb.EmptyCommandRequest(), nil
+		return xc.EmptyCommandRequest(), nil
 	}
 
 	if ctx.GetAttempt() == 1 {
@@ -72,7 +72,7 @@ func (b *stateDefaultPolicy) WaitUntil(
 			b.WaiUntilFail = true
 			fmt.Println("backoff interval is not correct", elapsedMillis, "expected 6000-10000")
 		}
-		return xdb.EmptyCommandRequest(), nil
+		return xc.EmptyCommandRequest(), nil
 	}
 }
 
@@ -84,49 +84,49 @@ func getCurrentTimeMillis() int64 {
 }
 
 func (b *stateDefaultPolicy) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
-	communication xdb.Communication,
-) (*xdb.StateDecision, error) {
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence,
+	communication xc.Communication,
+) (*xc.StateDecision, error) {
 	if ctx.GetProcessId() != currTestProcessId {
 		// ignore stale data
-		return xdb.ForceCompletingProcess, nil
+		return xc.ForceCompletingProcess, nil
 	}
 
 	if ctx.GetAttempt() == 1 {
 		return nil, fmt.Errorf("error for testing backoff retry")
 	}
 	b.ExecuteSuccess = true
-	return xdb.SingleNextState(&stateCustomizedPolicy{}, nil), nil
+	return xc.SingleNextState(&stateCustomizedPolicy{}, nil), nil
 }
 
 type stateCustomizedPolicy struct {
-	xdb.AsyncStateDefaultsSkipWaitUntil
+	xc.AsyncStateDefaultsSkipWaitUntil
 	Success bool
 }
 
 func (b *stateCustomizedPolicy) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
-	communication xdb.Communication,
-) (*xdb.StateDecision, error) {
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence,
+	communication xc.Communication,
+) (*xc.StateDecision, error) {
 	if ctx.GetProcessId() != currTestProcessId {
 		// ignore stale data
-		return xdb.ForceCompletingProcess, nil
+		return xc.ForceCompletingProcess, nil
 	}
 
 	if ctx.GetAttempt() == 1 {
 		return nil, fmt.Errorf("error for testing backoff retry")
 	}
 	b.Success = true
-	return xdb.ForceCompletingProcess, nil
+	return xc.ForceCompletingProcess, nil
 }
 
 var currTestProcessId string
 
-func TestBackoff(t *testing.T, client xdb.Client) {
+func TestBackoff(t *testing.T, client xc.Client) {
 	currTestProcessId = common.GenerateProcessId()
 	prc := BackoffProcess{}
 	_, err := client.StartProcessWithOptions(
-		context.Background(), prc, currTestProcessId, nil, &xdb.ProcessStartOptions{
+		context.Background(), prc, currTestProcessId, nil, &xc.ProcessStartOptions{
 			TimeoutSeconds: ptr.Any(int32(30)),
 		})
 	assert.Nil(t, err)
@@ -134,7 +134,7 @@ func TestBackoff(t *testing.T, client xdb.Client) {
 	time.Sleep(time.Second * 20) // （2+4+8）+1+1 = 9 seconds
 	resp, err := client.DescribeCurrentProcessExecution(context.Background(), currTestProcessId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdbapi.COMPLETED, resp.GetStatus())
+	assert.Equal(t, xcapi.COMPLETED, resp.GetStatus())
 
 	assert.False(t, defaultState.WaiUntilFail)
 	assert.True(t, defaultState.ExecuteSuccess)

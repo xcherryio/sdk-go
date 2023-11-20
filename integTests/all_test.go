@@ -1,18 +1,18 @@
 package integTests
 
 import (
-	"github.com/xdblab/xdb-golang-sdk/integTests/command_request"
+	"github.com/xcherryio/sdk-go/integTests/command_request"
 	"testing"
 
-	"github.com/xdblab/xdb-golang-sdk/integTests/global_attribute"
-	"github.com/xdblab/xdb-golang-sdk/integTests/process_timeout"
+	"github.com/xcherryio/sdk-go/integTests/global_attribute"
+	"github.com/xcherryio/sdk-go/integTests/process_timeout"
 
-	"github.com/xdblab/xdb-golang-sdk/integTests/failure_recovery"
-	"github.com/xdblab/xdb-golang-sdk/integTests/stateretry"
+	"github.com/xcherryio/sdk-go/integTests/failure_recovery"
+	"github.com/xcherryio/sdk-go/integTests/stateretry"
 
-	"github.com/xdblab/xdb-golang-sdk/integTests/basic"
-	"github.com/xdblab/xdb-golang-sdk/integTests/multi_states"
-	"github.com/xdblab/xdb-golang-sdk/integTests/state_decision"
+	"github.com/xcherryio/sdk-go/integTests/basic"
+	"github.com/xcherryio/sdk-go/integTests/multi_states"
+	"github.com/xcherryio/sdk-go/integTests/state_decision"
 )
 
 func TestIOProcess(t *testing.T) {

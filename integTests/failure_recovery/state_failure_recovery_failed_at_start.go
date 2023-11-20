@@ -8,39 +8,39 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/xdblab/xdb-apis/goapi/xdbapi"
-	"github.com/xdblab/xdb-golang-sdk/integTests/common"
-	"github.com/xdblab/xdb-golang-sdk/xdb"
-	"github.com/xdblab/xdb-golang-sdk/xdb/ptr"
+	"github.com/xcherryio/apis/goapi/xcapi"
+	"github.com/xcherryio/sdk-go/integTests/common"
+	"github.com/xcherryio/sdk-go/xc"
+	"github.com/xcherryio/sdk-go/xc/ptr"
 )
 
 type StateFailureRecoveryTestExecuteFailedAtStartProcess struct {
-	xdb.ProcessDefaults
+	xc.ProcessDefaults
 }
 
-func (b StateFailureRecoveryTestExecuteFailedAtStartProcess) GetAsyncStateSchema() xdb.StateSchema {
-	return xdb.NewStateSchema(
+func (b StateFailureRecoveryTestExecuteFailedAtStartProcess) GetAsyncStateSchema() xc.StateSchema {
+	return xc.NewStateSchema(
 		&executeFailedAtStartInitState{},
 		&executeFailedAtStartSkippedState{},
 		&executeFailedAtStartRecoverState{})
 }
 
 type executeFailedAtStartInitState struct {
-	xdb.AsyncStateDefaults
+	xc.AsyncStateDefaults
 }
 
-func (d executeFailedAtStartInitState) GetStateOptions() *xdb.AsyncStateOptions {
-	stateOptions := &xdb.AsyncStateOptions{
+func (d executeFailedAtStartInitState) GetStateOptions() *xc.AsyncStateOptions {
+	stateOptions := &xc.AsyncStateOptions{
 		ExecuteTimeoutSeconds:   1,
 		WaitUntilTimeoutSeconds: 1,
-		WaitUntilRetryPolicy: &xdbapi.RetryPolicy{
+		WaitUntilRetryPolicy: &xcapi.RetryPolicy{
 			BackoffCoefficient:             ptr.Any(float32(1.0)),
 			InitialIntervalSeconds:         ptr.Any(int32(1)),
 			MaximumIntervalSeconds:         ptr.Any(int32(1)),
 			MaximumAttemptsDurationSeconds: ptr.Any(int32(1)),
 			MaximumAttempts:                ptr.Any(int32(1)),
 		},
-		ExecuteRetryPolicy: &xdbapi.RetryPolicy{
+		ExecuteRetryPolicy: &xcapi.RetryPolicy{
 			BackoffCoefficient:             ptr.Any(float32(1.0)),
 			InitialIntervalSeconds:         ptr.Any(int32(1)),
 			MaximumIntervalSeconds:         ptr.Any(int32(1)),
@@ -55,55 +55,55 @@ func (d executeFailedAtStartInitState) GetStateOptions() *xdb.AsyncStateOptions 
 }
 
 func (b executeFailedAtStartInitState) WaitUntil(
-	ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication,
-) (*xdb.CommandRequest, error) {
-	return xdb.EmptyCommandRequest(), nil
+	ctx xc.Context, input xc.Object, communication xc.Communication,
+) (*xc.CommandRequest, error) {
+	return xc.EmptyCommandRequest(), nil
 }
 
 func (b executeFailedAtStartInitState) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
-	communication xdb.Communication,
-) (*xdb.StateDecision, error) {
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence,
+	communication xc.Communication,
+) (*xc.StateDecision, error) {
 	var i int
 	input.Get(&i)
-	return xdb.SingleNextState(&executeFailedAtStartSkippedState{}, i+1), fmt.Errorf("error for test")
+	return xc.SingleNextState(&executeFailedAtStartSkippedState{}, i+1), fmt.Errorf("error for test")
 }
 
 type executeFailedAtStartSkippedState struct {
-	xdb.AsyncStateDefaults
+	xc.AsyncStateDefaults
 }
 
 func (b executeFailedAtStartSkippedState) WaitUntil(
-	ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication,
-) (*xdb.CommandRequest, error) {
-	return xdb.EmptyCommandRequest(), nil
+	ctx xc.Context, input xc.Object, communication xc.Communication,
+) (*xc.CommandRequest, error) {
+	return xc.EmptyCommandRequest(), nil
 }
 
 func (b executeFailedAtStartSkippedState) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
-	communication xdb.Communication,
-) (*xdb.StateDecision, error) {
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence,
+	communication xc.Communication,
+) (*xc.StateDecision, error) {
 	var i int
 	input.Get(&i)
 
-	return xdb.SingleNextState(&executeFailedAtStartRecoverState{}, i+2), nil
+	return xc.SingleNextState(&executeFailedAtStartRecoverState{}, i+2), nil
 }
 
 type executeFailedAtStartRecoverState struct {
-	xdb.AsyncStateDefaults
+	xc.AsyncStateDefaults
 }
 
 func (b executeFailedAtStartRecoverState) WaitUntil(
-	ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication,
-) (*xdb.CommandRequest, error) {
-	return xdb.EmptyCommandRequest(), nil
+	ctx xc.Context, input xc.Object, communication xc.Communication,
+) (*xc.CommandRequest, error) {
+	return xc.EmptyCommandRequest(), nil
 }
 
 func (b executeFailedAtStartRecoverState) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
-	communication xdb.Communication,
-) (*xdb.StateDecision, error) {
-	if ctx.GetRecoverFromStateApi() == nil || *(ctx.GetRecoverFromStateApi()) != xdbapi.EXECUTE_API {
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence,
+	communication xc.Communication,
+) (*xc.StateDecision, error) {
+	if ctx.GetRecoverFromStateApi() == nil || *(ctx.GetRecoverFromStateApi()) != xcapi.EXECUTE_API {
 		panic("should recover from execute api")
 	}
 
@@ -115,13 +115,13 @@ func (b executeFailedAtStartRecoverState) Execute(
 	input.Get(&i)
 
 	if i == 1 {
-		return xdb.GracefulCompletingProcess, nil
+		return xc.GracefulCompletingProcess, nil
 	}
 
-	return xdb.ForceFailProcess, nil
+	return xc.ForceFailProcess, nil
 }
 
-func TestStateFailureRecoveryTestExecuteFailedAtStartProcess(t *testing.T, client xdb.Client) {
+func TestStateFailureRecoveryTestExecuteFailedAtStartProcess(t *testing.T, client xc.Client) {
 	prcId := common.GenerateProcessId()
 	prc := StateFailureRecoveryTestExecuteFailedAtStartProcess{}
 	_, err := client.StartProcess(context.Background(), prc, prcId, 1)
@@ -130,5 +130,5 @@ func TestStateFailureRecoveryTestExecuteFailedAtStartProcess(t *testing.T, clien
 	time.Sleep(time.Second * 3)
 	resp, err := client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdbapi.COMPLETED, resp.GetStatus())
+	assert.Equal(t, xcapi.COMPLETED, resp.GetStatus())
 }

@@ -6,111 +6,111 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/xdblab/xdb-apis/goapi/xdbapi"
-	"github.com/xdblab/xdb-golang-sdk/integTests/common"
-	"github.com/xdblab/xdb-golang-sdk/xdb"
-	"github.com/xdblab/xdb-golang-sdk/xdb/ptr"
+	"github.com/xcherryio/apis/goapi/xcapi"
+	"github.com/xcherryio/sdk-go/integTests/common"
+	"github.com/xcherryio/sdk-go/xc"
+	"github.com/xcherryio/sdk-go/xc/ptr"
 )
 
 type TimeoutProcess struct {
-	xdb.ProcessDefaults
+	xc.ProcessDefaults
 }
 
-func (b TimeoutProcess) GetAsyncStateSchema() xdb.StateSchema {
-	return xdb.NewStateSchema(&timeoutState1{})
+func (b TimeoutProcess) GetAsyncStateSchema() xc.StateSchema {
+	return xc.NewStateSchema(&timeoutState1{})
 }
 
 type timeoutState1 struct {
-	xdb.AsyncStateDefaultsSkipWaitUntil
+	xc.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b timeoutState1) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
-) (*xdb.StateDecision, error) {
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence, communication xc.Communication,
+) (*xc.StateDecision, error) {
 	time.Sleep(time.Second * 10)
-	return xdb.GracefulCompletingProcess, nil
+	return xc.GracefulCompletingProcess, nil
 }
 
-func TestStartTimeoutProcessCase1(t *testing.T, client xdb.Client) {
+func TestStartTimeoutProcessCase1(t *testing.T, client xc.Client) {
 	prcId := common.GenerateProcessId()
 	prc := TimeoutProcess{}
-	_, err := client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessStartOptions{
+	_, err := client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xc.ProcessStartOptions{
 		TimeoutSeconds: ptr.Any(int32(2)),
-		IdReusePolicy:  xdbapi.DISALLOW_REUSE.Ptr(),
+		IdReusePolicy:  xcapi.DISALLOW_REUSE.Ptr(),
 	})
 	assert.Nil(t, err)
 	resp, err := client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdb.DefaultWorkerUrl, resp.GetWorkerUrl())
-	assert.Equal(t, xdb.GetFinalProcessType(prc), resp.GetProcessType())
+	assert.Equal(t, xc.DefaultWorkerUrl, resp.GetWorkerUrl())
+	assert.Equal(t, xc.GetFinalProcessType(prc), resp.GetProcessType())
 	assert.NotNil(t, resp.ProcessExecutionId)
-	assert.Equal(t, xdbapi.RUNNING, resp.GetStatus())
+	assert.Equal(t, xcapi.RUNNING, resp.GetStatus())
 
 	time.Sleep(time.Second * 3)
 	resp, err = client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdbapi.TIMEOUT, resp.GetStatus())
+	assert.Equal(t, xcapi.TIMEOUT, resp.GetStatus())
 }
 
-func TestStartTimeoutProcessCase2(t *testing.T, client xdb.Client) {
+func TestStartTimeoutProcessCase2(t *testing.T, client xc.Client) {
 	prcId := common.GenerateProcessId()
 	prc := TimeoutProcess{}
-	_, err := client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessStartOptions{
+	_, err := client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xc.ProcessStartOptions{
 		TimeoutSeconds: ptr.Any(int32(2)),
-		IdReusePolicy:  xdbapi.ALLOW_IF_NO_RUNNING.Ptr(),
+		IdReusePolicy:  xcapi.ALLOW_IF_NO_RUNNING.Ptr(),
 	})
 	assert.Nil(t, err)
 	resp, err := client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdb.DefaultWorkerUrl, resp.GetWorkerUrl())
-	assert.Equal(t, xdb.GetFinalProcessType(prc), resp.GetProcessType())
+	assert.Equal(t, xc.DefaultWorkerUrl, resp.GetWorkerUrl())
+	assert.Equal(t, xc.GetFinalProcessType(prc), resp.GetProcessType())
 	assert.NotNil(t, resp.ProcessExecutionId)
-	assert.Equal(t, xdbapi.RUNNING, resp.GetStatus())
+	assert.Equal(t, xcapi.RUNNING, resp.GetStatus())
 
 	time.Sleep(time.Second * 3)
 	resp, err = client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdbapi.TIMEOUT, resp.GetStatus())
+	assert.Equal(t, xcapi.TIMEOUT, resp.GetStatus())
 }
 
-func TestStartTimeoutProcessCase3(t *testing.T, client xdb.Client) {
+func TestStartTimeoutProcessCase3(t *testing.T, client xc.Client) {
 	prcId := common.GenerateProcessId()
 	prc := TimeoutProcess{}
-	_, err := client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessStartOptions{
+	_, err := client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xc.ProcessStartOptions{
 		TimeoutSeconds: ptr.Any(int32(2)),
-		IdReusePolicy:  xdbapi.ALLOW_IF_PREVIOUS_EXIT_ABNORMALLY.Ptr(),
+		IdReusePolicy:  xcapi.ALLOW_IF_PREVIOUS_EXIT_ABNORMALLY.Ptr(),
 	})
 	assert.Nil(t, err)
 	resp, err := client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdb.DefaultWorkerUrl, resp.GetWorkerUrl())
-	assert.Equal(t, xdb.GetFinalProcessType(prc), resp.GetProcessType())
+	assert.Equal(t, xc.DefaultWorkerUrl, resp.GetWorkerUrl())
+	assert.Equal(t, xc.GetFinalProcessType(prc), resp.GetProcessType())
 	assert.NotNil(t, resp.ProcessExecutionId)
-	assert.Equal(t, xdbapi.RUNNING, resp.GetStatus())
+	assert.Equal(t, xcapi.RUNNING, resp.GetStatus())
 
 	time.Sleep(time.Second * 3)
 	resp, err = client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdbapi.TIMEOUT, resp.GetStatus())
+	assert.Equal(t, xcapi.TIMEOUT, resp.GetStatus())
 }
 
-func TestStartTimeoutProcessCase4(t *testing.T, client xdb.Client) {
+func TestStartTimeoutProcessCase4(t *testing.T, client xc.Client) {
 	prcId := common.GenerateProcessId()
 	prc := TimeoutProcess{}
-	_, err := client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xdb.ProcessStartOptions{
+	_, err := client.StartProcessWithOptions(context.Background(), prc, prcId, 123, &xc.ProcessStartOptions{
 		TimeoutSeconds: ptr.Any(int32(2)),
-		IdReusePolicy:  xdbapi.TERMINATE_IF_RUNNING.Ptr(),
+		IdReusePolicy:  xcapi.TERMINATE_IF_RUNNING.Ptr(),
 	})
 	assert.Nil(t, err)
 	resp, err := client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdb.DefaultWorkerUrl, resp.GetWorkerUrl())
-	assert.Equal(t, xdb.GetFinalProcessType(prc), resp.GetProcessType())
+	assert.Equal(t, xc.DefaultWorkerUrl, resp.GetWorkerUrl())
+	assert.Equal(t, xc.GetFinalProcessType(prc), resp.GetProcessType())
 	assert.NotNil(t, resp.ProcessExecutionId)
-	assert.Equal(t, xdbapi.RUNNING, resp.GetStatus())
+	assert.Equal(t, xcapi.RUNNING, resp.GetStatus())
 
 	time.Sleep(time.Second * 3)
 	resp, err = client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdbapi.TIMEOUT, resp.GetStatus())
+	assert.Equal(t, xcapi.TIMEOUT, resp.GetStatus())
 }
