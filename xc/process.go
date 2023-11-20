@@ -6,7 +6,7 @@ import (
 )
 
 // Process is the interface to define a process definition.
-// Process is a top level concept in XDB
+// Process is a top level concept in xCherry
 type Process interface {
 	// GetAsyncStateSchema defines the AsyncStates of the process.
 	// If there is no startingState, the process will not start any state execution after process stated.

@@ -20,7 +20,7 @@ type basicClientImpl struct {
 func (u *basicClientImpl) DescribeCurrentProcessExecution(
 	ctx context.Context, processId string,
 ) (*xcapi.ProcessExecutionDescribeResponse, error) {
-	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionDescribePost(ctx)
+	req := u.apiClient.DefaultAPI.ApiV1XcherryServiceProcessExecutionDescribePost(ctx)
 
 	reqObj := xcapi.ProcessExecutionDescribeRequest{
 		Namespace: u.options.Namespace,
@@ -80,7 +80,7 @@ func (u *basicClientImpl) StartProcess(
 		}
 	}
 
-	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionStartPost(ctx)
+	req := u.apiClient.DefaultAPI.ApiV1XcherryServiceProcessExecutionStartPost(ctx)
 	reqObj := xcapi.ProcessExecutionStartRequest{
 		Namespace:          u.options.Namespace,
 		ProcessId:          processId,
@@ -110,7 +110,7 @@ func (u *basicClientImpl) StartProcess(
 func (u *basicClientImpl) StopProcess(
 	ctx context.Context, processId string, stopType xcapi.ProcessExecutionStopType,
 ) error {
-	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionStopPost(ctx)
+	req := u.apiClient.DefaultAPI.ApiV1XcherryServiceProcessExecutionStopPost(ctx)
 	reqObj := xcapi.ProcessExecutionStopRequest{
 		Namespace: u.options.Namespace,
 		ProcessId: processId,
@@ -145,7 +145,7 @@ func (u *basicClientImpl) PublishToLocalQueue(
 
 	}
 
-	req := u.apiClient.DefaultAPI.ApiV1XdbServiceProcessExecutionPublishToLocalQueuePost(ctx)
+	req := u.apiClient.DefaultAPI.ApiV1XcherryServiceProcessExecutionPublishToLocalQueuePost(ctx)
 
 	reqObj := xcapi.PublishToLocalQueueRequest{
 		Namespace: u.options.Namespace,

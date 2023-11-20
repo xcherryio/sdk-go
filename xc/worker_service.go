@@ -11,7 +11,7 @@ const (
 	ApiPathAsyncStateExecute   = "/api/v1/xcherry/worker/async-state/execute"
 )
 
-// WorkerService is for worker to handle task requests from XDB server
+// WorkerService is for worker to handle task requests from xCherry server
 // Typically put it behind a REST controller, using the above API paths
 type WorkerService interface {
 	HandleAsyncStateWaitUntil(ctx context.Context, request xcapi.AsyncStateWaitUntilRequest) (*xcapi.AsyncStateWaitUntilResponse, error)

@@ -38,7 +38,7 @@ type Client interface {
 
 // BasicClient is a base client without process registry
 // It's the internal implementation of Client.
-// But it can be used directly if there is good reason -- let you invoke the APIs to xdb server without much type validation checks(process type, queue names, etc).
+// But it can be used directly if there is good reason -- let you invoke the APIs to xCherry server without much type validation checks(process type, queue names, etc).
 type BasicClient interface {
 	// StartProcess starts a process execution
 	// processType is the process type

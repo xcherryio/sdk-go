@@ -36,7 +36,7 @@ func NewProcessDefinitionError(tpl string, arg ...interface{}) error {
 	}
 }
 
-// InternalSDKError means something wrong within XDB SDK
+// InternalSDKError means something wrong within xCherry SDK
 type InternalSDKError struct {
 	Message string
 }
@@ -51,7 +51,7 @@ func (i InternalSDKError) Error() string {
 	return fmt.Sprintf("error in SDK or service: message:%v", i.Message)
 }
 
-// ApiError represents error returned from XDB server
+// ApiError represents error returned from xCherry server
 // Could be client side(4xx) or server side(5xx), see below helpers to check details
 type ApiError struct {
 	StatusCode    int
