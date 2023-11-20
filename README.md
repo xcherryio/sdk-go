@@ -7,7 +7,7 @@
 [![Build status](https://github.com/xcherryio/sdk-go/actions/workflows/ci-tests.yml/badge.svg?branch=build)](https://github.com/xcherryio/sdk-go/actions/workflows/ci-tests.yml)
 
 
-Golang SDK for [xCherry](https://github.com/xcherryio/xdb)
+Golang SDK for [xCherry](https://github.com/xcherryio/xcherry)
 
 See [samples](https://github.com/xcherryio/samples-go) for how to use this SDK.
 # Contribution
