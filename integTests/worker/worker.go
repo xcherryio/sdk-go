@@ -2,27 +2,27 @@ package worker
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/xdblab/xdb-apis/goapi/xdbapi"
-	"github.com/xdblab/xdb-golang-sdk/xdb"
+	"github.com/xcherryio/apis/goapi/xcapi"
+	"github.com/xcherryio/sdk-go/xc"
 	"log"
 	"net/http"
 )
 
 type worker struct {
-	workerService xdb.WorkerService
+	workerService xc.WorkerService
 }
 
-func StartGinWorker(workerService xdb.WorkerService) (closeFunc func()) {
+func StartGinWorker(workerService xc.WorkerService) (closeFunc func()) {
 	w := worker{
 		workerService: workerService,
 	}
 
 	router := gin.Default()
-	router.POST(xdb.ApiPathAsyncStateWaitUntil, w.apiAsyncStateWaitUntil)
-	router.POST(xdb.ApiPathAsyncStateExecute, w.apiAsyncStateExecute)
+	router.POST(xc.ApiPathAsyncStateWaitUntil, w.apiAsyncStateWaitUntil)
+	router.POST(xc.ApiPathAsyncStateExecute, w.apiAsyncStateExecute)
 
 	wfServer := &http.Server{
-		Addr:    ":" + xdb.DefaultWorkerPort,
+		Addr:    ":" + xc.DefaultWorkerPort,
 		Handler: router,
 	}
 	go func() {
@@ -34,7 +34,7 @@ func StartGinWorker(workerService xdb.WorkerService) (closeFunc func()) {
 }
 
 func (w worker) apiAsyncStateWaitUntil(c *gin.Context) {
-	var req xdbapi.AsyncStateWaitUntilRequest
+	var req xcapi.AsyncStateWaitUntilRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -48,7 +48,7 @@ func (w worker) apiAsyncStateWaitUntil(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 func (w worker) apiAsyncStateExecute(c *gin.Context) {
-	var req xdbapi.AsyncStateExecuteRequest
+	var req xcapi.AsyncStateExecuteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

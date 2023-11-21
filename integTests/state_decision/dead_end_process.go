@@ -6,21 +6,21 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/xdblab/xdb-apis/goapi/xdbapi"
-	"github.com/xdblab/xdb-golang-sdk/integTests/common"
-	"github.com/xdblab/xdb-golang-sdk/xdb"
+	"github.com/xcherryio/apis/goapi/xcapi"
+	"github.com/xcherryio/sdk-go/integTests/common"
+	"github.com/xcherryio/sdk-go/xc"
 )
 
 type DeadEndProcess struct {
-	xdb.ProcessDefaults
+	xc.ProcessDefaults
 }
 
-func (b DeadEndProcess) GetAsyncStateSchema() xdb.StateSchema {
-	return xdb.NewStateSchema(&deadEndState1{}, &deadEndState2{}, &deadEndState3{})
+func (b DeadEndProcess) GetAsyncStateSchema() xc.StateSchema {
+	return xc.NewStateSchema(&deadEndState1{}, &deadEndState2{}, &deadEndState3{})
 }
 
 type deadEndState1 struct {
-	xdb.AsyncStateDefaultsSkipWaitUntil
+	xc.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b deadEndState1) GetStateId() string {
@@ -28,13 +28,13 @@ func (b deadEndState1) GetStateId() string {
 }
 
 func (b deadEndState1) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
-) (*xdb.StateDecision, error) {
-	return xdb.MultiNextStates(deadEndState2{}, deadEndState3{}), nil
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence, communication xc.Communication,
+) (*xc.StateDecision, error) {
+	return xc.MultiNextStates(deadEndState2{}, deadEndState3{}), nil
 }
 
 type deadEndState2 struct {
-	xdb.AsyncStateDefaultsSkipWaitUntil
+	xc.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b deadEndState2) GetStateId() string {
@@ -42,13 +42,13 @@ func (b deadEndState2) GetStateId() string {
 }
 
 func (b deadEndState2) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
-) (*xdb.StateDecision, error) {
-	return xdb.DeadEnd, nil
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence, communication xc.Communication,
+) (*xc.StateDecision, error) {
+	return xc.DeadEnd, nil
 }
 
 type deadEndState3 struct {
-	xdb.AsyncStateDefaultsSkipWaitUntil
+	xc.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b deadEndState3) GetStateId() string {
@@ -56,12 +56,12 @@ func (b deadEndState3) GetStateId() string {
 }
 
 func (b deadEndState3) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
-) (*xdb.StateDecision, error) {
-	return xdb.DeadEnd, nil
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence, communication xc.Communication,
+) (*xc.StateDecision, error) {
+	return xc.DeadEnd, nil
 }
 
-func TestDeadEndProcess(t *testing.T, client xdb.Client) {
+func TestDeadEndProcess(t *testing.T, client xc.Client) {
 	prcId := common.GenerateProcessId()
 	prc := DeadEndProcess{}
 	_, err := client.StartProcess(context.Background(), prc, prcId, struct{}{})
@@ -71,5 +71,5 @@ func TestDeadEndProcess(t *testing.T, client xdb.Client) {
 
 	resp, err := client.DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdbapi.RUNNING, resp.GetStatus())
+	assert.Equal(t, xcapi.RUNNING, resp.GetStatus())
 }

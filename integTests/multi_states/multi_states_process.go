@@ -7,26 +7,26 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/xdblab/xdb-apis/goapi/xdbapi"
-	"github.com/xdblab/xdb-golang-sdk/integTests/common"
-	"github.com/xdblab/xdb-golang-sdk/xdb"
+	"github.com/xcherryio/apis/goapi/xcapi"
+	"github.com/xcherryio/sdk-go/integTests/common"
+	"github.com/xcherryio/sdk-go/xc"
 )
 
 const INPUT = 1
 
 type MultiStatesProcess struct {
-	xdb.ProcessDefaults
+	xc.ProcessDefaults
 }
 
-func (b MultiStatesProcess) GetAsyncStateSchema() xdb.StateSchema {
-	return xdb.NewStateSchema(&state1{}, &state2{}, &state3{})
+func (b MultiStatesProcess) GetAsyncStateSchema() xc.StateSchema {
+	return xc.NewStateSchema(&state1{}, &state2{}, &state3{})
 }
 
 type state1 struct {
-	xdb.AsyncStateDefaults
+	xc.AsyncStateDefaults
 }
 
-func (b state1) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication) (*xdb.CommandRequest, error) {
+func (b state1) WaitUntil(ctx xc.Context, input xc.Object, communication xc.Communication) (*xc.CommandRequest, error) {
 	var i int
 	input.Get(&i)
 
@@ -34,12 +34,12 @@ func (b state1) WaitUntil(ctx xdb.XdbContext, input xdb.Object, communication xd
 		panic("state1 WaitUntil: input is not expected. Expected: " + fmt.Sprint(INPUT) + ", actual: " + fmt.Sprint(i))
 	}
 
-	return xdb.EmptyCommandRequest(), nil
+	return xc.EmptyCommandRequest(), nil
 }
 
 func (b state1) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
-) (*xdb.StateDecision, error) {
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence, communication xc.Communication,
+) (*xc.StateDecision, error) {
 	var i int
 	input.Get(&i)
 
@@ -47,16 +47,16 @@ func (b state1) Execute(
 		panic("state1 Execute: input is not expected. Expected: " + fmt.Sprint(INPUT) + ", actual: " + fmt.Sprint(i))
 	}
 
-	return xdb.MultiNextStatesWithInput(xdb.NewStateMovement(state2{}, i+2), xdb.NewStateMovement(state3{}, i+3)), nil
+	return xc.MultiNextStatesWithInput(xc.NewStateMovement(state2{}, i+2), xc.NewStateMovement(state3{}, i+3)), nil
 }
 
 type state2 struct {
-	xdb.AsyncStateDefaultsSkipWaitUntil
+	xc.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b state2) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
-) (*xdb.StateDecision, error) {
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence, communication xc.Communication,
+) (*xc.StateDecision, error) {
 	var i int
 	input.Get(&i)
 
@@ -64,16 +64,16 @@ func (b state2) Execute(
 		panic("state2 Execute: input is not expected. Expected: " + fmt.Sprint(INPUT+2) + ", actual: " + fmt.Sprint(i))
 	}
 
-	return xdb.DeadEnd, nil
+	return xc.DeadEnd, nil
 }
 
 type state3 struct {
-	xdb.AsyncStateDefaultsSkipWaitUntil
+	xc.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b state3) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
-) (*xdb.StateDecision, error) {
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence, communication xc.Communication,
+) (*xc.StateDecision, error) {
 	var i int
 	input.Get(&i)
 
@@ -81,10 +81,10 @@ func (b state3) Execute(
 		panic("state3 Execute: input is not expected. Expected: " + fmt.Sprint(INPUT+3) + ", actual: " + fmt.Sprint(i))
 	}
 
-	return xdb.DeadEnd, nil
+	return xc.DeadEnd, nil
 }
 
-func TestTerminateMultiStatesProcess(t *testing.T, client xdb.Client) {
+func TestTerminateMultiStatesProcess(t *testing.T, client xc.Client) {
 	prcId := common.GenerateProcessId()
 	prc := MultiStatesProcess{}
 	_, err := client.StartProcess(context.Background(), prc, prcId, INPUT)
@@ -94,20 +94,20 @@ func TestTerminateMultiStatesProcess(t *testing.T, client xdb.Client) {
 
 	resp, err := client.DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdb.DefaultWorkerUrl, resp.GetWorkerUrl())
-	assert.Equal(t, xdb.GetFinalProcessType(prc), resp.GetProcessType())
+	assert.Equal(t, xc.DefaultWorkerUrl, resp.GetWorkerUrl())
+	assert.Equal(t, xc.GetFinalProcessType(prc), resp.GetProcessType())
 	assert.NotNil(t, resp.ProcessExecutionId)
-	assert.Equal(t, xdbapi.RUNNING, resp.GetStatus())
+	assert.Equal(t, xcapi.RUNNING, resp.GetStatus())
 
-	err = client.StopProcess(context.Background(), prcId, xdbapi.TERMINATE)
+	err = client.StopProcess(context.Background(), prcId, xcapi.TERMINATE)
 	assert.Nil(t, err)
 
 	resp, err = client.DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdbapi.TERMINATED, resp.GetStatus())
+	assert.Equal(t, xcapi.TERMINATED, resp.GetStatus())
 }
 
-func TestFailMultiStatesProcess(t *testing.T, client xdb.Client) {
+func TestFailMultiStatesProcess(t *testing.T, client xc.Client) {
 	prcId := common.GenerateProcessId()
 	prc := MultiStatesProcess{}
 	_, err := client.StartProcess(context.Background(), prc, prcId, INPUT)
@@ -117,15 +117,15 @@ func TestFailMultiStatesProcess(t *testing.T, client xdb.Client) {
 
 	resp, err := client.DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdb.DefaultWorkerUrl, resp.GetWorkerUrl())
-	assert.Equal(t, xdb.GetFinalProcessType(prc), resp.GetProcessType())
+	assert.Equal(t, xc.DefaultWorkerUrl, resp.GetWorkerUrl())
+	assert.Equal(t, xc.GetFinalProcessType(prc), resp.GetProcessType())
 	assert.NotNil(t, resp.ProcessExecutionId)
-	assert.Equal(t, xdbapi.RUNNING, resp.GetStatus())
+	assert.Equal(t, xcapi.RUNNING, resp.GetStatus())
 
-	err = client.StopProcess(context.Background(), prcId, xdbapi.FAIL)
+	err = client.StopProcess(context.Background(), prcId, xcapi.FAIL)
 	assert.Nil(t, err)
 
 	resp, err = client.DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdbapi.FAILED, resp.GetStatus())
+	assert.Equal(t, xcapi.FAILED, resp.GetStatus())
 }

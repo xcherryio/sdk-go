@@ -4,21 +4,21 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/xdblab/xdb-apis/goapi/xdbapi"
-	"github.com/xdblab/xdb-golang-sdk/integTests/common"
-	"github.com/xdblab/xdb-golang-sdk/xdb"
-	"github.com/xdblab/xdb-golang-sdk/xdb/ptr"
-	"github.com/xdblab/xdb-golang-sdk/xdb/str"
+	"github.com/xcherryio/apis/goapi/xcapi"
+	"github.com/xcherryio/sdk-go/integTests/common"
+	"github.com/xcherryio/sdk-go/xc"
+	"github.com/xcherryio/sdk-go/xc/ptr"
+	"github.com/xcherryio/sdk-go/xc/str"
 	"testing"
 	"time"
 )
 
 type AllOfTimerLocalQProcess struct {
-	xdb.ProcessDefaults
+	xc.ProcessDefaults
 }
 
-func (b AllOfTimerLocalQProcess) GetAsyncStateSchema() xdb.StateSchema {
-	return xdb.NewStateSchema(
+func (b AllOfTimerLocalQProcess) GetAsyncStateSchema() xc.StateSchema {
+	return xc.NewStateSchema(
 		&initState{},
 		&allOfTimerLocalQState{},
 		&publishMessagesState{},
@@ -26,45 +26,45 @@ func (b AllOfTimerLocalQProcess) GetAsyncStateSchema() xdb.StateSchema {
 }
 
 type initState struct {
-	xdb.AsyncStateDefaultsSkipWaitUntil
+	xc.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (i initState) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
-	communication xdb.Communication,
-) (*xdb.StateDecision, error) {
-	return xdb.MultiNextStates(
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence,
+	communication xc.Communication,
+) (*xc.StateDecision, error) {
+	return xc.MultiNextStates(
 		allOfTimerLocalQState{},
 		publishMessagesState{},
 	), nil
 }
 
 type allOfTimerLocalQState struct {
-	xdb.AsyncStateDefaults
+	xc.AsyncStateDefaults
 }
 
 func (b allOfTimerLocalQState) WaitUntil(
-	ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication,
-) (*xdb.CommandRequest, error) {
-	return xdb.AllOf(
-		xdb.NewTimerCommand(time.Second*5),
-		xdb.NewLocalQueueCommand(testQueueName1, 2),
-		xdb.NewLocalQueueCommand(testQueueName2, 1),
-		xdb.NewLocalQueueCommand(testQueueName3, 4),
+	ctx xc.Context, input xc.Object, communication xc.Communication,
+) (*xc.CommandRequest, error) {
+	return xc.AllOf(
+		xc.NewTimerCommand(time.Second*5),
+		xc.NewLocalQueueCommand(testQueueName1, 2),
+		xc.NewLocalQueueCommand(testQueueName2, 1),
+		xc.NewLocalQueueCommand(testQueueName3, 4),
 	), nil
 }
 
 func (b allOfTimerLocalQState) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
-	communication xdb.Communication,
-) (*xdb.StateDecision, error) {
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence,
+	communication xc.Communication,
+) (*xc.StateDecision, error) {
 	secondLocalQ := commandResults.GetLocalQueueCommand(1)
 	thirdLocalQ := commandResults.GetLocalQueueCommand(2)
 
-	if commandResults.GetFirstTimerStatus() == xdbapi.COMPLETED_COMMAND &&
-		commandResults.GetFirstLocalQueueCommand().GetStatus() == xdbapi.COMPLETED_COMMAND &&
-		secondLocalQ.GetStatus() == xdbapi.COMPLETED_COMMAND &&
-		thirdLocalQ.GetStatus() == xdbapi.COMPLETED_COMMAND {
+	if commandResults.GetFirstTimerStatus() == xcapi.COMPLETED_COMMAND &&
+		commandResults.GetFirstLocalQueueCommand().GetStatus() == xcapi.COMPLETED_COMMAND &&
+		secondLocalQ.GetStatus() == xcapi.COMPLETED_COMMAND &&
+		thirdLocalQ.GetStatus() == xcapi.COMPLETED_COMMAND {
 
 		// validate first queue
 		var msg1 string
@@ -105,34 +105,34 @@ func (b allOfTimerLocalQState) Execute(
 			panic("unexpected messages:" + str.AnyToJson(msgs))
 		}
 
-		return xdb.GracefulCompletingProcess, nil
+		return xc.GracefulCompletingProcess, nil
 	} else {
 		panic("unexpected command results" + str.AnyToJson(commandResults))
 	}
 }
 
 type publishMessagesState struct {
-	xdb.AsyncStateDefaults
+	xc.AsyncStateDefaults
 }
 
 func (p publishMessagesState) WaitUntil(
-	ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication,
-) (*xdb.CommandRequest, error) {
+	ctx xc.Context, input xc.Object, communication xc.Communication,
+) (*xc.CommandRequest, error) {
 	communication.PublishToLocalQueue(testQueueName3, "publishMessagesState")
 	communication.PublishToLocalQueue(testQueueName3, testMyMsq)
-	return xdb.EmptyCommandRequest(), nil
+	return xc.EmptyCommandRequest(), nil
 }
 
 func (p publishMessagesState) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
-	communication xdb.Communication,
-) (*xdb.StateDecision, error) {
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence,
+	communication xc.Communication,
+) (*xc.StateDecision, error) {
 	communication.PublishToLocalQueue(testQueueName3, 123)
 	communication.PublishToLocalQueue(testQueueName3, testMyMsq)
-	return xdb.DeadEnd, nil
+	return xc.DeadEnd, nil
 }
 
-func TestAllOfTimerLocalQueue(t *testing.T, client xdb.Client) {
+func TestAllOfTimerLocalQueue(t *testing.T, client xc.Client) {
 	prcId := common.GenerateProcessId()
 	prc := AllOfTimerLocalQProcess{}
 	_, err := client.StartProcess(context.Background(), prc, prcId, nil)
@@ -142,15 +142,15 @@ func TestAllOfTimerLocalQueue(t *testing.T, client xdb.Client) {
 	assert.Nil(t, err)
 
 	err = client.BatchPublishToLocalQueue(context.Background(), prcId,
-		xdb.LocalQueuePublishMessage{
+		xc.LocalQueuePublishMessage{
 			QueueName: testQueueName1,
 			Payload:   "testLocalQ1",
 			DedupSeed: ptr.Any("testLocalQ1"),
 		},
-		xdb.LocalQueuePublishMessage{
+		xc.LocalQueuePublishMessage{
 			QueueName: testQueueName2,
 		},
-		xdb.LocalQueuePublishMessage{
+		xc.LocalQueuePublishMessage{
 			QueueName: testQueueName1,
 			Payload:   testMyMsq,
 			DedupUUID: ptr.Any(tuid.String()),
@@ -160,5 +160,5 @@ func TestAllOfTimerLocalQueue(t *testing.T, client xdb.Client) {
 	time.Sleep(time.Second * 6)
 	resp, err := client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdbapi.COMPLETED, resp.GetStatus())
+	assert.Equal(t, xcapi.COMPLETED, resp.GetStatus())
 }

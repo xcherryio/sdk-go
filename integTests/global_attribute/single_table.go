@@ -3,62 +3,62 @@ package global_attribute
 import (
 	"context"
 	"fmt"
-	"github.com/xdblab/xdb-golang-sdk/integTests/common"
-	"github.com/xdblab/xdb-golang-sdk/xdb/ptr"
+	"github.com/xcherryio/sdk-go/integTests/common"
+	"github.com/xcherryio/sdk-go/xc/ptr"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/xdblab/xdb-apis/goapi/xdbapi"
-	"github.com/xdblab/xdb-golang-sdk/xdb"
+	"github.com/xcherryio/apis/goapi/xcapi"
+	"github.com/xcherryio/sdk-go/xc"
 )
 
 type SingleTableProcess struct {
-	xdb.ProcessDefaults
+	xc.ProcessDefaults
 }
 
-func (b SingleTableProcess) GetPersistenceSchema() xdb.PersistenceSchema {
-	return xdb.NewPersistenceSchemaWithOptions(
-		xdb.NewEmptyLocalAttributesSchema(),
-		xdb.NewGlobalAttributesSchema(
-			xdb.NewDBTableSchema(
+func (b SingleTableProcess) GetPersistenceSchema() xc.PersistenceSchema {
+	return xc.NewPersistenceSchemaWithOptions(
+		xc.NewEmptyLocalAttributesSchema(),
+		xc.NewGlobalAttributesSchema(
+			xc.NewDBTableSchema(
 				tblName, pk,
-				xdbapi.NO_LOCKING,
-				xdb.NewDBColumnDef(attrKeyInt, "create_timestamp", true),
-				xdb.NewDBColumnDef(attrKeyStr, "first_name", true)),
+				xcapi.NO_LOCKING,
+				xc.NewDBColumnDef(attrKeyInt, "create_timestamp", true),
+				xc.NewDBColumnDef(attrKeyStr, "first_name", true)),
 		),
-		xdb.NewPersistenceSchemaOptions(
-			xdb.NewNamedPersistencePolicy(
+		xc.NewPersistenceSchemaOptions(
+			xc.NewNamedPersistencePolicy(
 				loadNothingPolicyName, nil,
-				xdb.NewTablePolicy(tblName, xdbapi.NO_LOCKING)),
+				xc.NewTablePolicy(tblName, xcapi.NO_LOCKING)),
 		),
 	)
 }
 
-func (b SingleTableProcess) GetAsyncStateSchema() xdb.StateSchema {
-	return xdb.NewStateSchema(
+func (b SingleTableProcess) GetAsyncStateSchema() xc.StateSchema {
+	return xc.NewStateSchema(
 		&stateForInitialReadWrite{}, // read from initial global attributes and write to them
 		&stateToVerifyGlobalAttrs{}, // verify the global attributes write from the prev state
 		&stateForTestLoadNothing{})  // test loading nothing policy
 }
 
 type stateForInitialReadWrite struct {
-	xdb.AsyncStateDefaultsSkipWaitUntil
+	xc.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b stateForInitialReadWrite) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
-	communication xdb.Communication,
-) (*xdb.StateDecision, error) {
-	var mode xdbapi.AttributeWriteConflictMode
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence,
+	communication xc.Communication,
+) (*xc.StateDecision, error) {
+	var mode xcapi.AttributeWriteConflictMode
 	input.Get(&mode)
 	expectedI := 123
 	expectedStr := "abc"
-	if mode == xdbapi.OVERRIDE_ON_CONFLICT {
+	if mode == xcapi.OVERRIDE_ON_CONFLICT {
 		expectedI = 123456
 		expectedStr = "abcdef"
 	}
-	if mode == xdbapi.IGNORE_CONFLICT {
+	if mode == xcapi.IGNORE_CONFLICT {
 		// value from last execution
 		expectedI = 456
 		expectedStr = "def"
@@ -78,17 +78,17 @@ func (b stateForInitialReadWrite) Execute(
 	persistence.SetGlobalAttribute(attrKeyInt, 456)
 	persistence.SetGlobalAttribute(attrKeyStr, "def")
 
-	return xdb.SingleNextState(stateToVerifyGlobalAttrs{}, i+1), nil
+	return xc.SingleNextState(stateToVerifyGlobalAttrs{}, i+1), nil
 }
 
 type stateToVerifyGlobalAttrs struct {
-	xdb.AsyncStateDefaultsSkipWaitUntil
+	xc.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b stateToVerifyGlobalAttrs) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
-	communication xdb.Communication,
-) (*xdb.StateDecision, error) {
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence,
+	communication xc.Communication,
+) (*xc.StateDecision, error) {
 	var i int
 	persistence.GetGlobalAttribute(attrKeyInt, &i)
 	var str string
@@ -100,23 +100,23 @@ func (b stateToVerifyGlobalAttrs) Execute(
 		panic(fmt.Sprintf("unexpected value %s", str))
 	}
 
-	return xdb.SingleNextState(stateForTestLoadNothing{}, nil), nil
+	return xc.SingleNextState(stateForTestLoadNothing{}, nil), nil
 }
 
 type stateForTestLoadNothing struct {
-	xdb.AsyncStateDefaultsSkipWaitUntil
+	xc.AsyncStateDefaultsSkipWaitUntil
 }
 
-func (b stateForTestLoadNothing) GetStateOptions() *xdb.AsyncStateOptions {
-	return &xdb.AsyncStateOptions{
+func (b stateForTestLoadNothing) GetStateOptions() *xc.AsyncStateOptions {
+	return &xc.AsyncStateOptions{
 		PersistencePolicyName: ptr.Any(loadNothingPolicyName),
 	}
 }
 
 func (b stateForTestLoadNothing) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
-	communication xdb.Communication,
-) (*xdb.StateDecision, error) {
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence,
+	communication xc.Communication,
+) (*xc.StateDecision, error) {
 	var i int
 	persistence.GetGlobalAttribute(attrKeyInt, &i)
 	var str string
@@ -128,24 +128,24 @@ func (b stateForTestLoadNothing) Execute(
 		panic(fmt.Sprintf("unexpected value %s", str))
 	}
 
-	return xdb.ForceCompletingProcess, nil
+	return xc.ForceCompletingProcess, nil
 }
 
-func TestGlobalAttributesWithSingleTable(t *testing.T, client xdb.Client) {
+func TestGlobalAttributesWithSingleTable(t *testing.T, client xc.Client) {
 	prcId := common.GenerateProcessId()
 	prc := SingleTableProcess{}
 
-	runId1, err := client.StartProcessWithOptions(context.Background(), prc, prcId, xdbapi.RETURN_ERROR_ON_CONFLICT,
-		&xdb.ProcessStartOptions{
-			GlobalAttributeOptions: xdb.NewGlobalAttributeOptions(
-				xdb.DBTableConfig{
+	runId1, err := client.StartProcessWithOptions(context.Background(), prc, prcId, xcapi.RETURN_ERROR_ON_CONFLICT,
+		&xc.ProcessStartOptions{
+			GlobalAttributeOptions: xc.NewGlobalAttributeOptions(
+				xc.DBTableConfig{
 					TableName: tblName,
 					PKValue:   prcId, // use processId as the primary key value(string)
 					InitialAttributes: map[string]interface{}{
 						attrKeyInt: 123,
 						attrKeyStr: "abc",
 					},
-					InitialWriteConflictMode: xdbapi.RETURN_ERROR_ON_CONFLICT.Ptr(),
+					InitialWriteConflictMode: xcapi.RETURN_ERROR_ON_CONFLICT.Ptr(),
 				},
 			),
 		})
@@ -154,59 +154,59 @@ func TestGlobalAttributesWithSingleTable(t *testing.T, client xdb.Client) {
 	time.Sleep(time.Second * 3)
 	resp, err := client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdbapi.COMPLETED, resp.GetStatus())
+	assert.Equal(t, xcapi.COMPLETED, resp.GetStatus())
 
 	// failed when trying to start the same process again with conflicted global attributes
-	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, xdbapi.RETURN_ERROR_ON_CONFLICT,
-		&xdb.ProcessStartOptions{
-			IdReusePolicy: xdbapi.ALLOW_IF_NO_RUNNING.Ptr(),
-			GlobalAttributeOptions: xdb.NewGlobalAttributeOptions(
-				xdb.DBTableConfig{
+	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, xcapi.RETURN_ERROR_ON_CONFLICT,
+		&xc.ProcessStartOptions{
+			IdReusePolicy: xcapi.ALLOW_IF_NO_RUNNING.Ptr(),
+			GlobalAttributeOptions: xc.NewGlobalAttributeOptions(
+				xc.DBTableConfig{
 					TableName: tblName,
 					PKValue:   prcId, // use processId as the primary key value(string)
 					InitialAttributes: map[string]interface{}{
 						attrKeyInt: 123,
 						attrKeyStr: "abc",
 					},
-					InitialWriteConflictMode: xdbapi.RETURN_ERROR_ON_CONFLICT.Ptr(),
+					InitialWriteConflictMode: xcapi.RETURN_ERROR_ON_CONFLICT.Ptr(),
 				},
 			),
 		})
 	assert.NotNil(t, err)
-	assert.True(t, xdb.IsGlobalAttributeWriteFailure(err))
+	assert.True(t, xc.IsGlobalAttributeWriteFailure(err))
 
 	// failed when trying to start the same process when writing str to int
-	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, xdbapi.RETURN_ERROR_ON_CONFLICT,
-		&xdb.ProcessStartOptions{
-			IdReusePolicy: xdbapi.ALLOW_IF_NO_RUNNING.Ptr(),
-			GlobalAttributeOptions: xdb.NewGlobalAttributeOptions(
-				xdb.DBTableConfig{
+	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, xcapi.RETURN_ERROR_ON_CONFLICT,
+		&xc.ProcessStartOptions{
+			IdReusePolicy: xcapi.ALLOW_IF_NO_RUNNING.Ptr(),
+			GlobalAttributeOptions: xc.NewGlobalAttributeOptions(
+				xc.DBTableConfig{
 					TableName: tblName,
 					PKValue:   prcId, // use processId as the primary key value(string)
 					InitialAttributes: map[string]interface{}{
 						attrKeyInt: "abc",
 						attrKeyStr: "123",
 					},
-					InitialWriteConflictMode: xdbapi.RETURN_ERROR_ON_CONFLICT.Ptr(),
+					InitialWriteConflictMode: xcapi.RETURN_ERROR_ON_CONFLICT.Ptr(),
 				},
 			),
 		})
 	assert.NotNil(t, err)
-	assert.True(t, xdb.IsGlobalAttributeWriteFailure(err))
+	assert.True(t, xc.IsGlobalAttributeWriteFailure(err))
 
 	// succeeded when trying to start the same process with override
-	runId2, err := client.StartProcessWithOptions(context.Background(), prc, prcId, xdbapi.OVERRIDE_ON_CONFLICT,
-		&xdb.ProcessStartOptions{
-			IdReusePolicy: xdbapi.ALLOW_IF_NO_RUNNING.Ptr(),
-			GlobalAttributeOptions: xdb.NewGlobalAttributeOptions(
-				xdb.DBTableConfig{
+	runId2, err := client.StartProcessWithOptions(context.Background(), prc, prcId, xcapi.OVERRIDE_ON_CONFLICT,
+		&xc.ProcessStartOptions{
+			IdReusePolicy: xcapi.ALLOW_IF_NO_RUNNING.Ptr(),
+			GlobalAttributeOptions: xc.NewGlobalAttributeOptions(
+				xc.DBTableConfig{
 					TableName: tblName,
 					PKValue:   prcId, // use processId as the primary key value(string)
 					InitialAttributes: map[string]interface{}{
 						attrKeyInt: 123456,
 						attrKeyStr: "abcdef",
 					},
-					InitialWriteConflictMode: xdbapi.OVERRIDE_ON_CONFLICT.Ptr(),
+					InitialWriteConflictMode: xcapi.OVERRIDE_ON_CONFLICT.Ptr(),
 				},
 			),
 		})
@@ -216,21 +216,21 @@ func TestGlobalAttributesWithSingleTable(t *testing.T, client xdb.Client) {
 	time.Sleep(time.Second * 3)
 	resp, err = client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdbapi.COMPLETED, resp.GetStatus())
+	assert.Equal(t, xcapi.COMPLETED, resp.GetStatus())
 
 	// succeeded when trying to start the same process with ignore
-	runId3, err := client.StartProcessWithOptions(context.Background(), prc, prcId, xdbapi.IGNORE_CONFLICT,
-		&xdb.ProcessStartOptions{
-			IdReusePolicy: xdbapi.ALLOW_IF_NO_RUNNING.Ptr(),
-			GlobalAttributeOptions: xdb.NewGlobalAttributeOptions(
-				xdb.DBTableConfig{
+	runId3, err := client.StartProcessWithOptions(context.Background(), prc, prcId, xcapi.IGNORE_CONFLICT,
+		&xc.ProcessStartOptions{
+			IdReusePolicy: xcapi.ALLOW_IF_NO_RUNNING.Ptr(),
+			GlobalAttributeOptions: xc.NewGlobalAttributeOptions(
+				xc.DBTableConfig{
 					TableName: tblName,
 					PKValue:   prcId, // use processId as the primary key value(string)
 					InitialAttributes: map[string]interface{}{
 						attrKeyInt: 123456,
 						attrKeyStr: "abcdef",
 					},
-					InitialWriteConflictMode: xdbapi.IGNORE_CONFLICT.Ptr(),
+					InitialWriteConflictMode: xcapi.IGNORE_CONFLICT.Ptr(),
 				},
 			),
 		})
@@ -240,7 +240,7 @@ func TestGlobalAttributesWithSingleTable(t *testing.T, client xdb.Client) {
 	time.Sleep(time.Second * 3)
 	resp, err = client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdbapi.COMPLETED, resp.GetStatus())
+	assert.Equal(t, xcapi.COMPLETED, resp.GetStatus())
 }
 
 // TODO Test with different locking types

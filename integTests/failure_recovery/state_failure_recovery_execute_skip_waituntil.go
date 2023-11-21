@@ -8,43 +8,43 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/xdblab/xdb-apis/goapi/xdbapi"
-	"github.com/xdblab/xdb-golang-sdk/integTests/common"
-	"github.com/xdblab/xdb-golang-sdk/xdb"
-	"github.com/xdblab/xdb-golang-sdk/xdb/ptr"
+	"github.com/xcherryio/apis/goapi/xcapi"
+	"github.com/xcherryio/sdk-go/integTests/common"
+	"github.com/xcherryio/sdk-go/xc"
+	"github.com/xcherryio/sdk-go/xc/ptr"
 )
 
 type StateFailureRecoveryTestExecuteNoWaitUntilProcess struct {
-	xdb.ProcessDefaults
+	xc.ProcessDefaults
 }
 
-func (b StateFailureRecoveryTestExecuteNoWaitUntilProcess) GetAsyncStateSchema() xdb.StateSchema {
-	return xdb.NewStateSchema(
+func (b StateFailureRecoveryTestExecuteNoWaitUntilProcess) GetAsyncStateSchema() xc.StateSchema {
+	return xc.NewStateSchema(
 		&executeNoWaitUntilInitState{},
 		&executeNoWaitUntilFailState{},
 		&executeNoWaitUntilRecoverState{})
 }
 
 type executeNoWaitUntilInitState struct {
-	xdb.AsyncStateDefaultsSkipWaitUntil
+	xc.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b executeNoWaitUntilInitState) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence, communication xdb.Communication,
-) (*xdb.StateDecision, error) {
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence, communication xc.Communication,
+) (*xc.StateDecision, error) {
 	var i int
 	input.Get(&i)
-	return xdb.SingleNextState(&executeNoWaitUntilFailState{}, i+1), nil
+	return xc.SingleNextState(&executeNoWaitUntilFailState{}, i+1), nil
 }
 
 type executeNoWaitUntilFailState struct {
-	xdb.AsyncStateDefaultsSkipWaitUntil
+	xc.AsyncStateDefaultsSkipWaitUntil
 }
 
-func (d executeNoWaitUntilFailState) GetStateOptions() *xdb.AsyncStateOptions {
-	stateOptions := &xdb.AsyncStateOptions{
+func (d executeNoWaitUntilFailState) GetStateOptions() *xc.AsyncStateOptions {
+	stateOptions := &xc.AsyncStateOptions{
 		ExecuteTimeoutSeconds: 1,
-		ExecuteRetryPolicy: &xdbapi.RetryPolicy{
+		ExecuteRetryPolicy: &xcapi.RetryPolicy{
 			BackoffCoefficient:             ptr.Any(float32(1.0)),
 			InitialIntervalSeconds:         ptr.Any(int32(1)),
 			MaximumIntervalSeconds:         ptr.Any(int32(1)),
@@ -59,24 +59,24 @@ func (d executeNoWaitUntilFailState) GetStateOptions() *xdb.AsyncStateOptions {
 }
 
 func (b executeNoWaitUntilFailState) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
-	communication xdb.Communication,
-) (*xdb.StateDecision, error) {
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence,
+	communication xc.Communication,
+) (*xc.StateDecision, error) {
 	var i int
 	input.Get(&i)
 
-	return xdb.SingleNextState(&executeNoWaitUntilRecoverState{}, i+2), fmt.Errorf("error for test")
+	return xc.SingleNextState(&executeNoWaitUntilRecoverState{}, i+2), fmt.Errorf("error for test")
 }
 
 type executeNoWaitUntilRecoverState struct {
-	xdb.AsyncStateDefaultsSkipWaitUntil
+	xc.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b executeNoWaitUntilRecoverState) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
-	communication xdb.Communication,
-) (*xdb.StateDecision, error) {
-	if ctx.GetRecoverFromStateApi() == nil || *(ctx.GetRecoverFromStateApi()) != xdbapi.EXECUTE_API {
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence,
+	communication xc.Communication,
+) (*xc.StateDecision, error) {
+	if ctx.GetRecoverFromStateApi() == nil || *(ctx.GetRecoverFromStateApi()) != xcapi.EXECUTE_API {
 		panic("should recover from execute api")
 	}
 
@@ -88,13 +88,13 @@ func (b executeNoWaitUntilRecoverState) Execute(
 	input.Get(&i)
 
 	if i == 2 {
-		return xdb.GracefulCompletingProcess, nil
+		return xc.GracefulCompletingProcess, nil
 	}
 
-	return xdb.ForceFailProcess, nil
+	return xc.ForceFailProcess, nil
 }
 
-func TestStateFailureRecoveryTestExecuteNoWaitUntilProcess(t *testing.T, client xdb.Client) {
+func TestStateFailureRecoveryTestExecuteNoWaitUntilProcess(t *testing.T, client xc.Client) {
 	prcId := common.GenerateProcessId()
 	prc := StateFailureRecoveryTestExecuteNoWaitUntilProcess{}
 	_, err := client.StartProcess(context.Background(), prc, prcId, 1)
@@ -103,5 +103,5 @@ func TestStateFailureRecoveryTestExecuteNoWaitUntilProcess(t *testing.T, client 
 	time.Sleep(time.Second * 3)
 	resp, err := client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdbapi.COMPLETED, resp.GetStatus())
+	assert.Equal(t, xcapi.COMPLETED, resp.GetStatus())
 }

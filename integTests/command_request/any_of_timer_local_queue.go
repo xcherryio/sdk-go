@@ -3,51 +3,51 @@ package command_request
 import (
 	"context"
 	"github.com/stretchr/testify/assert"
-	"github.com/xdblab/xdb-apis/goapi/xdbapi"
-	"github.com/xdblab/xdb-golang-sdk/integTests/common"
-	"github.com/xdblab/xdb-golang-sdk/xdb"
-	"github.com/xdblab/xdb-golang-sdk/xdb/str"
+	"github.com/xcherryio/apis/goapi/xcapi"
+	"github.com/xcherryio/sdk-go/integTests/common"
+	"github.com/xcherryio/sdk-go/xc"
+	"github.com/xcherryio/sdk-go/xc/str"
 	"testing"
 	"time"
 )
 
 type AnyOfTimerLocalQProcess struct {
-	xdb.ProcessDefaults
+	xc.ProcessDefaults
 }
 
-func (b AnyOfTimerLocalQProcess) GetAsyncStateSchema() xdb.StateSchema {
-	return xdb.NewStateSchema(&anyOfTimerLocalQState{})
+func (b AnyOfTimerLocalQProcess) GetAsyncStateSchema() xc.StateSchema {
+	return xc.NewStateSchema(&anyOfTimerLocalQState{})
 }
 
 type anyOfTimerLocalQState struct {
-	xdb.AsyncStateDefaults
+	xc.AsyncStateDefaults
 }
 
 func (b anyOfTimerLocalQState) WaitUntil(
-	ctx xdb.XdbContext, input xdb.Object, communication xdb.Communication,
-) (*xdb.CommandRequest, error) {
-	return xdb.AnyOf(
-		xdb.NewTimerCommand(time.Second*5),
-		xdb.NewLocalQueueCommand(testQueueName1, 2),
+	ctx xc.Context, input xc.Object, communication xc.Communication,
+) (*xc.CommandRequest, error) {
+	return xc.AnyOf(
+		xc.NewTimerCommand(time.Second*5),
+		xc.NewLocalQueueCommand(testQueueName1, 2),
 	), nil
 }
 
 func (b anyOfTimerLocalQState) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
-	communication xdb.Communication,
-) (*xdb.StateDecision, error) {
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence,
+	communication xc.Communication,
+) (*xc.StateDecision, error) {
 	var expected string
 	input.Get(&expected)
 	if expected == "timer" {
-		if commandResults.GetFirstTimerStatus() == xdbapi.COMPLETED_COMMAND &&
-			commandResults.GetFirstLocalQueueCommand().GetStatus() == xdbapi.WAITING_COMMAND {
-			return xdb.GracefulCompletingProcess, nil
+		if commandResults.GetFirstTimerStatus() == xcapi.COMPLETED_COMMAND &&
+			commandResults.GetFirstLocalQueueCommand().GetStatus() == xcapi.WAITING_COMMAND {
+			return xc.GracefulCompletingProcess, nil
 		} else {
-			return xdb.ForceFailProcess, nil
+			return xc.ForceFailProcess, nil
 		}
 	} else if expected == "localQueue" {
-		if commandResults.GetFirstTimerStatus() == xdbapi.WAITING_COMMAND &&
-			commandResults.GetFirstLocalQueueCommand().GetStatus() == xdbapi.COMPLETED_COMMAND {
+		if commandResults.GetFirstTimerStatus() == xcapi.WAITING_COMMAND &&
+			commandResults.GetFirstLocalQueueCommand().GetStatus() == xcapi.COMPLETED_COMMAND {
 			var msg string
 			commandResults.GetFirstLocalQueueCommand().GetFirstMessage(&msg)
 			if msg != expected {
@@ -59,7 +59,7 @@ func (b anyOfTimerLocalQState) Execute(
 			if secondMsg != testMyMsq {
 				panic("unexpected second message:" + str.AnyToJson(secondMsg))
 			}
-			return xdb.GracefulCompletingProcess, nil
+			return xc.GracefulCompletingProcess, nil
 		} else {
 			panic("unexpected command results" + str.AnyToJson(commandResults))
 		}
@@ -68,7 +68,7 @@ func (b anyOfTimerLocalQState) Execute(
 	}
 }
 
-func TestAnyOfTimerLocalQueueWithTimerFired(t *testing.T, client xdb.Client) {
+func TestAnyOfTimerLocalQueueWithTimerFired(t *testing.T, client xc.Client) {
 	prcId := common.GenerateProcessId()
 	prc := AnyOfTimerLocalQProcess{}
 	_, err := client.StartProcess(context.Background(), prc, prcId, "timer")
@@ -77,10 +77,10 @@ func TestAnyOfTimerLocalQueueWithTimerFired(t *testing.T, client xdb.Client) {
 	time.Sleep(time.Second * 6)
 	resp, err := client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdbapi.COMPLETED, resp.GetStatus())
+	assert.Equal(t, xcapi.COMPLETED, resp.GetStatus())
 }
 
-func TestAnyOfTimerLocalQueueWithLocalQueueMessagesReceived(t *testing.T, client xdb.Client) {
+func TestAnyOfTimerLocalQueueWithLocalQueueMessagesReceived(t *testing.T, client xc.Client) {
 	prcId := common.GenerateProcessId()
 	prc := AnyOfTimerLocalQProcess{}
 	_, err := client.StartProcess(context.Background(), prc, prcId, "localQueue")
@@ -94,5 +94,5 @@ func TestAnyOfTimerLocalQueueWithLocalQueueMessagesReceived(t *testing.T, client
 	time.Sleep(time.Second * 6)
 	resp, err := client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdbapi.COMPLETED, resp.GetStatus())
+	assert.Equal(t, xcapi.COMPLETED, resp.GetStatus())
 }

@@ -3,76 +3,76 @@ package global_attribute
 import (
 	"context"
 	"fmt"
-	"github.com/xdblab/xdb-golang-sdk/integTests/common"
-	"github.com/xdblab/xdb-golang-sdk/xdb/ptr"
+	"github.com/xcherryio/sdk-go/integTests/common"
+	"github.com/xcherryio/sdk-go/xc/ptr"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/xdblab/xdb-apis/goapi/xdbapi"
-	"github.com/xdblab/xdb-golang-sdk/xdb"
+	"github.com/xcherryio/apis/goapi/xcapi"
+	"github.com/xcherryio/sdk-go/xc"
 )
 
 type MultiTablesProcess struct {
-	xdb.ProcessDefaults
+	xc.ProcessDefaults
 }
 
-func (b MultiTablesProcess) GetPersistenceSchema() xdb.PersistenceSchema {
-	return xdb.NewPersistenceSchemaWithOptions(
-		xdb.NewEmptyLocalAttributesSchema(),
-		xdb.NewGlobalAttributesSchema(
-			xdb.NewDBTableSchema(
+func (b MultiTablesProcess) GetPersistenceSchema() xc.PersistenceSchema {
+	return xc.NewPersistenceSchemaWithOptions(
+		xc.NewEmptyLocalAttributesSchema(),
+		xc.NewGlobalAttributesSchema(
+			xc.NewDBTableSchema(
 				tblName, pk,
-				xdbapi.NO_LOCKING,
-				xdb.NewDBColumnDef(attrKeyInt, "create_timestamp", true),
-				xdb.NewDBColumnDef(attrKeyStr, "first_name", true)),
-			xdb.NewDBTableSchema(
+				xcapi.NO_LOCKING,
+				xc.NewDBColumnDef(attrKeyInt, "create_timestamp", true),
+				xc.NewDBColumnDef(attrKeyStr, "first_name", true)),
+			xc.NewDBTableSchema(
 				tblName2, pk2,
-				xdbapi.NO_LOCKING,
-				xdb.NewDBColumnDef(attrKeyInt2, "sequence", false),
-				xdb.NewDBColumnDef(attrKeyStr2, "item_name", true)),
+				xcapi.NO_LOCKING,
+				xc.NewDBColumnDef(attrKeyInt2, "sequence", false),
+				xc.NewDBColumnDef(attrKeyStr2, "item_name", true)),
 		),
-		xdb.NewPersistenceSchemaOptions(
-			xdb.NewNamedPersistencePolicy(
+		xc.NewPersistenceSchemaOptions(
+			xc.NewNamedPersistencePolicy(
 				loadNothingPolicyName, nil,
-				xdb.NewTablePolicy(tblName, xdbapi.NO_LOCKING),
-				xdb.NewTablePolicy(tblName2, xdbapi.NO_LOCKING),
+				xc.NewTablePolicy(tblName, xcapi.NO_LOCKING),
+				xc.NewTablePolicy(tblName2, xcapi.NO_LOCKING),
 			),
-			xdb.NewNamedPersistencePolicy(
+			xc.NewNamedPersistencePolicy(
 				loadSequencePolicyName, nil,
-				xdb.NewTablePolicy(tblName, xdbapi.NO_LOCKING),
-				xdb.NewTablePolicy(tblName2, xdbapi.NO_LOCKING, attrKeyInt2),
+				xc.NewTablePolicy(tblName, xcapi.NO_LOCKING),
+				xc.NewTablePolicy(tblName2, xcapi.NO_LOCKING, attrKeyInt2),
 			),
-			xdb.NewNamedPersistencePolicy(
+			xc.NewNamedPersistencePolicy(
 				loadAllPolicyName, nil,
-				xdb.NewTablePolicy(tblName, xdbapi.NO_LOCKING, attrKeyInt, attrKeyStr),
-				xdb.NewTablePolicy(tblName2, xdbapi.NO_LOCKING, attrKeyInt2, attrKeyStr2),
+				xc.NewTablePolicy(tblName, xcapi.NO_LOCKING, attrKeyInt, attrKeyStr),
+				xc.NewTablePolicy(tblName2, xcapi.NO_LOCKING, attrKeyInt2, attrKeyStr2),
 			),
 		),
 	)
 }
 
-func (b MultiTablesProcess) GetAsyncStateSchema() xdb.StateSchema {
-	return xdb.NewStateSchema(
+func (b MultiTablesProcess) GetAsyncStateSchema() xc.StateSchema {
+	return xc.NewStateSchema(
 		&multiTableStateForInitialReadWrite{}, // read from initial global attributes and write to them
 		&multiTableStateToVerifyGlobalAttrs{}, // verify the global attributes write from the prev state
 		&multiTableStateForTestLoadSequence{}) // test loading load sequence policy
 }
 
 type multiTableStateForInitialReadWrite struct {
-	xdb.AsyncStateDefaultsSkipWaitUntil
+	xc.AsyncStateDefaultsSkipWaitUntil
 }
 
-func (b multiTableStateForInitialReadWrite) GetStateOptions() *xdb.AsyncStateOptions {
-	return &xdb.AsyncStateOptions{
+func (b multiTableStateForInitialReadWrite) GetStateOptions() *xc.AsyncStateOptions {
+	return &xc.AsyncStateOptions{
 		PersistencePolicyName: ptr.Any(loadAllPolicyName),
 	}
 }
 
 func (b multiTableStateForInitialReadWrite) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
-	communication xdb.Communication,
-) (*xdb.StateDecision, error) {
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence,
+	communication xc.Communication,
+) (*xc.StateDecision, error) {
 
 	var i int
 	persistence.GetGlobalAttribute(attrKeyInt, &i)
@@ -100,17 +100,17 @@ func (b multiTableStateForInitialReadWrite) Execute(
 	persistence.SetGlobalAttribute(attrKeyInt2, 444)
 	persistence.SetGlobalAttribute(attrKeyStr2, "ddd")
 
-	return xdb.SingleNextState(multiTableStateToVerifyGlobalAttrs{}, nil), nil
+	return xc.SingleNextState(multiTableStateToVerifyGlobalAttrs{}, nil), nil
 }
 
 type multiTableStateToVerifyGlobalAttrs struct {
-	xdb.AsyncStateDefaultsSkipWaitUntil
+	xc.AsyncStateDefaultsSkipWaitUntil
 }
 
 func (b multiTableStateToVerifyGlobalAttrs) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
-	communication xdb.Communication,
-) (*xdb.StateDecision, error) {
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence,
+	communication xc.Communication,
+) (*xc.StateDecision, error) {
 	var i int
 	persistence.GetGlobalAttribute(attrKeyInt, &i)
 	var str string
@@ -133,23 +133,23 @@ func (b multiTableStateToVerifyGlobalAttrs) Execute(
 		panic(fmt.Sprintf("unexpected value %s", str))
 	}
 
-	return xdb.SingleNextState(multiTableStateForTestLoadSequence{}, nil), nil
+	return xc.SingleNextState(multiTableStateForTestLoadSequence{}, nil), nil
 }
 
 type multiTableStateForTestLoadSequence struct {
-	xdb.AsyncStateDefaultsSkipWaitUntil
+	xc.AsyncStateDefaultsSkipWaitUntil
 }
 
-func (b multiTableStateForTestLoadSequence) GetStateOptions() *xdb.AsyncStateOptions {
-	return &xdb.AsyncStateOptions{
+func (b multiTableStateForTestLoadSequence) GetStateOptions() *xc.AsyncStateOptions {
+	return &xc.AsyncStateOptions{
 		PersistencePolicyName: ptr.Any(loadSequencePolicyName),
 	}
 }
 
 func (b multiTableStateForTestLoadSequence) Execute(
-	ctx xdb.XdbContext, input xdb.Object, commandResults xdb.CommandResults, persistence xdb.Persistence,
-	communication xdb.Communication,
-) (*xdb.StateDecision, error) {
+	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence,
+	communication xc.Communication,
+) (*xc.StateDecision, error) {
 	var i int
 	persistence.GetGlobalAttribute(attrKeyInt, &i)
 	var str string
@@ -170,35 +170,35 @@ func (b multiTableStateForTestLoadSequence) Execute(
 		panic(fmt.Sprintf("unexpected value %s", str))
 	}
 
-	return xdb.ForceCompletingProcess, nil
+	return xc.ForceCompletingProcess, nil
 }
 
-func TestGlobalAttributesWithMultiTables(t *testing.T, client xdb.Client) {
+func TestGlobalAttributesWithMultiTables(t *testing.T, client xc.Client) {
 	prcId := common.GenerateProcessId()
 	prc := MultiTablesProcess{}
 
 	now64 := time.Now().UnixNano()
 
-	_, err := client.StartProcessWithOptions(context.Background(), prc, prcId, xdbapi.RETURN_ERROR_ON_CONFLICT,
-		&xdb.ProcessStartOptions{
-			GlobalAttributeOptions: xdb.NewGlobalAttributeOptions(
-				xdb.DBTableConfig{
+	_, err := client.StartProcessWithOptions(context.Background(), prc, prcId, xcapi.RETURN_ERROR_ON_CONFLICT,
+		&xc.ProcessStartOptions{
+			GlobalAttributeOptions: xc.NewGlobalAttributeOptions(
+				xc.DBTableConfig{
 					TableName: tblName,
 					PKValue:   prcId, // use processId as the primary key value(string)
 					InitialAttributes: map[string]interface{}{
 						attrKeyInt: 111,
 						attrKeyStr: "aaa",
 					},
-					InitialWriteConflictMode: xdbapi.RETURN_ERROR_ON_CONFLICT.Ptr(),
+					InitialWriteConflictMode: xcapi.RETURN_ERROR_ON_CONFLICT.Ptr(),
 				},
-				xdb.DBTableConfig{
+				xc.DBTableConfig{
 					TableName: tblName2,
 					PKValue:   now64,
 					InitialAttributes: map[string]interface{}{
 						attrKeyInt2: 222,
 						attrKeyStr2: "bbb",
 					},
-					InitialWriteConflictMode: xdbapi.RETURN_ERROR_ON_CONFLICT.Ptr(),
+					InitialWriteConflictMode: xcapi.RETURN_ERROR_ON_CONFLICT.Ptr(),
 				},
 			),
 		})
@@ -207,5 +207,5 @@ func TestGlobalAttributesWithMultiTables(t *testing.T, client xdb.Client) {
 	time.Sleep(time.Second * 3)
 	resp, err := client.GetBasicClient().DescribeCurrentProcessExecution(context.Background(), prcId)
 	assert.Nil(t, err)
-	assert.Equal(t, xdbapi.COMPLETED, resp.GetStatus())
+	assert.Equal(t, xcapi.COMPLETED, resp.GetStatus())
 }

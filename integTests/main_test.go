@@ -2,7 +2,7 @@ package integTests
 
 import (
 	"fmt"
-	"github.com/xdblab/xdb-golang-sdk/integTests/worker"
+	"github.com/xcherryio/sdk-go/integTests/worker"
 	"os"
 	"testing"
 )
