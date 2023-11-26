@@ -63,7 +63,7 @@ type LocalAttributesSchema struct {
 type LocalAttributePolicy struct {
 	LocalAttributeKeysNoLock   map[string]bool
 	LocalAttributeKeysWithLock map[string]bool
-	LockingType                *xdbapi.TableReadLockingPolicy
+	LockingType                *xcapi.TableReadLockingPolicy
 }
 
 func NewEmptyPersistenceSchema() PersistenceSchema {
@@ -103,6 +103,16 @@ type PersistenceSchemaOptions struct {
 
 func NewEmptyLocalAttributesSchema() *LocalAttributesSchema {
 	return nil
+}
+
+func NewLocalAttributesSchema(
+	keys map[string]bool,
+	defaultLocalAttributePolicy LocalAttributePolicy,
+) *LocalAttributesSchema {
+	return &LocalAttributesSchema{
+		LocalAttributeKeys:          keys,
+		DefaultLocalAttributePolicy: defaultLocalAttributePolicy,
+	}
 }
 
 func NewGlobalAttributesSchema(

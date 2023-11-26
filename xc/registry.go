@@ -26,5 +26,6 @@ func NewRegistry() Registry {
 		persistenceSchemaStore:      map[string]PersistenceSchema{},
 		globalAttributeKeyToDef:     map[string]map[string]internalGlobalAttrDef{},
 		globalAttrTableColNameToKey: map[string]map[string]string{},
+		localAttrKeys:               map[string]map[string]bool{},
 	}
 }

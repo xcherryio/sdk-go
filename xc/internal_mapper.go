@@ -216,7 +216,7 @@ func getFinalTablePolicy(schema DBTableSchema, policy *NamedPersistencePolicy) T
 
 func createLoadLocalAttributesRequestIfNeeded(
 	registry Registry, prcType string, preferredPersistencePolicyName *string,
-) *xdbapi.LoadLocalAttributesRequest {
+) *xcapi.LoadLocalAttributesRequest {
 	persistenceSchema := registry.getPersistenceSchema(prcType)
 
 	var preferredPolicy *NamedPersistencePolicy
@@ -228,25 +228,25 @@ func createLoadLocalAttributesRequestIfNeeded(
 		preferredPolicy = &preferredPolicyS
 	}
 
-	if preferredPolicy.LocalAttributePolicy == nil {
-		return nil
+	var localAttributePolicy *LocalAttributePolicy
+	if preferredPolicy != nil {
+		localAttributePolicy = preferredPolicy.LocalAttributePolicy
 	}
-	if len(preferredPolicy.LocalAttributePolicy.LocalAttributeKeysWithLock)+
-		len(preferredPolicy.LocalAttributePolicy.LocalAttributeKeysNoLock) == 0 {
-		return nil
+	if localAttributePolicy == nil {
+		localAttributePolicy = &persistenceSchema.LocalAttributeSchema.DefaultLocalAttributePolicy
 	}
 
 	var keysToLoadWithLock []string
-	for key := range preferredPolicy.LocalAttributePolicy.LocalAttributeKeysWithLock {
+	for key := range localAttributePolicy.LocalAttributeKeysWithLock {
 		keysToLoadWithLock = append(keysToLoadWithLock, key)
 	}
 	var keysToLoadNoLock []string
-	for key := range preferredPolicy.LocalAttributePolicy.LocalAttributeKeysNoLock {
+	for key := range localAttributePolicy.LocalAttributeKeysNoLock {
 		keysToLoadNoLock = append(keysToLoadNoLock, key)
 	}
 
-	return &xdbapi.LoadLocalAttributesRequest{
-		LockingPolicy:      preferredPolicy.LocalAttributePolicy.LockingType,
+	return &xcapi.LoadLocalAttributesRequest{
+		LockingPolicy:      localAttributePolicy.LockingType,
 		KeysToLoadNoLock:   keysToLoadNoLock,
 		KeysToLoadWithLock: keysToLoadWithLock,
 	}

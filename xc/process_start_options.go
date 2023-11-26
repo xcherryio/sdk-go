@@ -21,7 +21,7 @@ type ProcessStartOptions struct {
 
 type LocalAttributeOptions struct {
 	// InitialAttributes is the initial local attributes to be set when starting the process execution
-	InitialAttributes map[string]xdbapi.EncodedObject
+	InitialAttributes map[string]xcapi.EncodedObject
 }
 
 type GlobalAttributeOptions struct {

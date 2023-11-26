@@ -73,15 +73,15 @@ func (c *clientImpl) StartProcessWithOptions(
 			return "", NewInvalidArgumentError("LocalAttributeConfig is required for process with LocalAttributeSchema")
 		}
 
-		var initialWrite []xdbapi.KeyValue
+		var initialWrite []xcapi.KeyValue
 		for key, attr := range startOptions.LocalAttributeOptions.InitialAttributes {
 			if _, ok := persSchema.LocalAttributeSchema.LocalAttributeKeys[key]; !ok {
 				return "", NewInvalidArgumentError("invalid attribute key for local attribute schema: " + key)
 			}
-			initialWrite = append(initialWrite, *xdbapi.NewKeyValue(key, attr))
+			initialWrite = append(initialWrite, *xcapi.NewKeyValue(key, attr))
 		}
 
-		unregOpt.LocalAttributeConfig = &xdbapi.LocalAttributeConfig{
+		unregOpt.LocalAttributeConfig = &xcapi.LocalAttributeConfig{
 			InitialWrite: initialWrite,
 		}
 	}

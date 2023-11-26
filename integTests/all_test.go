@@ -2,6 +2,7 @@ package integTests
 
 import (
 	"github.com/xcherryio/sdk-go/integTests/command_request"
+	"github.com/xcherryio/sdk-go/integTests/local_attribute"
 	"testing"
 
 	"github.com/xcherryio/sdk-go/integTests/global_attribute"
@@ -80,6 +81,10 @@ func TestGlobalAttributesWithSingleTable(t *testing.T) {
 
 func TestGlobalAttributesWithMultiTables(t *testing.T) {
 	global_attribute.TestGlobalAttributesWithMultiTables(t, client)
+}
+
+func TestLocalAttributes(t *testing.T) {
+	local_attribute.TestLocalAttributes(t, client)
 }
 
 func TestStartTimeoutProcessCase1(t *testing.T) {

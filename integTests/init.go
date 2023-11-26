@@ -5,6 +5,7 @@ import (
 	"github.com/xcherryio/sdk-go/integTests/command_request"
 	"github.com/xcherryio/sdk-go/integTests/failure_recovery"
 	"github.com/xcherryio/sdk-go/integTests/global_attribute"
+	"github.com/xcherryio/sdk-go/integTests/local_attribute"
 	"github.com/xcherryio/sdk-go/integTests/multi_states"
 	"github.com/xcherryio/sdk-go/integTests/process_timeout"
 	"github.com/xcherryio/sdk-go/integTests/state_decision"
@@ -24,6 +25,7 @@ func init() {
 		&failure_recovery.StateFailureRecoveryTestExecuteNoWaitUntilProcess{},
 		&failure_recovery.StateFailureRecoveryTestExecuteFailedAtStartProcess{},
 		&multi_states.MultiStatesProcess{},
+		&local_attribute.LocalAttributeTestProcess{},
 		&state_decision.GracefulCompleteProcess{},
 		&state_decision.ForceCompleteProcess{},
 		&state_decision.ForceFailProcess{},
