@@ -42,15 +42,13 @@ func (b stateForInitialReadWrite) Execute(
 	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence,
 	communication xc.Communication,
 ) (*xc.StateDecision, error) {
-	localAttr := persistence.GetLocalAttribute("localAttr1")
-	if localAttr.GetData() != "initial" {
-		panic(fmt.Sprintf("unexpected value %s", localAttr.GetData()))
+	var localAttr string
+	persistence.GetLocalAttribute("localAttr1", &localAttr)
+	if localAttr != "initial" {
+		panic(fmt.Sprintf("unexpected value %s", localAttr))
 	}
 
-	persistence.SetLocalAttribute("localAttr1", xcapi.EncodedObject{
-		Encoding: "golangJson",
-		Data:     "updated",
-	})
+	persistence.SetLocalAttribute("localAttr1", "updated")
 
 	return xc.SingleNextState(stateToVerifyLocalAttrs{}, 1), nil
 }
@@ -63,9 +61,10 @@ func (b stateToVerifyLocalAttrs) Execute(
 	ctx xc.Context, input xc.Object, commandResults xc.CommandResults, persistence xc.Persistence,
 	communication xc.Communication,
 ) (*xc.StateDecision, error) {
-	localAttr := persistence.GetLocalAttribute("localAttr1")
-	if localAttr.GetData() != "updated" {
-		panic(fmt.Sprintf("unexpected value %s", localAttr.GetData()))
+	var localAttr string
+	persistence.GetLocalAttribute("localAttr1", &localAttr)
+	if localAttr != "updated" {
+		panic(fmt.Sprintf("unexpected value %s", localAttr))
 	}
 	return xc.GracefulCompletingProcess, nil
 }
@@ -74,17 +73,12 @@ func TestLocalAttributes(t *testing.T, client xc.Client) {
 	prcId := common.GenerateProcessId()
 	prc := LocalAttributeTestProcess{}
 
-	initialWrite := map[string]xcapi.EncodedObject{}
-	initialWrite["localAttr1"] = xcapi.EncodedObject{
-		Encoding: "golangJson",
-		Data:     "initial",
-	}
+	initialWrite := map[string]interface{}{}
+	initialWrite["localAttr1"] = "initial"
 
 	_, err := client.StartProcessWithOptions(context.Background(), prc, prcId, xcapi.RETURN_ERROR_ON_CONFLICT,
 		&xc.ProcessStartOptions{
-			LocalAttributeOptions: &xc.LocalAttributeOptions{
-				InitialAttributes: initialWrite,
-			},
+			InitialLocalAttribute: initialWrite,
 		})
 	assert.Nil(t, err)
 

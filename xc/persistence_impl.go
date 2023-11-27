@@ -118,7 +118,7 @@ func (p *persistenceImpl) getGlobalAttributesToUpdate() []xcapi.GlobalAttributeT
 	return res2
 }
 
-func (p *persistenceImpl) GetLocalAttribute(key string) *xcapi.EncodedObject {
+func (p *persistenceImpl) GetLocalAttribute(key string, resultPtr interface{}) {
 	_, ok := p.localAttrKeys[key]
 	if !ok {
 		panic("local attribute not found " + key)
@@ -126,20 +126,30 @@ func (p *persistenceImpl) GetLocalAttribute(key string) *xcapi.EncodedObject {
 
 	curVal, ok := p.currLocalAttrs[key]
 	if !ok {
-		return nil
+		return
 	}
 
-	return &curVal
+	err := GetDefaultObjectEncoder().Decode(&curVal, resultPtr)
+	if err != nil {
+		panic(err)
+	}
+
+	return
 }
 
-func (p *persistenceImpl) SetLocalAttribute(key string, value xcapi.EncodedObject) {
+func (p *persistenceImpl) SetLocalAttribute(key string, value interface{}) {
 	_, ok := p.localAttrKeys[key]
 	if !ok {
 		panic("local attribute not found " + key)
 	}
 
-	p.currLocalAttrs[key] = value
-	p.currUpdatedLocalAttrs[key] = value
+	encodedVal, err := GetDefaultObjectEncoder().Encode(value)
+	if err != nil {
+		panic(err)
+	}
+
+	p.currLocalAttrs[key] = *encodedVal
+	p.currUpdatedLocalAttrs[key] = *encodedVal
 }
 
 func (p *persistenceImpl) getLocalAttributesToUpdate() []xcapi.KeyValue {

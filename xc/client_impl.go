@@ -68,21 +68,24 @@ func (c *clientImpl) StartProcessWithOptions(
 		}
 	}
 	if persSchema.LocalAttributeSchema != nil {
-		if startOptions == nil || startOptions.LocalAttributeOptions == nil ||
-			len(startOptions.LocalAttributeOptions.InitialAttributes) == 0 {
-			return "", NewInvalidArgumentError("LocalAttributeConfig is required for process with LocalAttributeSchema")
-		}
+		if startOptions != nil && len(startOptions.InitialLocalAttribute) > 0 {
+			var initialWrite []xcapi.KeyValue
+			for key, attr := range startOptions.InitialLocalAttribute {
+				if _, ok := persSchema.LocalAttributeSchema.LocalAttributeKeys[key]; !ok {
+					return "", NewInvalidArgumentError("invalid attribute key for local attribute schema: " + key)
+				}
 
-		var initialWrite []xcapi.KeyValue
-		for key, attr := range startOptions.LocalAttributeOptions.InitialAttributes {
-			if _, ok := persSchema.LocalAttributeSchema.LocalAttributeKeys[key]; !ok {
-				return "", NewInvalidArgumentError("invalid attribute key for local attribute schema: " + key)
+				encodedValPtr, err := GetDefaultObjectEncoder().Encode(attr)
+				if err != nil {
+					return "", err
+				}
+
+				initialWrite = append(initialWrite, *xcapi.NewKeyValue(key, *encodedValPtr))
 			}
-			initialWrite = append(initialWrite, *xcapi.NewKeyValue(key, attr))
-		}
 
-		unregOpt.LocalAttributeConfig = &xcapi.LocalAttributeConfig{
-			InitialWrite: initialWrite,
+			unregOpt.LocalAttributeConfig = &xcapi.LocalAttributeConfig{
+				InitialWrite: initialWrite,
+			}
 		}
 	}
 

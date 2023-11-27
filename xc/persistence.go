@@ -10,9 +10,9 @@ type Persistence interface {
 	// GetGlobalAttributesToReturn returns the global attributes to update
 	getGlobalAttributesToUpdate() []xcapi.GlobalAttributeTableRowUpdate
 	// GetLocalAttribute returns the local attribute value
-	GetLocalAttribute(key string) *xcapi.EncodedObject
+	GetLocalAttribute(key string, resultPtr interface{})
 	// SetLocalAttribute sets the local attribute value
-	SetLocalAttribute(key string, value xcapi.EncodedObject)
+	SetLocalAttribute(key string, value interface{})
 	// getLocalAttributesToReturn returns the local attributes to update
 	getLocalAttributesToUpdate() []xcapi.KeyValue
 }
