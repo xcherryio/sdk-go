@@ -101,17 +101,57 @@ type PersistenceSchemaOptions struct {
 	NameToPolicy map[string]NamedPersistencePolicy
 }
 
+type LocalAttributeLoadingType string
+
+const (
+	NotLoad      LocalAttributeLoadingType = "not load"
+	LoadWithLock LocalAttributeLoadingType = "load with lock"
+	LoadNoLock   LocalAttributeLoadingType = "load no lock"
+)
+
+type LocalAttributeDef struct {
+	Key                string
+	DefaultLoadingType LocalAttributeLoadingType
+}
+
+func NewLocalAttributeDef(key string, defaultLoadingType LocalAttributeLoadingType) LocalAttributeDef {
+	return LocalAttributeDef{
+		Key:                key,
+		DefaultLoadingType: defaultLoadingType,
+	}
+}
+
 func NewEmptyLocalAttributesSchema() *LocalAttributesSchema {
 	return nil
 }
 
 func NewLocalAttributesSchema(
-	keys map[string]bool,
-	defaultLocalAttributePolicy LocalAttributePolicy,
+	LockingType *xcapi.TableReadLockingPolicy,
+	localAttributesDef ...LocalAttributeDef,
 ) *LocalAttributesSchema {
+	keys := map[string]bool{}
+	keysWithLock := map[string]bool{}
+	keysNoLock := map[string]bool{}
+	for _, def := range localAttributesDef {
+		keys[def.Key] = true
+		switch def.DefaultLoadingType {
+		case NotLoad:
+		case LoadWithLock:
+			keysWithLock[def.Key] = true
+		case LoadNoLock:
+			keysNoLock[def.Key] = true
+		default:
+			panic("unknown loading type " + def.DefaultLoadingType)
+		}
+	}
+
 	return &LocalAttributesSchema{
-		LocalAttributeKeys:          keys,
-		DefaultLocalAttributePolicy: defaultLocalAttributePolicy,
+		LocalAttributeKeys: keys,
+		DefaultLocalAttributePolicy: LocalAttributePolicy{
+			LocalAttributeKeysNoLock:   keysNoLock,
+			LocalAttributeKeysWithLock: keysWithLock,
+			LockingType:                LockingType,
+		},
 	}
 }
 

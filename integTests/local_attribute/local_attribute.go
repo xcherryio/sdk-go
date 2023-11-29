@@ -7,6 +7,7 @@ import (
 	"github.com/xcherryio/apis/goapi/xcapi"
 	"github.com/xcherryio/sdk-go/integTests/common"
 	"github.com/xcherryio/sdk-go/xc"
+	"github.com/xcherryio/sdk-go/xc/ptr"
 	"testing"
 	"time"
 )
@@ -16,13 +17,11 @@ type LocalAttributeTestProcess struct {
 }
 
 func (b LocalAttributeTestProcess) GetPersistenceSchema() xc.PersistenceSchema {
-	keys := map[string]bool{}
-	keys["localAttr1"] = true
-	defaultPolicy := xc.LocalAttributePolicy{
-		LocalAttributeKeysNoLock: keys,
-	}
 	return xc.NewPersistenceSchemaWithOptions(
-		xc.NewLocalAttributesSchema(keys, defaultPolicy),
+		xc.NewLocalAttributesSchema(
+			ptr.Any(xcapi.NO_LOCKING),
+			xc.NewLocalAttributeDef("localAttr1", xc.LoadNoLock),
+		),
 		nil,
 		xc.NewPersistenceSchemaOptions(),
 	)
