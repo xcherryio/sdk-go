@@ -133,14 +133,12 @@ func (p *persistenceImpl) GetLocalAttribute(key string, resultPtr interface{}) {
 	if err != nil {
 		panic(err)
 	}
-
-	return
 }
 
 func (p *persistenceImpl) SetLocalAttribute(key string, value interface{}) {
 	_, ok := p.localAttrKeys[key]
 	if !ok {
-		panic("local attribute not found " + key)
+		panic("local attribute is not defined/registered in the PersistenceSchema: " + key)
 	}
 
 	encodedVal, err := GetDefaultObjectEncoder().Encode(value)
