@@ -57,7 +57,7 @@ func (w *workerServiceImpl) HandleAsyncStateExecute(
 		return nil, err
 	}
 
-	pers := w.createPersistenceImpl(prcType, request.LoadedGlobalAttributes)
+	pers := w.createPersistenceImpl(prcType, request.LoadedGlobalAttributes, request.LoadedLocalAttributes)
 
 	comm := NewCommunication(w.options.ObjectEncoder)
 	decision, err := stateDef.Execute(wfCtx, input, commandResults, pers, comm)
@@ -76,13 +76,24 @@ func (w *workerServiceImpl) HandleAsyncStateExecute(
 	if len(pers.getGlobalAttributesToUpdate()) > 0 {
 		resp.WriteToGlobalAttributes = pers.getGlobalAttributesToUpdate()
 	}
+	if len(pers.getLocalAttributesToUpdate()) > 0 {
+		resp.WriteToLocalAttributes = pers.getLocalAttributesToUpdate()
+	}
 	return resp, nil
 }
 
 func (w *workerServiceImpl) createPersistenceImpl(
 	prcType string, currGlobalAttrs *xcapi.LoadGlobalAttributeResponse,
+	currLocalAttrs *xcapi.LoadLocalAttributesResponse,
 ) Persistence {
 	gloAttrDefs := w.registry.getGlobalAttributeKeyToDefs(prcType)
 	gloTblColToKey := w.registry.getGlobalAttributeTableColumnToKey(prcType)
-	return NewPersistenceImpl(w.options.DBConverter, gloAttrDefs, gloTblColToKey, currGlobalAttrs)
+	localAttributeKeys := w.registry.getLocalAttributeKeys(prcType)
+	return NewPersistenceImpl(
+		w.options.DBConverter,
+		gloAttrDefs,
+		gloTblColToKey,
+		currGlobalAttrs,
+		localAttributeKeys,
+		currLocalAttrs)
 }

@@ -68,6 +68,7 @@ func (u *basicClientImpl) StartProcess(
 			IdReusePolicy:         options.ProcessIdReusePolicy,
 			TimeoutSeconds:        &options.TimeoutSeconds,
 			GlobalAttributeConfig: options.GlobalAttributeConfig,
+			LocalAttributeConfig:  options.LocalAttributeConfig,
 		}
 	}
 

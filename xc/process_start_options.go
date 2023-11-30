@@ -14,6 +14,8 @@ type ProcessStartOptions struct {
 	// GlobalAttributeOptions is the options for global attributes
 	// Required if using global attribute feature
 	GlobalAttributeOptions *GlobalAttributeOptions
+	// InitialLocalAttribute is the initial local attributes to be set when starting the process execution
+	InitialLocalAttribute map[string]interface{}
 }
 
 type GlobalAttributeOptions struct {

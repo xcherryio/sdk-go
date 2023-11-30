@@ -5,7 +5,7 @@ type internalGlobalAttrDef struct {
 	colDef    DBColumnDef
 }
 
-func (s PersistenceSchema) ValidateForRegistry() (map[string]internalGlobalAttrDef, map[string]string, error) {
+func (s PersistenceSchema) ValidateGlobalAttributeForRegistry() (map[string]internalGlobalAttrDef, map[string]string, error) {
 	keyToDef := map[string]internalGlobalAttrDef{}
 	tableColNameToKey := map[string]string{}
 
@@ -42,6 +42,39 @@ func (s PersistenceSchema) ValidateForRegistry() (map[string]internalGlobalAttrD
 		}
 	}
 	return keyToDef, tableColNameToKey, nil
+}
+
+func (s PersistenceSchema) ValidateLocalAttributeForRegistry() (map[string]bool, error) {
+	localAttributeKeys := map[string]bool{}
+	if s.LocalAttributeSchema != nil {
+		localAttributeKeys = s.LocalAttributeSchema.LocalAttributeKeys
+
+		if len(s.LocalAttributeSchema.DefaultLocalAttributePolicy.LocalAttributeKeysWithLock) > 0 &&
+			s.LocalAttributeSchema.DefaultLocalAttributePolicy.LockingType == nil {
+			return nil, NewProcessDefinitionError(
+				"DefaultLocalAttributePolicy KeysWithLock is not empty but locking type is not specified")
+		}
+
+		for key := range s.LocalAttributeSchema.DefaultLocalAttributePolicy.LocalAttributeKeysWithLock {
+			if _, ok := localAttributeKeys[key]; !ok {
+				return nil, NewProcessDefinitionError(
+					"DefaultLocalAttributePolicy KeysWithLock contains invalid key " + key)
+			}
+		}
+
+		for key := range s.LocalAttributeSchema.DefaultLocalAttributePolicy.LocalAttributeKeysNoLock {
+			if _, ok := localAttributeKeys[key]; !ok {
+				return nil, NewProcessDefinitionError(
+					"DefaultLocalAttributePolicy KeysNoLock contains invalid key " + key)
+			}
+
+			if _, ok := s.LocalAttributeSchema.DefaultLocalAttributePolicy.LocalAttributeKeysWithLock[key]; ok {
+				return nil, NewProcessDefinitionError(
+					"DefaultLocalAttributePolicy KeysNoLock and KeysWithLock contains duplicated key " + key)
+			}
+		}
+	}
+	return localAttributeKeys, nil
 }
 
 func getTableColumnName(name string, column string) string {

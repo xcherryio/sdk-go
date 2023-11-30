@@ -8,4 +8,5 @@ type BasicClientProcessOptions struct {
 	// default is 0 which indicate no timeout
 	TimeoutSeconds        int32
 	GlobalAttributeConfig *xcapi.GlobalAttributeConfig
+	LocalAttributeConfig  *xcapi.LocalAttributeConfig
 }

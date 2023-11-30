@@ -10,12 +10,18 @@ type persistenceImpl struct {
 	globalAttrTableColNameToKey map[string]string
 	currGlobalAttrs             map[string]xcapi.TableColumnValue
 	currUpdatedGlobalAttrs      map[string]xcapi.TableColumnValue
+	// for local attributes
+	localAttrKeys         map[string]bool
+	currLocalAttrs        map[string]xcapi.EncodedObject
+	currUpdatedLocalAttrs map[string]xcapi.EncodedObject
 }
 
 func NewPersistenceImpl(
 	dbConverter DBConverter,
 	globalAttrDefs map[string]internalGlobalAttrDef, globalAttrTableColNameToKey map[string]string,
 	currGlobalAttrs *xcapi.LoadGlobalAttributeResponse,
+	localAttrKeys map[string]bool,
+	currLocalAttrs *xcapi.LoadLocalAttributesResponse,
 ) Persistence {
 	currGlobalAttrsMap := map[string]xcapi.TableColumnValue{}
 
@@ -32,6 +38,16 @@ func NewPersistenceImpl(
 		}
 	}
 
+	currLocalAttrsMap := map[string]xcapi.EncodedObject{}
+	if currLocalAttrs != nil {
+		for _, kv := range currLocalAttrs.Attributes {
+			if _, ok := localAttrKeys[kv.Key]; !ok {
+				panic("local attribute not found " + kv.Key)
+			}
+			currLocalAttrsMap[kv.Key] = kv.Value
+		}
+	}
+
 	return &persistenceImpl{
 		dbConverter:                 dbConverter,
 		globalAttrDefs:              globalAttrDefs,
@@ -39,6 +55,10 @@ func NewPersistenceImpl(
 		currGlobalAttrs:             currGlobalAttrsMap,
 		// start from empty
 		currUpdatedGlobalAttrs: map[string]xcapi.TableColumnValue{},
+
+		localAttrKeys:         localAttrKeys,
+		currLocalAttrs:        currLocalAttrsMap,
+		currUpdatedLocalAttrs: map[string]xcapi.EncodedObject{},
 	}
 }
 
@@ -96,4 +116,47 @@ func (p *persistenceImpl) getGlobalAttributesToUpdate() []xcapi.GlobalAttributeT
 		res2 = append(res2, v)
 	}
 	return res2
+}
+
+func (p *persistenceImpl) GetLocalAttribute(key string, resultPtr interface{}) {
+	_, ok := p.localAttrKeys[key]
+	if !ok {
+		panic("local attribute not found " + key)
+	}
+
+	curVal, ok := p.currLocalAttrs[key]
+	if !ok {
+		return
+	}
+
+	err := GetDefaultObjectEncoder().Decode(&curVal, resultPtr)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (p *persistenceImpl) SetLocalAttribute(key string, value interface{}) {
+	_, ok := p.localAttrKeys[key]
+	if !ok {
+		panic("local attribute is not defined/registered in the PersistenceSchema: " + key)
+	}
+
+	encodedVal, err := GetDefaultObjectEncoder().Encode(value)
+	if err != nil {
+		panic(err)
+	}
+
+	p.currLocalAttrs[key] = *encodedVal
+	p.currUpdatedLocalAttrs[key] = *encodedVal
+}
+
+func (p *persistenceImpl) getLocalAttributesToUpdate() []xcapi.KeyValue {
+	var res []xcapi.KeyValue
+	for k, v := range p.currUpdatedLocalAttrs {
+		res = append(res, xcapi.KeyValue{
+			Key:   k,
+			Value: v,
+		})
+	}
+	return res
 }

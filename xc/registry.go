@@ -15,6 +15,7 @@ type Registry interface {
 	getPersistenceSchema(prcType string) PersistenceSchema
 	getGlobalAttributeKeyToDefs(prcType string) map[string]internalGlobalAttrDef
 	getGlobalAttributeTableColumnToKey(prcType string) map[string]string
+	getLocalAttributeKeys(prcType string) map[string]bool
 }
 
 func NewRegistry() Registry {
@@ -25,5 +26,6 @@ func NewRegistry() Registry {
 		persistenceSchemaStore:      map[string]PersistenceSchema{},
 		globalAttributeKeyToDef:     map[string]map[string]internalGlobalAttrDef{},
 		globalAttrTableColNameToKey: map[string]map[string]string{},
+		localAttrKeys:               map[string]map[string]bool{},
 	}
 }

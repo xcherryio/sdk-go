@@ -67,6 +67,27 @@ func (c *clientImpl) StartProcessWithOptions(
 			TableConfigs: tableConfigs,
 		}
 	}
+	if persSchema.LocalAttributeSchema != nil {
+		if startOptions != nil && len(startOptions.InitialLocalAttribute) > 0 {
+			var initialWrite []xcapi.KeyValue
+			for key, attr := range startOptions.InitialLocalAttribute {
+				if _, ok := persSchema.LocalAttributeSchema.LocalAttributeKeys[key]; !ok {
+					return "", NewInvalidArgumentError("invalid attribute key for local attribute schema: " + key)
+				}
+
+				encodedValPtr, err := GetDefaultObjectEncoder().Encode(attr)
+				if err != nil {
+					return "", err
+				}
+
+				initialWrite = append(initialWrite, *xcapi.NewKeyValue(key, *encodedValPtr))
+			}
+
+			unregOpt.LocalAttributeConfig = &xcapi.LocalAttributeConfig{
+				InitialWrite: initialWrite,
+			}
+		}
+	}
 
 	unregOpt.ProcessIdReusePolicy = prcOptions.IdReusePolicy
 	unregOpt.TimeoutSeconds = prcOptions.TimeoutSeconds
