@@ -67,6 +67,11 @@ func (s PersistenceSchema) ValidateLocalAttributeForRegistry() (map[string]bool,
 				return nil, NewProcessDefinitionError(
 					"DefaultLocalAttributePolicy KeysNoLock contains invalid key " + key)
 			}
+
+			if _, ok := s.LocalAttributeSchema.DefaultLocalAttributePolicy.LocalAttributeKeysWithLock[key]; ok {
+				return nil, NewProcessDefinitionError(
+					"DefaultLocalAttributePolicy KeysNoLock and KeysWithLock contains duplicated key " + key)
+			}
 		}
 	}
 	return localAttributeKeys, nil
