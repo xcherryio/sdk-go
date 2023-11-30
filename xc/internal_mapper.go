@@ -233,6 +233,9 @@ func createLoadLocalAttributesRequestIfNeeded(
 		localAttributePolicy = preferredPolicy.LocalAttributePolicy
 	}
 	if localAttributePolicy == nil {
+		if persistenceSchema.LocalAttributeSchema == nil {
+			return nil
+		}
 		localAttributePolicy = &persistenceSchema.LocalAttributeSchema.DefaultLocalAttributePolicy
 	}
 
