@@ -20,12 +20,12 @@ type SingleTableProcess struct {
 func (b SingleTableProcess) GetPersistenceSchema() xc.PersistenceSchema {
 	return xc.NewPersistenceSchemaWithOptions(
 		xc.NewEmptyLocalAttributesSchema(),
-		xc.NewGlobalAttributesSchema(
-			xc.NewDBTableSchema(
+		xc.NewAppDatabaseSchema(
+			xc.NewAppDatabaseTableSchema(
 				tblName, pk,
 				xcapi.NO_LOCKING,
-				xc.NewDBColumnDef(attrKeyInt, "create_timestamp", true),
-				xc.NewDBColumnDef(attrKeyStr, "first_name", true)),
+				xc.NewDatabaseColumnDef(attrKeyInt, "create_timestamp", true),
+				xc.NewDatabaseColumnDef(attrKeyStr, "first_name", true)),
 		),
 		xc.NewPersistenceSchemaOptions(
 			xc.NewNamedPersistencePolicy(
@@ -137,8 +137,8 @@ func TestGlobalAttributesWithSingleTable(t *testing.T, client xc.Client) {
 
 	runId1, err := client.StartProcessWithOptions(context.Background(), prc, prcId, xcapi.RETURN_ERROR_ON_CONFLICT,
 		&xc.ProcessStartOptions{
-			GlobalAttributeOptions: xc.NewGlobalAttributeOptions(
-				xc.DBTableConfig{
+			GlobalAttributeOptions: xc.NewAppDatabaseOptions(
+				xc.AppDatabaseTableOptions{
 					TableName: tblName,
 					PKValue:   prcId, // use processId as the primary key value(string)
 					InitialAttributes: map[string]interface{}{
@@ -160,8 +160,8 @@ func TestGlobalAttributesWithSingleTable(t *testing.T, client xc.Client) {
 	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, xcapi.RETURN_ERROR_ON_CONFLICT,
 		&xc.ProcessStartOptions{
 			IdReusePolicy: xcapi.ALLOW_IF_NO_RUNNING.Ptr(),
-			GlobalAttributeOptions: xc.NewGlobalAttributeOptions(
-				xc.DBTableConfig{
+			GlobalAttributeOptions: xc.NewAppDatabaseOptions(
+				xc.AppDatabaseTableOptions{
 					TableName: tblName,
 					PKValue:   prcId, // use processId as the primary key value(string)
 					InitialAttributes: map[string]interface{}{
@@ -179,8 +179,8 @@ func TestGlobalAttributesWithSingleTable(t *testing.T, client xc.Client) {
 	_, err = client.StartProcessWithOptions(context.Background(), prc, prcId, xcapi.RETURN_ERROR_ON_CONFLICT,
 		&xc.ProcessStartOptions{
 			IdReusePolicy: xcapi.ALLOW_IF_NO_RUNNING.Ptr(),
-			GlobalAttributeOptions: xc.NewGlobalAttributeOptions(
-				xc.DBTableConfig{
+			GlobalAttributeOptions: xc.NewAppDatabaseOptions(
+				xc.AppDatabaseTableOptions{
 					TableName: tblName,
 					PKValue:   prcId, // use processId as the primary key value(string)
 					InitialAttributes: map[string]interface{}{
@@ -198,8 +198,8 @@ func TestGlobalAttributesWithSingleTable(t *testing.T, client xc.Client) {
 	runId2, err := client.StartProcessWithOptions(context.Background(), prc, prcId, xcapi.OVERRIDE_ON_CONFLICT,
 		&xc.ProcessStartOptions{
 			IdReusePolicy: xcapi.ALLOW_IF_NO_RUNNING.Ptr(),
-			GlobalAttributeOptions: xc.NewGlobalAttributeOptions(
-				xc.DBTableConfig{
+			GlobalAttributeOptions: xc.NewAppDatabaseOptions(
+				xc.AppDatabaseTableOptions{
 					TableName: tblName,
 					PKValue:   prcId, // use processId as the primary key value(string)
 					InitialAttributes: map[string]interface{}{
@@ -222,8 +222,8 @@ func TestGlobalAttributesWithSingleTable(t *testing.T, client xc.Client) {
 	runId3, err := client.StartProcessWithOptions(context.Background(), prc, prcId, xcapi.IGNORE_CONFLICT,
 		&xc.ProcessStartOptions{
 			IdReusePolicy: xcapi.ALLOW_IF_NO_RUNNING.Ptr(),
-			GlobalAttributeOptions: xc.NewGlobalAttributeOptions(
-				xc.DBTableConfig{
+			GlobalAttributeOptions: xc.NewAppDatabaseOptions(
+				xc.AppDatabaseTableOptions{
 					TableName: tblName,
 					PKValue:   prcId, // use processId as the primary key value(string)
 					InitialAttributes: map[string]interface{}{

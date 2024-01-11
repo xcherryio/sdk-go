@@ -13,7 +13,7 @@ type Registry interface {
 	getProcessStartingState(prcType string) AsyncState
 	getProcessState(prcType string, id string) AsyncState
 	getPersistenceSchema(prcType string) PersistenceSchema
-	getGlobalAttributeKeyToDefs(prcType string) map[string]internalGlobalAttrDef
+	getGlobalAttributeKeyToDefs(prcType string) map[string]internalColumnDef
 	getGlobalAttributeTableColumnToKey(prcType string) map[string]string
 	getLocalAttributeKeys(prcType string) map[string]bool
 }
@@ -24,7 +24,7 @@ func NewRegistry() Registry {
 		startingState:               map[string]AsyncState{},
 		stateStore:                  map[string]map[string]AsyncState{},
 		persistenceSchemaStore:      map[string]PersistenceSchema{},
-		globalAttributeKeyToDef:     map[string]map[string]internalGlobalAttrDef{},
+		globalAttributeKeyToDef:     map[string]map[string]internalColumnDef{},
 		globalAttrTableColNameToKey: map[string]map[string]string{},
 		localAttrKeys:               map[string]map[string]bool{},
 	}

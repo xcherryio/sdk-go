@@ -175,10 +175,10 @@ func createLoadGlobalAttributesRequestIfNeeded(
 	}
 
 	var tblReqs []xcapi.TableReadRequest
-	if persistenceSchema.GlobalAttributeSchema != nil {
+	if persistenceSchema.AppDatabaseSchema != nil {
 		keyToDefs := registry.getGlobalAttributeKeyToDefs(prcType)
 
-		for _, tblSchema := range persistenceSchema.GlobalAttributeSchema.Tables {
+		for _, tblSchema := range persistenceSchema.AppDatabaseSchema.Tables {
 			tblPolicy := getFinalTablePolicy(tblSchema, preferredPolicy)
 
 			var colsToRead []xcapi.TableColumnDef
@@ -204,7 +204,7 @@ func createLoadGlobalAttributesRequestIfNeeded(
 	}
 }
 
-func getFinalTablePolicy(schema DBTableSchema, policy *NamedPersistencePolicy) TablePolicy {
+func getFinalTablePolicy(schema AppDatabaseTableSchema, policy *NamedPersistencePolicy) TablePolicy {
 	if policy != nil && policy.GlobalAttributePolicy != nil {
 		p, ok := policy.GlobalAttributePolicy[schema.TableName]
 		if ok {
@@ -228,7 +228,7 @@ func createLoadLocalAttributesRequestIfNeeded(
 		preferredPolicy = &preferredPolicyS
 	}
 
-	var localAttributePolicy *LocalAttributePolicy
+	var localAttributePolicy *LocalAttributeLoadingPolicy
 	if preferredPolicy != nil {
 		localAttributePolicy = preferredPolicy.LocalAttributePolicy
 	}
@@ -236,7 +236,7 @@ func createLoadLocalAttributesRequestIfNeeded(
 		if persistenceSchema.LocalAttributeSchema == nil {
 			return nil
 		}
-		localAttributePolicy = &persistenceSchema.LocalAttributeSchema.DefaultLocalAttributePolicy
+		localAttributePolicy = &persistenceSchema.LocalAttributeSchema.DefaultLoadingPolicy
 	}
 
 	var keysToLoadWithLock []string

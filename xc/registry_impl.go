@@ -3,7 +3,7 @@ package xc
 type registryImpl struct {
 	processStore                map[string]Process
 	persistenceSchemaStore      map[string]PersistenceSchema
-	globalAttributeKeyToDef     map[string]map[string]internalGlobalAttrDef
+	globalAttributeKeyToDef     map[string]map[string]internalColumnDef
 	globalAttrTableColNameToKey map[string]map[string]string
 	localAttrKeys               map[string]map[string]bool
 	startingState               map[string]AsyncState
@@ -57,7 +57,7 @@ func (r *registryImpl) getPersistenceSchema(prcType string) PersistenceSchema {
 	return r.persistenceSchemaStore[prcType]
 }
 
-func (r *registryImpl) getGlobalAttributeKeyToDefs(prcType string) map[string]internalGlobalAttrDef {
+func (r *registryImpl) getGlobalAttributeKeyToDefs(prcType string) map[string]internalColumnDef {
 	return r.globalAttributeKeyToDef[prcType]
 }
 
@@ -97,7 +97,7 @@ func (r *registryImpl) registerProcessState(prc Process) error {
 func (r *registryImpl) registerPersistenceSchema(prc Process) error {
 	prcType := GetFinalProcessType(prc)
 	ps := prc.GetPersistenceSchema()
-	keyToDef, tableColNameToKey, err := ps.ValidateGlobalAttributeForRegistry()
+	keyToDef, tableColNameToKey, err := ps.ValidateAppDatabaseForRegistry()
 	if err != nil {
 		return err
 	}

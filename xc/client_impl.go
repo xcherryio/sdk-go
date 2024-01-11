@@ -49,13 +49,13 @@ func (c *clientImpl) StartProcessWithOptions(
 			prcOptions.TimeoutSeconds = *startOptions.TimeoutSeconds
 		}
 	}
-	if persSchema.GlobalAttributeSchema != nil {
+	if persSchema.AppDatabaseSchema != nil {
 		if startOptions == nil || startOptions.GlobalAttributeOptions == nil ||
 			len(startOptions.GlobalAttributeOptions.DBTableConfigs) == 0 {
-			return "", NewInvalidArgumentError("GlobalAttributeConfig is required for process with GlobalAttributeSchema")
+			return "", NewInvalidArgumentError("GlobalAttributeConfig is required for process with AppDatabaseSchema")
 		}
 		dbTableCfgs := startOptions.GlobalAttributeOptions.DBTableConfigs
-		schema := persSchema.GlobalAttributeSchema
+		schema := persSchema.AppDatabaseSchema
 		keyDefs := c.registry.getGlobalAttributeKeyToDefs(prcType)
 
 		tableConfigs, err := c.convertToTableConfig(dbTableCfgs, *schema, keyDefs)
@@ -172,14 +172,14 @@ func (c *clientImpl) DescribeCurrentProcessExecution(
 }
 
 func (c *clientImpl) convertToTableConfig(
-	dbCfgs map[string]DBTableConfig, schema GlobalAttributesSchema, keyToDefs map[string]internalGlobalAttrDef,
+	dbCfgs map[string]AppDatabaseTableOptions, schema AppDatabaseSchema, keyToDefs map[string]internalColumnDef,
 ) ([]xcapi.GlobalAttributeTableConfig, error) {
 	var res []xcapi.GlobalAttributeTableConfig
 	for _, tbl := range schema.Tables {
 		tblName := tbl.TableName
 		cfg, ok := dbCfgs[tblName]
 		if !ok {
-			return nil, NewInvalidArgumentError("GlobalAttributeConfig.DBTableConfigs missing table: " + tblName)
+			return nil, NewInvalidArgumentError("GlobalAttributeConfig.tables missing table: " + tblName)
 		}
 		dbVal, err := c.dbConverter.ToDBValue(cfg.PKValue, cfg.PKHint)
 		if err != nil {

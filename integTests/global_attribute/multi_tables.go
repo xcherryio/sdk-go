@@ -20,17 +20,17 @@ type MultiTablesProcess struct {
 func (b MultiTablesProcess) GetPersistenceSchema() xc.PersistenceSchema {
 	return xc.NewPersistenceSchemaWithOptions(
 		xc.NewEmptyLocalAttributesSchema(),
-		xc.NewGlobalAttributesSchema(
-			xc.NewDBTableSchema(
+		xc.NewAppDatabaseSchema(
+			xc.NewAppDatabaseTableSchema(
 				tblName, pk,
 				xcapi.NO_LOCKING,
-				xc.NewDBColumnDef(attrKeyInt, "create_timestamp", true),
-				xc.NewDBColumnDef(attrKeyStr, "first_name", true)),
-			xc.NewDBTableSchema(
+				xc.NewDatabaseColumnDef(attrKeyInt, "create_timestamp", true),
+				xc.NewDatabaseColumnDef(attrKeyStr, "first_name", true)),
+			xc.NewAppDatabaseTableSchema(
 				tblName2, pk2,
 				xcapi.NO_LOCKING,
-				xc.NewDBColumnDef(attrKeyInt2, "sequence", false),
-				xc.NewDBColumnDef(attrKeyStr2, "item_name", true)),
+				xc.NewDatabaseColumnDef(attrKeyInt2, "sequence", false),
+				xc.NewDatabaseColumnDef(attrKeyStr2, "item_name", true)),
 		),
 		xc.NewPersistenceSchemaOptions(
 			xc.NewNamedPersistencePolicy(
@@ -181,8 +181,8 @@ func TestGlobalAttributesWithMultiTables(t *testing.T, client xc.Client) {
 
 	_, err := client.StartProcessWithOptions(context.Background(), prc, prcId, xcapi.RETURN_ERROR_ON_CONFLICT,
 		&xc.ProcessStartOptions{
-			GlobalAttributeOptions: xc.NewGlobalAttributeOptions(
-				xc.DBTableConfig{
+			GlobalAttributeOptions: xc.NewAppDatabaseOptions(
+				xc.AppDatabaseTableOptions{
 					TableName: tblName,
 					PKValue:   prcId, // use processId as the primary key value(string)
 					InitialAttributes: map[string]interface{}{
@@ -191,7 +191,7 @@ func TestGlobalAttributesWithMultiTables(t *testing.T, client xc.Client) {
 					},
 					InitialWriteConflictMode: xcapi.RETURN_ERROR_ON_CONFLICT.Ptr(),
 				},
-				xc.DBTableConfig{
+				xc.AppDatabaseTableOptions{
 					TableName: tblName2,
 					PKValue:   now64,
 					InitialAttributes: map[string]interface{}{

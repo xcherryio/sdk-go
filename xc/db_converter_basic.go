@@ -15,7 +15,7 @@ func NewBasicDBConverter() DBConverter {
 }
 
 func (b *basicDBConverter) ToDBValue(
-	val interface{}, hint *DBHint,
+	val interface{}, hint *DatabaseHint,
 ) (dbValue string, err error) {
 	// TODO convert for binary, datetime, etc using hint
 
@@ -28,7 +28,7 @@ func (b *basicDBConverter) ToDBValue(
 }
 
 func (b *basicDBConverter) FromDBValue(
-	dbQueryValue string, hint *DBHint, resultPtr interface{},
+	dbQueryValue string, hint *DatabaseHint, resultPtr interface{},
 ) error {
 	if dbQueryValue == "" {
 		return nil

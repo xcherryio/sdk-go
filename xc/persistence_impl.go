@@ -6,7 +6,7 @@ type persistenceImpl struct {
 	dbConverter DBConverter
 
 	// for global attributes
-	globalAttrDefs              map[string]internalGlobalAttrDef
+	globalAttrDefs              map[string]internalColumnDef
 	globalAttrTableColNameToKey map[string]string
 	currGlobalAttrs             map[string]xcapi.TableColumnValue
 	currUpdatedGlobalAttrs      map[string]xcapi.TableColumnValue
@@ -18,7 +18,7 @@ type persistenceImpl struct {
 
 func NewPersistenceImpl(
 	dbConverter DBConverter,
-	globalAttrDefs map[string]internalGlobalAttrDef, globalAttrTableColNameToKey map[string]string,
+	globalAttrDefs map[string]internalColumnDef, globalAttrTableColNameToKey map[string]string,
 	currGlobalAttrs *xcapi.LoadGlobalAttributeResponse,
 	localAttrKeys map[string]bool,
 	currLocalAttrs *xcapi.LoadLocalAttributesResponse,

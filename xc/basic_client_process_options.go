@@ -6,7 +6,7 @@ type BasicClientProcessOptions struct {
 	ProcessIdReusePolicy *xcapi.ProcessIdReusePolicy
 	StartStateOptions    *xcapi.AsyncStateConfig
 	// default is 0 which indicate no timeout
-	TimeoutSeconds        int32
-	GlobalAttributeConfig *xcapi.GlobalAttributeConfig
-	LocalAttributeConfig  *xcapi.LocalAttributeConfig
+	TimeoutSeconds         int32
+	AppDatabaseTableConfig *xcapi.AppDatabaseTableConfig
+	LocalAttributeConfig   *xcapi.LocalAttributeConfig
 }
