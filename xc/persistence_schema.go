@@ -6,13 +6,6 @@ type PersistenceSchema struct {
 	// LocalAttributeSchema is the schema for local attributes
 	// LocalAttributes are attributes that are specific to a process execution
 	LocalAttributeSchema *LocalAttributesSchema
-	// GlobalAttributeSchema is the schema for global attributes
-	// GlobalAttributes are attributes that are shared across all process executions
-	// They are directly mapped to a table in the database
-	GlobalAttributeSchema *GlobalAttributesSchema
-	// OverridePersistencePolicies is the persistence policy with a name, which can be used as an override to the default
-	// policy for global and local attribute schemas
-	OverridePersistencePolicies map[string]NamedPersistencePolicy
 }
 
 type GlobalAttributesSchema struct {
@@ -43,7 +36,7 @@ type TablePolicy struct {
 	// LoadingKeys are the attribute keys that will be loaded from the database
 	LoadingKeys []string
 	// TableLockingTypeDefault is the locking type for all the loaded attributes
-	LockingType xcapi.TableReadLockingPolicy
+	LockingType xcapi.DatabaseLockingType
 }
 
 type NamedPersistencePolicy struct {
@@ -63,7 +56,7 @@ type LocalAttributesSchema struct {
 type LocalAttributePolicy struct {
 	LocalAttributeKeysNoLock   map[string]bool
 	LocalAttributeKeysWithLock map[string]bool
-	LockingType                *xcapi.TableReadLockingPolicy
+	LockingType                *xcapi.DatabaseLockingType
 }
 
 func NewEmptyPersistenceSchema() PersistenceSchema {
@@ -78,20 +71,15 @@ func NewPersistenceSchema(
 	globalAttrSchema *GlobalAttributesSchema,
 ) PersistenceSchema {
 	return PersistenceSchema{
-		GlobalAttributeSchema: globalAttrSchema,
-		LocalAttributeSchema:  localAttrSchema,
+		LocalAttributeSchema: localAttrSchema,
 	}
 }
 
 func NewPersistenceSchemaWithOptions(
 	localAttrSchema *LocalAttributesSchema,
-	globalAttrSchema *GlobalAttributesSchema,
-	options PersistenceSchemaOptions,
 ) PersistenceSchema {
 	return PersistenceSchema{
-		GlobalAttributeSchema:       globalAttrSchema,
-		LocalAttributeSchema:        localAttrSchema,
-		OverridePersistencePolicies: options.NameToPolicy,
+		LocalAttributeSchema: localAttrSchema,
 	}
 }
 
@@ -126,7 +114,7 @@ func NewEmptyLocalAttributesSchema() *LocalAttributesSchema {
 }
 
 func NewLocalAttributesSchema(
-	LockingType *xcapi.TableReadLockingPolicy,
+	LockingType *xcapi.DatabaseLockingType,
 	localAttributesDef ...LocalAttributeDef,
 ) *LocalAttributesSchema {
 	keys := map[string]bool{}
@@ -174,7 +162,7 @@ func NewEmptyGlobalAttributesSchema() *GlobalAttributesSchema {
 func NewDBTableSchema(
 	tableName string,
 	pk string,
-	defaultReadLocking xcapi.TableReadLockingPolicy,
+	defaultReadLocking xcapi.DatabaseLockingType,
 	columns ...DBColumnDef,
 ) DBTableSchema {
 
@@ -218,7 +206,7 @@ func NewDBColumnDefWithHint(
 
 func NewTablePolicy(
 	tableName string,
-	lockingType xcapi.TableReadLockingPolicy,
+	lockingType xcapi.DatabaseLockingType,
 	loadingKeys ...string,
 ) TablePolicy {
 	return TablePolicy{
@@ -254,4 +242,37 @@ func NewPersistenceSchemaOptions(
 	return PersistenceSchemaOptions{
 		NameToPolicy: nameToPolicy,
 	}
+}
+
+func (s PersistenceSchema) ValidateLocalAttributeForRegistry() (map[string]bool, error) {
+	localAttributeKeys := map[string]bool{}
+	if s.LocalAttributeSchema != nil {
+		localAttributeKeys = s.LocalAttributeSchema.LocalAttributeKeys
+
+		if len(s.LocalAttributeSchema.DefaultLocalAttributePolicy.LocalAttributeKeysWithLock) > 0 &&
+			s.LocalAttributeSchema.DefaultLocalAttributePolicy.LockingType == nil {
+			return nil, NewProcessDefinitionError(
+				"DefaultLocalAttributePolicy KeysWithLock is not empty but locking type is not specified")
+		}
+
+		for key := range s.LocalAttributeSchema.DefaultLocalAttributePolicy.LocalAttributeKeysWithLock {
+			if _, ok := localAttributeKeys[key]; !ok {
+				return nil, NewProcessDefinitionError(
+					"DefaultLocalAttributePolicy KeysWithLock contains invalid key " + key)
+			}
+		}
+
+		for key := range s.LocalAttributeSchema.DefaultLocalAttributePolicy.LocalAttributeKeysNoLock {
+			if _, ok := localAttributeKeys[key]; !ok {
+				return nil, NewProcessDefinitionError(
+					"DefaultLocalAttributePolicy KeysNoLock contains invalid key " + key)
+			}
+
+			if _, ok := s.LocalAttributeSchema.DefaultLocalAttributePolicy.LocalAttributeKeysWithLock[key]; ok {
+				return nil, NewProcessDefinitionError(
+					"DefaultLocalAttributePolicy KeysNoLock and KeysWithLock contains duplicated key " + key)
+			}
+		}
+	}
+	return localAttributeKeys, nil
 }

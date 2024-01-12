@@ -10,7 +10,6 @@ import (
 
 type clientImpl struct {
 	BasicClient
-	dbConverter   DBConverter
 	clientOptions ClientOptions
 	registry      Registry
 }
@@ -47,24 +46,6 @@ func (c *clientImpl) StartProcessWithOptions(
 		}
 		if startOptions.TimeoutSeconds != nil {
 			prcOptions.TimeoutSeconds = *startOptions.TimeoutSeconds
-		}
-	}
-	if persSchema.GlobalAttributeSchema != nil {
-		if startOptions == nil || startOptions.GlobalAttributeOptions == nil ||
-			len(startOptions.GlobalAttributeOptions.DBTableConfigs) == 0 {
-			return "", NewInvalidArgumentError("GlobalAttributeConfig is required for process with GlobalAttributeSchema")
-		}
-		dbTableCfgs := startOptions.GlobalAttributeOptions.DBTableConfigs
-		schema := persSchema.GlobalAttributeSchema
-		keyDefs := c.registry.getGlobalAttributeKeyToDefs(prcType)
-
-		tableConfigs, err := c.convertToTableConfig(dbTableCfgs, *schema, keyDefs)
-		if err != nil {
-			return "", err
-		}
-
-		unregOpt.GlobalAttributeConfig = &xcapi.GlobalAttributeConfig{
-			TableConfigs: tableConfigs,
 		}
 	}
 	if persSchema.LocalAttributeSchema != nil {
@@ -169,47 +150,4 @@ func (c *clientImpl) DescribeCurrentProcessExecution(
 	ctx context.Context, processId string,
 ) (*xcapi.ProcessExecutionDescribeResponse, error) {
 	return c.BasicClient.DescribeCurrentProcessExecution(ctx, processId)
-}
-
-func (c *clientImpl) convertToTableConfig(
-	dbCfgs map[string]DBTableConfig, schema GlobalAttributesSchema, keyToDefs map[string]internalGlobalAttrDef,
-) ([]xcapi.GlobalAttributeTableConfig, error) {
-	var res []xcapi.GlobalAttributeTableConfig
-	for _, tbl := range schema.Tables {
-		tblName := tbl.TableName
-		cfg, ok := dbCfgs[tblName]
-		if !ok {
-			return nil, NewInvalidArgumentError("GlobalAttributeConfig.DBTableConfigs missing table: " + tblName)
-		}
-		dbVal, err := c.dbConverter.ToDBValue(cfg.PKValue, cfg.PKHint)
-		if err != nil {
-			return nil, err
-		}
-		var initWrite []xcapi.TableColumnValue
-		for key, attr := range cfg.InitialAttributes {
-			def, ok := keyToDefs[key]
-			if !ok {
-				return nil, NewInvalidArgumentError("invalid attribute key for global attribute schema: " + key)
-			}
-			dbVal, err := c.dbConverter.ToDBValue(attr, def.colDef.Hint)
-			if err != nil {
-				return nil, err
-			}
-			initWrite = append(initWrite, xcapi.TableColumnValue{
-				DbColumn:     def.colDef.ColumnName,
-				DbQueryValue: dbVal,
-			})
-		}
-		tblConfig := xcapi.GlobalAttributeTableConfig{
-			TableName: tblName,
-			PrimaryKey: xcapi.TableColumnValue{
-				DbColumn:     tbl.PK,
-				DbQueryValue: dbVal,
-			},
-			InitialWrite:     initWrite,
-			InitialWriteMode: cfg.InitialWriteConflictMode,
-		}
-		res = append(res, tblConfig)
-	}
-	return res, nil
 }

@@ -117,7 +117,6 @@ func fromStateToAsyncStateConfig(
 		recoverState = state.GetStateOptions().FailureRecoveryState
 	}
 
-	stateCfg.LoadGlobalAttributesRequest = createLoadGlobalAttributesRequestIfNeeded(registry, prcType, preferredPersistencePolicyName)
 	stateCfg.LoadLocalAttributesRequest = createLoadLocalAttributesRequestIfNeeded(registry, prcType, preferredPersistencePolicyName)
 	stateCfg.StateFailureRecoveryOptions = createFailureRecoveryOptionsIfNeeded(recoverState, prcType, registry)
 	return stateCfg
@@ -160,50 +159,6 @@ func fromAsyncStateOptionsToBasicAsyncStateConfig(
 	return stateCfg
 }
 
-func createLoadGlobalAttributesRequestIfNeeded(
-	registry Registry, prcType string, preferredPersistencePolicyName *string,
-) *xcapi.LoadGlobalAttributesRequest {
-	persistenceSchema := registry.getPersistenceSchema(prcType)
-
-	var preferredPolicy *NamedPersistencePolicy
-	if preferredPersistencePolicyName != nil {
-		preferredPolicyS, ok := persistenceSchema.OverridePersistencePolicies[*preferredPersistencePolicyName]
-		if !ok {
-			panic("persistence loading policy not found " + *preferredPersistencePolicyName)
-		}
-		preferredPolicy = &preferredPolicyS
-	}
-
-	var tblReqs []xcapi.TableReadRequest
-	if persistenceSchema.GlobalAttributeSchema != nil {
-		keyToDefs := registry.getGlobalAttributeKeyToDefs(prcType)
-
-		for _, tblSchema := range persistenceSchema.GlobalAttributeSchema.Tables {
-			tblPolicy := getFinalTablePolicy(tblSchema, preferredPolicy)
-
-			var colsToRead []xcapi.TableColumnDef
-			for _, key := range tblPolicy.LoadingKeys {
-				def := keyToDefs[key]
-				colsToRead = append(colsToRead, xcapi.TableColumnDef{
-					DbColumn: def.colDef.ColumnName,
-				})
-			}
-
-			tblReqs = append(tblReqs, xcapi.TableReadRequest{
-				TableName:     ptr.Any(tblSchema.TableName),
-				Columns:       colsToRead,
-				LockingPolicy: ptr.Any(tblPolicy.LockingType),
-			})
-		}
-	}
-	if len(tblReqs) == 0 {
-		return nil
-	}
-	return &xcapi.LoadGlobalAttributesRequest{
-		TableRequests: tblReqs,
-	}
-}
-
 func getFinalTablePolicy(schema DBTableSchema, policy *NamedPersistencePolicy) TablePolicy {
 	if policy != nil && policy.GlobalAttributePolicy != nil {
 		p, ok := policy.GlobalAttributePolicy[schema.TableName]
@@ -220,13 +175,6 @@ func createLoadLocalAttributesRequestIfNeeded(
 	persistenceSchema := registry.getPersistenceSchema(prcType)
 
 	var preferredPolicy *NamedPersistencePolicy
-	if preferredPersistencePolicyName != nil {
-		preferredPolicyS, ok := persistenceSchema.OverridePersistencePolicies[*preferredPersistencePolicyName]
-		if !ok {
-			panic("persistence loading policy not found " + *preferredPersistencePolicyName)
-		}
-		preferredPolicy = &preferredPolicyS
-	}
 
 	var localAttributePolicy *LocalAttributePolicy
 	if preferredPolicy != nil {
@@ -249,7 +197,7 @@ func createLoadLocalAttributesRequestIfNeeded(
 	}
 
 	return &xcapi.LoadLocalAttributesRequest{
-		LockingPolicy:      localAttributePolicy.LockingType,
+		LockType:           localAttributePolicy.LockingType,
 		KeysToLoadNoLock:   keysToLoadNoLock,
 		KeysToLoadWithLock: keysToLoadWithLock,
 	}

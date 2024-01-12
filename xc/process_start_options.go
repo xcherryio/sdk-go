@@ -11,39 +11,6 @@ type ProcessStartOptions struct {
 	// Default: xcapi.ALLOW_IF_NO_RUNNING when set as nil.
 	// This will override the IdReusePolicy defined in process definition.
 	IdReusePolicy *xcapi.ProcessIdReusePolicy
-	// GlobalAttributeOptions is the options for global attributes
-	// Required if using global attribute feature
-	GlobalAttributeOptions *GlobalAttributeOptions
 	// InitialLocalAttribute is the initial local attributes to be set when starting the process execution
 	InitialLocalAttribute map[string]interface{}
-}
-
-type GlobalAttributeOptions struct {
-	// DBTableConfigs is the database table configs for global attributes
-	// key is the table name. All the tables defined in globalAttributeSchema must be included
-	DBTableConfigs map[string]DBTableConfig
-}
-
-func NewGlobalAttributeOptions(
-	tableConfig ...DBTableConfig,
-) *GlobalAttributeOptions {
-	dbTableConfigs := map[string]DBTableConfig{}
-	for _, tblCfg := range tableConfig {
-		dbTableConfigs[tblCfg.TableName] = tblCfg
-	}
-	return &GlobalAttributeOptions{
-		DBTableConfigs: dbTableConfigs,
-	}
-}
-
-type DBTableConfig struct {
-	TableName string
-	PKValue   interface{}
-	PKHint    *DBHint
-	// InitialAttributes is the initial attributes to be set when starting the process execution
-	// Key is the attribute key, value is the attribute value
-	InitialAttributes map[string]interface{}
-	// InitialWriteConflictMode is for how to resolve the write conflict when setting the initial attributes
-	// Required if InitialAttributes is not empty
-	InitialWriteConflictMode *xcapi.AttributeWriteConflictMode
 }

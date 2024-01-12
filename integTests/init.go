@@ -4,7 +4,6 @@ import (
 	"github.com/xcherryio/sdk-go/integTests/basic"
 	"github.com/xcherryio/sdk-go/integTests/command_request"
 	"github.com/xcherryio/sdk-go/integTests/failure_recovery"
-	"github.com/xcherryio/sdk-go/integTests/global_attribute"
 	"github.com/xcherryio/sdk-go/integTests/local_attribute"
 	"github.com/xcherryio/sdk-go/integTests/multi_states"
 	"github.com/xcherryio/sdk-go/integTests/process_timeout"
@@ -31,8 +30,6 @@ func init() {
 		&state_decision.ForceFailProcess{},
 		&state_decision.DeadEndProcess{},
 		&stateretry.BackoffProcess{},
-		&global_attribute.SingleTableProcess{},
-		&global_attribute.MultiTablesProcess{},
 		&process_timeout.TimeoutProcess{},
 		&command_request.AnyOfTimerLocalQProcess{},
 		&command_request.AllOfTimerLocalQProcess{},

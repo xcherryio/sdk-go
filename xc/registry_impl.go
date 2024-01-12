@@ -1,13 +1,11 @@
 package xc
 
 type registryImpl struct {
-	processStore                map[string]Process
-	persistenceSchemaStore      map[string]PersistenceSchema
-	globalAttributeKeyToDef     map[string]map[string]internalGlobalAttrDef
-	globalAttrTableColNameToKey map[string]map[string]string
-	localAttrKeys               map[string]map[string]bool
-	startingState               map[string]AsyncState
-	stateStore                  map[string]map[string]AsyncState
+	processStore           map[string]Process
+	persistenceSchemaStore map[string]PersistenceSchema
+	localAttrKeys          map[string]map[string]bool
+	startingState          map[string]AsyncState
+	stateStore             map[string]map[string]AsyncState
 }
 
 func (r *registryImpl) AddProcess(processDef Process) error {
@@ -57,14 +55,6 @@ func (r *registryImpl) getPersistenceSchema(prcType string) PersistenceSchema {
 	return r.persistenceSchemaStore[prcType]
 }
 
-func (r *registryImpl) getGlobalAttributeKeyToDefs(prcType string) map[string]internalGlobalAttrDef {
-	return r.globalAttributeKeyToDef[prcType]
-}
-
-func (r *registryImpl) getGlobalAttributeTableColumnToKey(prcType string) map[string]string {
-	return r.globalAttrTableColNameToKey[prcType]
-}
-
 func (r *registryImpl) registerProcessType(prc Process) error {
 	prcType := GetFinalProcessType(prc)
 	_, ok := r.processStore[prcType]
@@ -97,13 +87,7 @@ func (r *registryImpl) registerProcessState(prc Process) error {
 func (r *registryImpl) registerPersistenceSchema(prc Process) error {
 	prcType := GetFinalProcessType(prc)
 	ps := prc.GetPersistenceSchema()
-	keyToDef, tableColNameToKey, err := ps.ValidateGlobalAttributeForRegistry()
-	if err != nil {
-		return err
-	}
 	r.persistenceSchemaStore[prcType] = ps
-	r.globalAttributeKeyToDef[prcType] = keyToDef
-	r.globalAttrTableColNameToKey[prcType] = tableColNameToKey
 
 	localAttrKeys, err := ps.ValidateLocalAttributeForRegistry()
 	if err != nil {

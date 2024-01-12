@@ -5,7 +5,6 @@ import (
 	"github.com/xcherryio/sdk-go/integTests/local_attribute"
 	"testing"
 
-	"github.com/xcherryio/sdk-go/integTests/global_attribute"
 	"github.com/xcherryio/sdk-go/integTests/process_timeout"
 
 	"github.com/xcherryio/sdk-go/integTests/failure_recovery"
@@ -73,14 +72,6 @@ func TestStateFailureRecoveryExecuteNoWaitUntilProcess(t *testing.T) {
 
 func TestStateFailureRecoveryExecuteFailedAtStartProcess(t *testing.T) {
 	failure_recovery.TestStateFailureRecoveryTestExecuteFailedAtStartProcess(t, client)
-}
-
-func TestGlobalAttributesWithSingleTable(t *testing.T) {
-	global_attribute.TestGlobalAttributesWithSingleTable(t, client)
-}
-
-func TestGlobalAttributesWithMultiTables(t *testing.T) {
-	global_attribute.TestGlobalAttributesWithMultiTables(t, client)
 }
 
 func TestLocalAttributes(t *testing.T) {
