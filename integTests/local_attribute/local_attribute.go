@@ -22,8 +22,6 @@ func (b LocalAttributeTestProcess) GetPersistenceSchema() xc.PersistenceSchema {
 			ptr.Any(xcapi.NO_LOCKING),
 			xc.NewLocalAttributeDef("localAttr1", xc.LoadNoLock),
 		),
-		nil,
-		xc.NewPersistenceSchemaOptions(),
 	)
 }
 

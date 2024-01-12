@@ -5,7 +5,6 @@ type ClientOptions struct {
 	ServerUrl           string
 	WorkerUrl           string
 	ObjectEncoder       ObjectEncoder
-	DBConverter         DBConverter
 	EnabledDebugLogging bool
 	// DefaultProcessTimeoutSecondsOverride is used when StartProcess is called and
 	// 1. no timeout specified in ProcessOptions(default as zero)
@@ -29,7 +28,6 @@ var localDefaultClientOptions = ClientOptions{
 	ServerUrl:     DefaultServerUrl,
 	WorkerUrl:     DefaultWorkerUrl,
 	ObjectEncoder: GetDefaultObjectEncoder(),
-	DBConverter:   NewBasicDBConverter(),
 }
 
 func GetLocalDefaultClientOptions() *ClientOptions {

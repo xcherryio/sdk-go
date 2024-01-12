@@ -77,7 +77,6 @@ func NewClient(registry Registry, options *ClientOptions) Client {
 		BasicClient:   NewBasicClient(*options),
 		clientOptions: *options,
 		registry:      registry,
-		dbConverter:   options.DBConverter,
 	}
 }
 

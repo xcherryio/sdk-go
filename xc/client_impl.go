@@ -10,7 +10,6 @@ import (
 
 type clientImpl struct {
 	BasicClient
-	dbConverter   DBConverter
 	clientOptions ClientOptions
 	registry      Registry
 }
