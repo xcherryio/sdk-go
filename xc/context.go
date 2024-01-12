@@ -6,7 +6,7 @@ type Context interface {
 	GetAttempt() int
 	GetProcessId() string
 	GetRecoverFromStateExecutionId() *string
-	GetRecoverFromStateApi() *xcapi.StateApiType
+	GetRecoverFromStateApi() *xcapi.WorkerApiType
 }
 
 func newContext(ctx xcapi.Context) Context {
@@ -29,6 +29,6 @@ func (c contextImpl) GetRecoverFromStateExecutionId() *string {
 	return c.ctx.RecoverFromStateExecutionId
 }
 
-func (c contextImpl) GetRecoverFromStateApi() *xcapi.StateApiType {
+func (c contextImpl) GetRecoverFromStateApi() *xcapi.WorkerApiType {
 	return c.ctx.RecoverFromApi
 }

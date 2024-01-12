@@ -108,14 +108,6 @@ func IsProcessAlreadyStartedError(err error) bool {
 	return apiError.StatusCode == http.StatusConflict
 }
 
-func IsGlobalAttributeWriteFailure(err error) bool {
-	apiError, ok := err.(*ApiError)
-	if !ok || apiError.ErrResponse == nil {
-		return false
-	}
-	return apiError.StatusCode == http.StatusFailedDependency
-}
-
 func IsProcessNotExistsError(err error) bool {
 	apiError, ok := err.(*ApiError)
 	if !ok || apiError.ErrResponse == nil {
