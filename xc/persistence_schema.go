@@ -36,7 +36,7 @@ type TablePolicy struct {
 	// LoadingKeys are the attribute keys that will be loaded from the database
 	LoadingKeys []string
 	// TableLockingTypeDefault is the locking type for all the loaded attributes
-	LockingType xcapi.DatabaseLockingType
+	LockingType xcapi.LockType
 }
 
 type NamedPersistencePolicy struct {
@@ -56,7 +56,7 @@ type LocalAttributesSchema struct {
 type LocalAttributePolicy struct {
 	LocalAttributeKeysNoLock   map[string]bool
 	LocalAttributeKeysWithLock map[string]bool
-	LockingType                *xcapi.DatabaseLockingType
+	LockingType                *xcapi.LockType
 }
 
 func NewEmptyPersistenceSchema() PersistenceSchema {
@@ -114,7 +114,7 @@ func NewEmptyLocalAttributesSchema() *LocalAttributesSchema {
 }
 
 func NewLocalAttributesSchema(
-	LockingType *xcapi.DatabaseLockingType,
+	LockingType *xcapi.LockType,
 	localAttributesDef ...LocalAttributeDef,
 ) *LocalAttributesSchema {
 	keys := map[string]bool{}
@@ -162,7 +162,7 @@ func NewEmptyGlobalAttributesSchema() *GlobalAttributesSchema {
 func NewDBTableSchema(
 	tableName string,
 	pk string,
-	defaultReadLocking xcapi.DatabaseLockingType,
+	defaultReadLocking xcapi.LockType,
 	columns ...DBColumnDef,
 ) DBTableSchema {
 
@@ -206,7 +206,7 @@ func NewDBColumnDefWithHint(
 
 func NewTablePolicy(
 	tableName string,
-	lockingType xcapi.DatabaseLockingType,
+	lockingType xcapi.LockType,
 	loadingKeys ...string,
 ) TablePolicy {
 	return TablePolicy{
